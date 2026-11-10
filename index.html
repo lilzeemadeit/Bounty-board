@@ -474,7 +474,8 @@ META.tags.push(["leadercond","Has a leader condition"]);
 const TAGLABEL = Object.fromEntries(META.tags);
 const CATNAME = {L:"Leader",C:"Character",E:"Event",S:"Stage"};
 const COLORS = ["Red","Green","Blue","Purple","Black","Yellow"];
-const IMG_BASE = "https://en.onepiece-cardgame.com/images/cardlist/card/";
+// Pictures go through Bounty Board's own relay (a Supabase function), because Bandai's site won't show them inside other sites.
+const IMG_BASE = "https://ebsgqefxokkgihfjrvvh.supabase.co/functions/v1/card-img?id=";
 let IMG_OK = null;               // null = untested, false = this host blocks card images
 for (const c of CARDS){
   c._name = c.n.toLowerCase();
@@ -712,7 +713,7 @@ function results(){
 let imgFails = 0;
 function imgTag(id, suf){
   if (IMG_OK === false) return "";
-  return `<img alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" src="${IMG_BASE}${id}${suf||""}.png" data-img>`;
+  return `<img alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" src="${IMG_BASE}${encodeURIComponent(id + (suf||""))}" data-img>`;
 }
 document.addEventListener("error", e => {
   const el = e.target;
