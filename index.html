@@ -138,6 +138,7 @@ button{cursor:pointer}
 /* ---------- results ---------- */
 .resbar{display:flex;align-items:center;gap:8px;padding-block:10px 4px;flex-wrap:wrap}
 .resbar .n{font-weight:700}
+@media (max-width:420px){.resbar label[for=sort]{display:none}.resbar select{max-width:138px}}
 .resbar select{height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:0 8px;font-size:13px;margin-left:auto}
 .note{font-size:13px;color:var(--muted);padding-block:2px 6px}
 .note button{background:none;border:0;padding:0;color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:2px}
@@ -344,6 +345,10 @@ details[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
 .bucket[open] .bcount,.effects .bcount{color:var(--accent)}
 .fgroup .lab{font-weight:700;font-size:13px;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .wrapchips{display:flex;gap:6px;flex-wrap:wrap}
+.costgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.costgrid .chip{justify-content:center;padding-inline:0;width:100%}
+@media (min-width:560px){.costgrid:not(.blocks){grid-template-columns:repeat(10,minmax(0,1fr))}.costgrid.blocks{max-width:50%}}
+@media (max-width:380px){.brand h1{font-size:15px}.brand .lookbtn{width:30px;height:30px}.brand{gap:6px}}
 .field{height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:0 10px;width:100%;font-size:16px}
 textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13px;resize:vertical}
 .out{font-family:var(--f-mono);font-size:12.5px;white-space:pre;background:var(--sunk);border-radius:10px;padding:10px;max-height:240px;overflow:auto}
@@ -543,7 +548,8 @@ for (const w of S.wish){            // Buy Lists: {items: extra copies added by 
 S.treasure = S.treasure || [];
 S.favLeaders = S.favLeaders || [];
 S.pools = S.pools || {};      // leaderId -> {cards:{cardId: addedAt}}  (the ★ Leader Pool's own ideas)
-S.prefs = Object.assign({grid:"l", sort:"rel", compat:true, matchLeader:true, pool:"all", arts:false}, S.prefs||{});
+S.prefs = Object.assign({grid:"l", sort:"rel", compat:true, matchLeader:true, pool:"all", arts:true}, S.prefs||{});
+if (!S.prefs.artsV2){ S.prefs.arts = true; S.prefs.artsV2 = true; }   // all printings shown by default
 save();
 const NODECK = {id:null, name:"", leader:null, cards:{}, ghost:true};
 const deck = () => S.decks.find(d=>d.id===S.cur) || NODECK;
@@ -634,7 +640,7 @@ function compat(c){
 /* ================= search ================= */
 // Two searches share one engine: the Cards tab searches everything; the Build tab's "Add cards"
 // searches for the open build, locked to its leader's colors until "Leader colors" is switched off.
-const mkF = () => ({ q:"", colors:new Set(), cats:new Set(), costs:new Set(), counter:"any", tags:new Set(), type:"", set:"", exact:false, lock:true });
+const mkF = () => ({ q:"", colors:new Set(), cats:new Set(), costs:new Set(), counter:"any", tags:new Set(), blocks:new Set(), type:"", set:"", exact:false, lock:true });
 const FC = mkF(); let FB = mkF();
 let ctx = "cards", F = FC;
 const isFav = id => S.favLeaders.includes(id);
@@ -688,7 +694,8 @@ function passFilters(c, L, hideLeaders){
   else if (hideLeaders && c.c === "L") return false;   // while building, other leaders only show under the Leaders chip
   if (F.colors.size && !c.co.some(x=>F.colors.has(x))) return false;
   if (L && c.c !== "L" && !sharesColor(c, L)) return false;
-  if (F.costs.size){ const k = c.k ?? 0; const b = k >= 9 ? 9 : k; if (!F.costs.has(b)) return false; }
+  if (F.costs.size && !F.costs.has(c.k ?? 0)) return false;
+  if (F.blocks && F.blocks.size && !F.blocks.has(c.b)) return false;
   if (F.counter === "none" && c.ct) return false;
   if (F.counter === "has" && !c.ct) return false;
   if ((F.counter === "1000" || F.counter === "2000") && String(c.ct) !== F.counter) return false;
@@ -812,6 +819,7 @@ V.innerHTML = `
     <div id="homeStrip"></div>
     <div class="resbar">
       <span><span class="n" id="rcount">0</span> <span class="muted">cards</span></span>
+      <button class="chip" id="artsBtn" aria-pressed="true" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button>
       <label class="muted" for="sort" style="margin-left:auto;font-size:13px">Sort</label>
       <select id="sort" style="margin-left:0">
         <option value="rel">Relevance</option><option value="costA">Cost: low to high</option><option value="costD">Cost: high to low</option>
@@ -831,23 +839,23 @@ function renderQuick(){
   if (ctx === "build"){
     if (DL){
       h += `<button class="chip" id="qLock" aria-pressed="${FB.lock}" title="Only show cards that share a color with ${esc(DL.n)}">${FB.lock?"🔒 ":""}${esc(DL.co.join("/"))} only</button>`;
-      h += `<button class="chip" id="qCompat" aria-pressed="${S.prefs.compat}" title="Gray out cards whose effects need a different leader">Compatibility</button>`;
-      h += `<span class="sep"></span>`;
-    } else h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><span class="sep"></span>`;
+      h += `<button class="chip" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">✓ Legal only</button><span class="sep"></span>`;
+    } else h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><button class="chip" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">✓ Legal only</button><span class="sep"></span>`;
   } else {
-    h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><span class="sep"></span>`;
+    h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><button class="chip" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">✓ Legal only</button><span class="sep"></span>`;
   }
   for (const col of COLORS) h += `<button class="chip color" data-col="${col}" aria-pressed="${F.colors.has(col)}" aria-label="${col}"><span class="dot" style="background:${colorVar(col)}"></span>${F.colors.has(col)?col:""}</button>`;
   h += `<span class="sep"></span>`;
   for (const [cat,lab] of [["C","Characters"],["E","Events"],["S","Stages"]]) h += `<button class="chip" data-cat="${cat}" aria-pressed="${F.cats.has(cat)}">${lab}</button>`;
   $("#quick").innerHTML = h;  $("#quick").innerHTML = h;
   $("#sort").value = S.prefs.sort;
+  $("#artsBtn").setAttribute("aria-pressed", !!S.prefs.arts);
   const gb = $("#gridBtn");
   gb.innerHTML = S.prefs.grid === "l"
     ? `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`
     : `<svg viewBox="0 0 24 24" fill="currentColor">${[3,8,13,18].map(x=>[3,8,13,18].map(y=>`<rect x="${x}" y="${y}" width="3.4" height="3.4" rx=".6"/>`).join("")).join("")}</svg>`;
   gb.setAttribute("aria-label", S.prefs.grid === "l" ? "Showing 2 per row. Switch to 4 per row" : "Showing 4 per row. Switch to 2 per row");
-  const n = F.costs.size + F.tags.size + (F.counter!=="any") + !!F.type + !!F.set + (S.prefs.pool!=="all");
+  const n = F.costs.size + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + !!F.type + !!F.set + (S.prefs.pool!=="all");
   const fc = $("#fcount"); fc.hidden = !n; fc.textContent = n;
   const lb = $("#leaderBanner");
   const wide = innerWidth >= 1024;
@@ -908,7 +916,7 @@ qIn.addEventListener("input", () => setTimeout(renderHome, 150));
 // Cards tab "home": recent builds and recently viewed cards, shown until you search or filter
 function renderHome(){
   const el = $("#homeStrip"); if (!el) return;
-  const busy = F.q || F.colors.size || F.cats.size || F.costs.size || F.tags.size || F.counter !== "any" || F.type || F.set;
+  const busy = F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.type || F.set;
   if (ctx !== "cards" || busy){ el.innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,3), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
   el.innerHTML = `${!S.decks.length ? firstDeckHTML() : ""}${rb.length ? `<div class="hs"><span class="hsl">Recent builds</span><div class="hsr">${rb.map(d=>{ const L = d.leader && BY.get(d.leader); return `<button class="chip" data-rb="${d.id}"><span class="dot" style="background:${L?bandBg(L):"var(--line)"}"></span>${esc(d.name)} <span class="muted">${deckCount(d)}/50</span></button>`; }).join("")}</div></div>` : ""}
@@ -925,7 +933,8 @@ V.addEventListener("click", e => {
   else if (t.dataset.act3 === "switchBuild"){ openWorkOn(); return; }
   else if (t.dataset.act3 === "doneAdding"){ setCtx("cards"); return; }
   else if (t.id === "qLock"){ FB.lock = !FB.lock; }
-  else if (t.id === "qCompat"){ S.prefs.compat = !S.prefs.compat; save(); }
+  else if (t.id === "artsBtn"){ S.prefs.arts = !S.prefs.arts; save(); }
+  else if (t.id === "qLegal"){ S.prefs.pool = S.prefs.pool === "std" ? "all" : "std"; save(); }
   else if (t.id === "pickLeader"){ F.cats = new Set(["L"]); F.lock = false; }
   else if (t.id === "exactBtn"){ F.exact = !F.exact; }
   else if (t.id === "openFilters"){ openFilters(); return; }
@@ -1016,25 +1025,30 @@ function openFilters(){
       <div class="wrapchips">${keys.map(k=>`<button class="chip" data-ftag="${k}" aria-pressed="${F.tags.has(k)}">${esc(TAGLABEL[k])}</button>`).join("")}</div></details>`;
   }).join("");
   const effOn = F.tags.size;
-  const costChips = [0,1,2,3,4,5,6,7,8,9].map(k=>`<button class="chip" data-fcost="${k}" aria-pressed="${F.costs.has(k)}">${k===9?"9+":k}</button>`).join("");
+  if (!F.blocks) F.blocks = new Set();
+  const costChips = [1,2,3,4,5,6,7,8,9,10].map(k=>`<button class="chip" data-fcost="${k}" aria-pressed="${F.costs.has(k)}">${k}</button>`).join("");
+  const blockChips = [1,2,3,4,5].map(k=>`<button class="chip" data-fblock="${k}" aria-pressed="${F.blocks.has(k)}">${k}</button>`).join("");
   const sc = sheet(`
     <div class="shead"><h2 class="h2">Filters</h2><button class="btn sm" id="fReset">Reset</button><button class="btn sm dark x" id="fDone">Show cards</button></div>
-    <div class="fgroup"><div class="lab">Cost</div><div class="wrapchips">${costChips}</div></div>
+    <div class="fgroup"><div class="lab">Legal cards</div><div class="wrapchips">${[["all","All cards"],["noban","Hide banned"],["std","✓ Legal only"]].map(([v,l])=>`<button class="chip" data-fpool="${v}" aria-pressed="${S.prefs.pool===v}">${l}</button>`).join("")}</div>
+      <p class="foot-note" style="margin-top:6px">Banned and rotated are separate. “Hide banned” removes only the ${META.banned.length} cards on the October 12, 2026 ban list. “Legal only” also removes rotated Block 1 cards, except the ${STD_PERMIT.size + STD_B4.size} that Bandai keeps legal.</p></div>
+    <div class="fgroup"><div class="lab">Cost</div><div class="costgrid">${costChips}</div></div>
+    <div class="fgroup"><div class="lab">Block icon</div><div class="costgrid blocks">${blockChips}</div></div>
+    ${ctx === "build" ? `<div class="fgroup"><div class="lab">Leader compatibility</div><div class="wrapchips"><button class="chip" id="fCompat" aria-pressed="${S.prefs.compat}">Gray out cards that need a different leader</button></div></div>` : ""}
     <div class="fgroup"><div class="lab">Counter</div><div class="wrapchips">${[["any","Any"],["has","Has counter"],["1000","+1000"],["2000","+2000"],["none","No counter"]].map(([v,l])=>`<button class="chip" data-fctr="${v}" aria-pressed="${F.counter===v}">${l}</button>`).join("")}</div></div>
     <details class="fgroup effects"${effOn?" open":""}><summary class="lab">What the card does <span class="bcount" id="effCount">${effOn?effOn+" selected":""}</span></summary>
       <div class="buckets">${bucketHTML}</div></details>
     <div class="fgroup"><label class="lab" for="fType">Type, trait or attribute</label><input class="field" id="fType" list="typeList" placeholder="e.g. Fish-Man, Navy, Slash, Wisdom" value="${esc(F.type)}"><datalist id="typeList">${ATTRS.map(a=>`<option value="${a}" label="Attribute">`).join("")}${allTypes.map(t=>`<option value="${esc(t)}">`).join("")}</datalist>
       <div class="wrapchips" style="margin-top:8px">${ATTRS.map(a=>`<button class="chip" data-fattr="${a}" aria-pressed="${F.type.toLowerCase()===a.toLowerCase()}">${a}</button>`).join("")}</div></div>
     <div class="fgroup"><label class="lab" for="fSet">Set</label><select class="field" id="fSet"><option value="">All sets</option>${META.sets.map(s=>`<option ${F.set===s?"selected":""}>${esc(s)}</option>`).join("")}</select></div>
-    <div class="fgroup"><div class="lab">Card pool</div><div class="wrapchips">${[["all","Everything"],["noban","Hide banned"],["std","Standard legal only"]].map(([v,l])=>`<button class="chip" data-fpool="${v}" aria-pressed="${S.prefs.pool===v}">${l}</button>`).join("")}</div>
-      <p class="foot-note" style="margin-top:6px">Banned and rotated are separate. “Hide banned” removes only the ${META.banned.length} cards on the October 12, 2026 ban list. “Standard legal only” also removes Block 1 cards, except the ${STD_PERMIT.size + STD_B4.size} that Bandai keeps legal.</p></div>
-    <div class="fgroup"><div class="lab">Display</div><div class="wrapchips"><button class="chip" id="fArts" aria-pressed="${S.prefs.arts}">Show every printing (alt arts, parallels)</button></div></div>
-    <p class="foot-note">Card list: ${CARDS.length.toLocaleString()} cards and ${CARDS.reduce((n,c)=>n+c.v.length,0).toLocaleString()} printings, through ${META.through}, including promos. Last updated October 30, 2026. Automatic nightly updates start when the app is hosted.</p>
+    <p class="foot-note">Card list: ${CARDS.length.toLocaleString()} cards and ${CARDS.reduce((n,c)=>n+c.v.length,0).toLocaleString()} printings, through ${META.through}, including promos. Card data from ${new Date(META.updated+"T12:00:00").toLocaleDateString([], {month:"long", day:"numeric", year:"numeric"})}; checked for new cards every night.</p>
   `, "Filters");
   onClose = () => { renderQuick(); renderResults(); };
   sc.addEventListener("click", e => {
     const t = e.target.closest("button"); if (!t) return;
     if (t.dataset.fcost){ const k=+t.dataset.fcost; F.costs.has(k)?F.costs.delete(k):F.costs.add(k); t.setAttribute("aria-pressed",F.costs.has(k)); }
+    else if (t.dataset.fblock){ const k=+t.dataset.fblock; F.blocks.has(k)?F.blocks.delete(k):F.blocks.add(k); t.setAttribute("aria-pressed",F.blocks.has(k)); }
+    else if (t.id === "fCompat"){ S.prefs.compat = !S.prefs.compat; save(); compatCache.clear(); t.setAttribute("aria-pressed", S.prefs.compat); }
     else if (t.dataset.fctr){ F.counter = t.dataset.fctr; sc.querySelectorAll("[data-fctr]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fctr===F.counter)); }
     else if (t.dataset.ftag){ const k=t.dataset.ftag; F.tags.has(k)?F.tags.delete(k):F.tags.add(k); t.setAttribute("aria-pressed",F.tags.has(k));
       const det = t.closest(".bucket"), n = det.querySelectorAll('[aria-pressed="true"]').length;
@@ -1044,7 +1058,7 @@ function openFilters(){
       sc.querySelectorAll("[data-fattr]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fattr.toLowerCase()===F.type.toLowerCase())); }
     else if (t.dataset.fpool){ S.prefs.pool = t.dataset.fpool; save(); sc.querySelectorAll("[data-fpool]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fpool===S.prefs.pool)); }
     else if (t.id === "fArts"){ S.prefs.arts = !S.prefs.arts; save(); t.setAttribute("aria-pressed", S.prefs.arts); }
-    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),counter:"any",tags:new Set(),type:"",set:""}); S.prefs.pool="all"; save(); closeSheet(); }
+    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),blocks:new Set(),counter:"any",tags:new Set(),type:"",set:""}); S.prefs.pool="all"; save(); closeSheet(); }
     else if (t.id === "fDone") closeSheet();
   });
   $("#fType").addEventListener("input", e => { F.type = e.target.value.trim(); sc.querySelectorAll("[data-fattr]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fattr.toLowerCase()===F.type.toLowerCase())); });
