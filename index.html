@@ -398,6 +398,15 @@ textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13p
 .btile .edit:hover{background:rgba(242,242,239,.3)}
 .newtile{flex:none;width:132px;height:184px;scroll-snap-align:start;border-radius:12px;border:1.5px dashed var(--line);background:transparent;color:var(--muted);font-weight:700;font-size:14px}
 .dempty{margin:28px 0 0;color:var(--muted);font-size:14px}
+.junklink{margin:28px 0 4px;display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:8px 0;color:var(--muted);font-size:14px;font-weight:600}
+html[data-photo] .junklink{background:var(--frost);padding:8px 12px;border-radius:12px}
+.junkrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.junkrow b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.junkrow small{font-size:12.5px}
+.ebdel{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+.firstdeck{margin:22px 0 6px;padding:20px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:grid;gap:8px;justify-items:start}
+.firstdeck b{font-family:var(--f-display);font-size:26px;line-height:1}
+.firstdeck p{margin:0 0 6px;color:var(--muted);font-size:14px}
+html[data-photo] .firstdeck{background:var(--frost);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 /* edit-build sheet */
 .ebhead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:4px 0 16px}
 .ebhead b{display:block;font-family:var(--f-display);font-size:26px;line-height:1}
@@ -517,8 +526,10 @@ function sampleDeck(){
   return {id:uid(), name:"Sample: Straw Hat Crew (ST-01 cards)", used: 0, leader:"ST01-001", cards, updated:Date.now(), sample:true};
 }
 let S = load() || {};
-S.decks = S.decks && S.decks.length ? S.decks : [sampleDeck()];
-S.cur = S.decks.find(d=>d.id===S.cur) ? S.cur : S.decks[0].id;
+S.decks = (S.decks || []).filter(d => !d.sample);          // no sample decks: everyone starts with their own
+const JUNK_DAYS = 7;                                         // deleted builds wait in the Junkyard this long
+S.junk = (S.junk || []).filter(j => Date.now() - (j.deletedAt||0) < JUNK_DAYS*864e5);
+S.cur = S.decks.find(d=>d.id===S.cur) ? S.cur : (S.decks[0] ? S.decks[0].id : null);
 S.owned = S.owned || {};
 S.wish = S.wish || [];
 for (const w of S.wish){            // Buy Lists: {items: extra copies added by hand, decks: deck ids to buy for, mode}
@@ -531,7 +542,8 @@ S.favLeaders = S.favLeaders || [];
 S.pools = S.pools || {};      // leaderId -> {cards:{cardId: addedAt}}  (the ★ Leader Pool's own ideas)
 S.prefs = Object.assign({grid:"l", sort:"rel", compat:true, matchLeader:true, pool:"all", arts:false}, S.prefs||{});
 save();
-const deck = () => S.decks.find(d=>d.id===S.cur);
+const NODECK = {id:null, name:"", leader:null, cards:{}, ghost:true};
+const deck = () => S.decks.find(d=>d.id===S.cur) || NODECK;
 
 /* ================= helpers ================= */
 const $ = (s,el=document) => el.querySelector(s);
@@ -867,7 +879,7 @@ function renderHome(){
   const busy = F.q || F.colors.size || F.cats.size || F.costs.size || F.tags.size || F.counter !== "any" || F.type || F.set;
   if (ctx !== "cards" || busy){ el.innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,3), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
-  el.innerHTML = `${rb.length ? `<div class="hs"><span class="hsl">Recent builds</span><div class="hsr">${rb.map(d=>{ const L = d.leader && BY.get(d.leader); return `<button class="chip" data-rb="${d.id}"><span class="dot" style="background:${L?bandBg(L):"var(--line)"}"></span>${esc(d.name)} <span class="muted">${deckCount(d)}/50</span></button>`; }).join("")}</div></div>` : ""}
+  el.innerHTML = `${!S.decks.length ? firstDeckHTML() : ""}${rb.length ? `<div class="hs"><span class="hsl">Recent builds</span><div class="hsr">${rb.map(d=>{ const L = d.leader && BY.get(d.leader); return `<button class="chip" data-rb="${d.id}"><span class="dot" style="background:${L?bandBg(L):"var(--line)"}"></span>${esc(d.name)} <span class="muted">${deckCount(d)}/50</span></button>`; }).join("")}</div></div>` : ""}
     ${rv.length ? `<div class="hs"><span class="hsl">Recently viewed</span><div class="hsr">${rv.map(c=>`<button class="chip" data-open="${c.i}"><span class="dot" style="background:${bandBg(c)}"></span>${esc(c.n)} <span class="mono muted">${c.i}</span></button>`).join("")}</div></div>` : ""}`;
 }
 $("#sort").onchange = e => { S.prefs.sort = e.target.value; save(); renderResults(); };
@@ -900,6 +912,7 @@ function setCtx(c){
 let bSub = "add";
 // Open a build for editing: on a phone, the Build tab; on a wide screen, the left side switches to adding cards.
 function openBuild(sub){
+  if (deck().ghost){ setCtx("cards"); go("decks"); return; }
   if (sub) bSub = sub;
   if (innerWidth >= 1024){ setCtx("build"); renderDeckViews(); go("cards"); window.scrollTo({top:0}); }
   else go("build");
@@ -1422,7 +1435,7 @@ function buildBodyHTML(tab){
       <button class="btn sm" data-act="newdeck">${L ? `New ${esc(L.n)} build` : "New build"}</button>
       <button class="btn sm danger" data-act="del">Delete</button>
     </div>
-    ${confirmDel?`<div class="confirm" style="margin-top:8px">Delete “${esc(d.name)}”? This can't be undone. <button class="btn sm danger" data-act="delYes">Delete build</button><button class="btn sm" data-act="delNo">Keep</button></div>`:""}
+    ${confirmDel?`<div class="confirm" style="margin-top:8px">Move “${esc(d.name)}” to the Junkyard? You can bring it back for ${JUNK_DAYS} days. <button class="btn sm danger" data-act="delYes">Move to Junkyard</button><button class="btn sm" data-act="delNo">Keep</button></div>`:""}
     <div class="issues">${iss.map(([k,m])=>`<div class="issue ${k}"><i></i><span>${esc(m)}</span></div>`).join("")}</div>
     ${tab === "stats" ? `<div style="margin-top:14px">${statsHTML(d)}</div>`
       : `${rows.length?`<div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn sm" data-act="wishMissing" ${missing===0?"disabled":""}>${missing?`Buy List for this build (${missing} to buy)`:"Nothing to buy ✓"}</button></div>`:""}
@@ -1438,6 +1451,7 @@ function buildHeadHTML(){
 }
 function renderDeckViews(){
   const a = $("#asideDeck"), st = a.scrollTop;
+  if (deck().ghost){ a.innerHTML = firstDeckHTML(); $("#bHead").innerHTML = ""; $("#bBody").innerHTML = ""; $("#bAddSlot").hidden = true; updateChip(); return; }
   a.innerHTML = buildHeadHTML() + `<div class="row" style="margin:10px 0 4px;justify-content:space-between">
       <button class="btn sm ${ctx==="build"?"dark":"primary"}" data-act="addCards">${ctx==="build" ? "Adding cards ✓" : "Add cards"}</button>
       <div class="seg" role="group" aria-label="Build view"><button data-dtab="list" aria-pressed="${deckTab==="list"}">Build list</button><button data-dtab="stats" aria-pressed="${deckTab==="stats"}">Stats</button></div></div>
@@ -1467,7 +1481,7 @@ function deckClick(e){
   else if (a === "newdeck"){ const nd = newBuild(d.leader); workOn(nd.id); if (!d.leader) FB.cats = new Set(["L"]); renderAll(); openBuild("add"); toast(d.leader ? "New build started. Rename it in Build list." : "New build. Pick a leader."); }
   else if (a === "del"){ confirmDel = true; renderDeckViews(); }
   else if (a === "delNo"){ confirmDel = false; renderDeckViews(); }
-  else if (a === "delYes"){ confirmDel = false; (S.gone = S.gone || {})[d.id] = Date.now(); S.decks = S.decks.filter(x=>x.id!==d.id); if (!S.decks.length) newBuild(null); S.cur = recentBuilds()[0].id; FB = mkF(); if (ctx === "build") F = FB; compatCache.clear(); save(); renderAll(); toast("Build deleted"); }
+  else if (a === "delYes"){ confirmDel = false; trashBuild(d.id); renderAll(); if (!S.decks.length) go("decks"); toast("Moved to the Junkyard"); }
   else if (a === "wishMissing"){
     let w = S.wish.find(x=>x.decks.length===1 && x.decks[0]===d.id);
     if (!w){ w = {id:uid(), name:`${d.name} — Buy List`, items:{}, decks:[d.id], mode:"all"}; S.wish.unshift(w); }
@@ -1480,6 +1494,7 @@ for (const el of [$("#v-deck"), $("#asideDeck")]){
 }
 function updateChip(){
   const d = deck(), n = deckCount(d);
+  $("#deckChip").hidden = !!d.ghost;
   $("#chipName").textContent = d.name;
   const cc = $("#chipCount"); cc.textContent = `${n}/50`; cc.classList.toggle("full", n===50);
   const nc = $("#navCount"); nc.hidden = !n; nc.textContent = n;
@@ -1535,6 +1550,45 @@ function tileHTMLb(d){
   </div>`;
 }
 const DF = [["recent","Recent",""],["fav","Favorited",`<svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.3 4.8 5.2.7-3.8 3.6.9 5.2L10 14.3l-4.6 2.5.9-5.2L2.5 8l5.2-.7z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`],["done","Completed",`<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M6.6 10.2l2.3 2.3 4.6-4.8"/></svg>`]];
+function trashBuild(id){
+  const d = S.decks.find(x => x.id === id); if (!d) return;
+  S.junk = S.junk || []; S.junk.unshift(Object.assign({}, d, {deletedAt: Date.now()}));
+  (S.gone = S.gone || {})[id] = Date.now();
+  S.decks = S.decks.filter(x => x.id !== id);
+  if (S.cur === id) S.cur = S.decks.length ? recentBuilds()[0].id : null;
+  if (!S.decks.length) setCtx("cards");
+  FB = mkF(); if (ctx === "build") F = FB; compatCache.clear(); save();
+}
+function restoreBuild(id){
+  const j = (S.junk || []).find(x => x.id === id); if (!j) return;
+  S.junk = S.junk.filter(x => x.id !== id); delete j.deletedAt; if (S.gone) delete S.gone[id];
+  j.updated = j.used = Date.now(); S.decks.unshift(j); save();
+}
+function openJunkyard(){
+  const draw = () => {
+    const left = j => { const d = Math.ceil((j.deletedAt + JUNK_DAYS*864e5 - Date.now()) / 864e5); return d <= 1 ? "gone tomorrow" : `${d} days left`; };
+    const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">MY DECKS</span><b>Junkyard</b></span><button class="btn primary" data-jk="done">Done</button></div>
+      <p class="muted" style="margin:0 0 12px;font-size:13.5px">Deleted builds wait here for ${JUNK_DAYS} days, then they're gone for good.</p>
+      ${(S.junk||[]).length ? (S.junk||[]).map(j => { const L = j.leader && BY.get(j.leader); return `<div class="junkrow"><span><b>${esc(j.name)}</b><small class="muted">${L ? esc(L.n) + " · " : ""}${deckCount(j)}/50 · ${left(j)}</small></span>
+          <button class="btn sm" data-jr="${j.id}">Restore</button><button class="btn sm danger" data-jx="${j.id}" aria-label="Delete ${esc(j.name)} now">Delete now</button></div>`; }).join("")
+        : `<p class="dempty" style="margin:8px 0">The Junkyard is empty.</p>`}`, "Junkyard");
+    sc.addEventListener("click", e => { const t = e.target.closest("button"); if (!t) return;
+      if (t.dataset.jk === "done"){ closeSheet(); return; }
+      if (t.dataset.jr){ restoreBuild(t.dataset.jr); toast("Build restored"); draw(); return; }
+      if (t.dataset.jx){ S.junk = S.junk.filter(x => x.id !== t.dataset.jx); save(); draw(); return; }
+    });
+  };
+  onClose = () => { renderDecks(); renderHome(); updateChip(); };
+  draw();
+}
+document.addEventListener("click", e => { if (e.target.closest("[data-junk]")) openJunkyard(); });
+function firstDeckHTML(){
+  return `<div class="firstdeck"><b>Build your first deck</b><p>Pick a leader to start. Each leader can have as many builds as you like.</p><button class="btn primary" data-first="1">Choose a leader</button></div>`;
+}
+document.addEventListener("click", e => {
+  if (!e.target.closest("[data-first]")) return;
+  const nd = newBuild(null); workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast("New deck. Pick its leader.");
+});
 function renderDecks(){
   const v = $("#v-decks");
   v.dataset.mode = (poolView && BY.get(poolView)) ? "pool" : "home";
@@ -1558,7 +1612,9 @@ function renderDecks(){
   }
   const loose = byRecent(none);
   if (loose.length) body += `<section class="lsec"><div class="lrow">${jollyHTML([])}<span class="lt"><b>No leader yet</b><span class="ctags" style="color:var(--muted)">Pick a leader inside the build</span></span></div><div class="trow">${loose.map(tileHTMLb).join("")}</div></section>`;
-  if (!body) body = `<p class="dempty">${df === "fav" ? "No favorite builds yet. Tap the pencil on a build and choose ★ Favorite." : df === "done" ? "No completed builds yet. A build counts as completed at 50/50." : "No decks yet. Tap + to start one."}</p>`;
+  if (!body) body = df === "recent" ? firstDeckHTML() : `<p class="dempty">${df === "fav" ? "No favorite builds yet. Tap the pencil on a build and choose ★ Favorite." : "No completed builds yet. A build counts as completed at 50/50."}</p>`;
+  const nj = (S.junk||[]).length;
+  if (nj && df === "recent") body += `<button class="junklink" data-junk="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Junkyard · ${nj} deleted build${nj===1?"":"s"}</button>`;
   v.innerHTML = `<div class="dhead"><h2 class="dtitle">Decks</h2><button class="roundbtn" data-act="new" aria-label="New deck"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></button></div>
     <div class="dfilt" role="group" aria-label="Show builds">${DF.map(([k,l,ic]) => `<button class="fpill" data-df="${k}" aria-pressed="${df===k}">${ic}${l}</button>`).join("")}</div>
     ${body}`;
@@ -1579,7 +1635,7 @@ function saveNow(){ try { localStorage.setItem(KEY, JSON.stringify(S)); return t
 function editBuild(id){
   const d = S.decks.find(x => x.id === id); if (!d) return;
   const L = d.leader && BY.get(d.leader);
-  let picking = false;
+  let picking = false, confirming = false;
   const draw = () => {
     const ids = [...new Set([d.leader, ...Object.keys(d.cards)].filter(Boolean))];
     const cur = d.cover && d.cover.photo ? null : coverId(d);
@@ -1592,7 +1648,9 @@ function editBuild(id){
             <label class="optbtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-8 8"/></svg>Upload your own photo<input type="file" accept="image/*" id="ebFile" style="position:absolute;width:1px;height:1px;opacity:0"></label>
             ${d.cover ? `<button class="linkbtn" data-eb="reset">Go back to the leader card</button>` : ""}</span></div>
         ${picking ? `<div class="pickgrid" role="group" aria-label="Cards in this build">${ids.map(cid => { const c = BY.get(cid); return c ? `<button data-ebc="${cid}" aria-pressed="${cid===cur}" aria-label="${esc(c.n)} ${cid}">${coverHTML(d, cid)}</button>` : ""; }).join("")}</div>` : ""}
-      </div>`, "Edit build");
+      </div>
+      <div class="ebdel">${confirming ? `<p style="margin:0 0 10px">Move “${esc(d.name)}” to the Junkyard? You can bring it back for ${JUNK_DAYS} days.</p><div class="row" style="gap:8px"><button class="btn danger" data-eb="delyes">Move to Junkyard</button><button class="btn" data-eb="delno">Keep it</button></div>`
+        : `<button class="linkbtn" data-eb="del" style="color:var(--bad)">Delete this build</button>`}</div>`, "Edit build");
     const nm = $("#ebName", sc);
     nm.addEventListener("input", () => { d.name = nm.value.trim() || "Untitled build"; d.updated = Date.now(); save(); });
     $("#ebFile", sc).addEventListener("change", async e => {
@@ -1606,6 +1664,9 @@ function editBuild(id){
       const t = e.target.closest("button"); if (!t) return;
       if (t.dataset.eb === "done"){ closeSheet(); return; }
       if (t.dataset.eb === "fav"){ d.star = !d.star; save(); draw(); return; }
+      if (t.dataset.eb === "del"){ confirming = true; draw(); return; }
+      if (t.dataset.eb === "delno"){ confirming = false; draw(); return; }
+      if (t.dataset.eb === "delyes"){ trashBuild(d.id); closeSheet(); toast("Moved to the Junkyard"); return; }
       if (t.dataset.eb === "pick"){ picking = !picking; draw(); return; }
       if (t.dataset.eb === "reset"){ delete d.cover; save(); draw(); return; }
       if (t.dataset.ebc){ d.cover = {card: t.dataset.ebc}; save(); draw(); return; }
@@ -1777,6 +1838,7 @@ function show(tab){
   if (tab === "deck") tab = "build"; if (tab === "builds") tab = "decks";
   if (!TABS.includes(tab)) tab = "cards";
   const wide = innerWidth >= 1024;
+  if (tab === "build" && deck().ghost){ tab = "decks"; history.replaceState(null, "", "#decks"); }
   if (tab === "build" && wide){ setCtx("build"); tab = "cards"; }
   scrollMem[curTab] = scrollY;
   curTab = tab;
@@ -1942,12 +2004,13 @@ async function pull(){
 function combine(a, b){
   const gone = Object.assign({}, b.gone||{}, a.gone||{});
   const byId = new Map();
-  for (const d of [...(b.decks||[]), ...(a.decks||[])]){ if (gone[d.id] || d.sample) continue; const o = byId.get(d.id); if (!o || (d.updated||0) >= (o.updated||0)) byId.set(d.id, d); }
+  for (const d of [...(b.decks||[]), ...(a.decks||[])]){ if ((gone[d.id] && gone[d.id] >= (d.updated||0)) || d.sample) continue; const o = byId.get(d.id); if (!o || (d.updated||0) >= (o.updated||0)) byId.set(d.id, d); }
   const owned = Object.assign({}, b.owned||{}); for (const [k,v] of Object.entries(a.owned||{})) owned[k] = Math.max(v, owned[k]||0);
   const union = (x, y, key) => { const m = new Map(); for (const it of [...(y||[]), ...(x||[])]) m.set(key ? it[key] : JSON.stringify(it), it); return [...m.values()]; };
   const pools = JSON.parse(JSON.stringify(b.pools||{})); for (const [l,p] of Object.entries(a.pools||{})){ pools[l] = pools[l] || {cards:{}}; Object.assign(pools[l].cards, p.cards||{}); }
   const decks = [...byId.values()];
   return Object.assign({}, b, a, {decks: decks.length ? decks : (a.decks||[]), owned, gone, pools,
+    junk: union(a.junk, b.junk, "id").filter(j => !byId.has(j.id)),
     wish: union(a.wish, b.wish, "id"), treasure: union(a.treasure, b.treasure), favLeaders: [...new Set([...(a.favLeaders||[]), ...(b.favLeaders||[])])]});
 }
 function askCombine(row){
