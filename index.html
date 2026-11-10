@@ -274,21 +274,14 @@ button{cursor:pointer}
 .pop{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
 @media (min-width:600px){.pop{grid-template-columns:240px minmax(0,1fr)}}
 .pop .art{max-width:260px;width:100%;margin:0 auto}
-.popl{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:12px;align-items:center}
-.popl .art{margin:0}
-@media (max-width:599px){.pop .popl .art .face .nm{font-size:16px}.pop .popl .art .fx{-webkit-line-clamp:6;font-size:11px}}
-@media (min-width:600px){.popl{grid-template-columns:1fr;gap:12px}.popl .art{margin:0 auto}}
-.qadd{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:12px 8px;border-radius:14px;background:var(--sunk);border:1px solid var(--line)}
-.qadd .qlab{font-size:12.5px;line-height:1.25;color:var(--muted)}.qadd .qlab b{color:var(--ink);display:block;font-size:13.5px;overflow-wrap:anywhere}
-.qbtn{width:52px;height:52px;border-radius:26px;border:0;background:var(--accent-fill);color:var(--on-accent);font-size:28px;font-weight:700;line-height:1;display:grid;place-items:center}
-.qbtn + .qn + .qbtn{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.popl{position:relative;max-width:260px;margin:0 auto}
+.popl .art{margin:0 auto}
+.qadd{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;flex-direction:row-reverse;align-items:center;gap:4px;padding:4px;border-radius:30px;background:rgba(20,18,15,.84);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 4px 14px rgba(0,0,0,.25);white-space:nowrap}
+.qbtn{width:40px;height:40px;border-radius:20px;border:0;background:var(--accent-fill);color:#231800;font-size:22px;font-weight:700;line-height:1;display:grid;place-items:center}
+.qbtn.minus{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff}
 .qbtn:disabled{opacity:.35}
-.qbtn.big{width:64px;height:64px;border-radius:32px;font-size:34px}
-.qadd .qn{font-family:var(--f-display);font-size:30px;font-weight:700;line-height:1}
-.qadd .qsub{font-size:12px;color:var(--muted);line-height:1.3}.qadd .qsub b{color:var(--ink)}
-.qadd .qmore{font-size:12.5px}
-.qfav{border:1px solid var(--line);background:transparent;border-radius:16px;padding:6px 10px;font-size:12.5px;font-weight:700;color:var(--ink)}
-.qfav[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.qadd .qn{font-family:var(--f-display);font-size:22px;font-weight:700;line-height:1;min-width:1.6em;text-align:center;color:#fff}
+.qadd .qcap{color:#fff;padding:0 10px 0 6px;font-size:13px;font-weight:700}
 .pop .art .face .nm{font-size:22px}.pop .art .fx{-webkit-line-clamp:9;font-size:12px}
 .prints{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;justify-content:center}
 .prints button{height:28px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:12px;padding:0 10px;font-weight:700}
@@ -334,6 +327,8 @@ button{cursor:pointer}
 .rb .rbn b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rb .rbn small{display:block;color:var(--muted);font-size:12px}
 .hs{display:grid;gap:4px;padding-block:6px 2px}
+.recentbtn{display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:none;border:0;padding:6px 0;color:var(--muted);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.recentbtn svg{transition:transform .15s}.recentbtn[aria-expanded="true"] svg{transform:rotate(180deg)}
 .hsl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .hsr{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .hsr::-webkit-scrollbar{display:none}
@@ -834,7 +829,6 @@ V.innerHTML = `
     <div id="homeStrip"></div>
     <div class="resbar">
       <span><span class="n" id="rcount">0</span> <span class="muted">cards</span></span>
-      <button class="chip" id="artsBtn" aria-pressed="true" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button>
       <label class="muted" for="sort" style="margin-left:auto;font-size:13px">Sort</label>
       <select id="sort" style="margin-left:0">
         <option value="rel">Relevance</option><option value="costA">Cost: low to high</option><option value="costD">Cost: high to low</option>
@@ -853,24 +847,23 @@ function renderQuick(){
   let h = "";
   if (ctx === "build"){
     if (DL){
-      h += `<button class="chip" id="qLock" aria-pressed="${FB.lock}" title="Only show cards that share a color with ${esc(DL.n)}">${FB.lock?"🔒 ":""}${esc(DL.co.join("/"))} only</button>`;
+      h += `<button class="chip" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip" id="qLock" aria-pressed="${FB.lock}" title="Only show cards that share a color with ${esc(DL.n)}">${FB.lock?"🔒 ":""}${esc(DL.co.join("/"))} only</button>`;
       h += `<button class="chip" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">✓ Legal only</button><span class="sep"></span>`;
     } else h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><button class="chip" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">✓ Legal only</button><span class="sep"></span>`;
   } else {
-    h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><button class="chip" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">✓ Legal only</button><span class="sep"></span>`;
+    h += `<button class="chip" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">✓ Legal only</button><span class="sep"></span>`;
   }
   for (const col of COLORS) h += `<button class="chip color" data-col="${col}" aria-pressed="${F.colors.has(col)}" aria-label="${col}"><span class="dot" style="background:${colorVar(col)}"></span>${F.colors.has(col)?col:""}</button>`;
   h += `<span class="sep"></span>`;
   for (const [cat,lab] of [["C","Characters"],["E","Events"],["S","Stages"]]) h += `<button class="chip" data-cat="${cat}" aria-pressed="${F.cats.has(cat)}">${lab}</button>`;
   $("#quick").innerHTML = h;  $("#quick").innerHTML = h;
   $("#sort").value = S.prefs.sort;
-  $("#artsBtn").setAttribute("aria-pressed", !!S.prefs.arts);
   const gb = $("#gridBtn");
   gb.innerHTML = S.prefs.grid === "l"
     ? `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`
     : `<svg viewBox="0 0 24 24" fill="currentColor">${[3,8,13,18].map(x=>[3,8,13,18].map(y=>`<rect x="${x}" y="${y}" width="3.4" height="3.4" rx=".6"/>`).join("")).join("")}</svg>`;
   gb.setAttribute("aria-label", S.prefs.grid === "l" ? "Showing 2 per row. Switch to 4 per row" : "Showing 4 per row. Switch to 2 per row");
-  const n = F.costs.size + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + !!F.type + !!F.set + (S.prefs.pool!=="all");
+  const n = (F.cats.has("L") && ctx !== "build" ? 1 : 0) + F.costs.size + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + !!F.type + !!F.set + (S.prefs.pool!=="all");
   const fc = $("#fcount"); fc.hidden = !n; fc.textContent = n;
   const lb = $("#leaderBanner");
   const wide = innerWidth >= 1024;
@@ -934,8 +927,10 @@ function renderHome(){
   const busy = F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.type || F.set;
   if (ctx !== "cards" || busy){ el.innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,3), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
-  el.innerHTML = `${!S.decks.length ? firstDeckHTML() : ""}${rb.length ? `<div class="hs"><span class="hsl">Recent builds</span><div class="hsr">${rb.map(d=>{ const L = d.leader && BY.get(d.leader); return `<button class="chip" data-rb="${d.id}"><span class="dot" style="background:${L?bandBg(L):"var(--line)"}"></span>${esc(d.name)} <span class="muted">${deckCount(d)}/50</span></button>`; }).join("")}</div></div>` : ""}
-    ${rv.length ? `<div class="hs"><span class="hsl">Recently viewed</span><div class="hsr">${rv.map(c=>`<button class="chip" data-open="${c.i}"><span class="dot" style="background:${bandBg(c)}"></span>${esc(c.n)} <span class="mono muted">${c.i}</span></button>`).join("")}</div></div>` : ""}`;
+  const open = !!S.prefs.recentOpen, any = rb.length || rv.length;
+  el.innerHTML = `${!S.decks.length ? firstDeckHTML() : ""}${any ? `<button class="recentbtn" id="recentBtn" aria-expanded="${open}">Recent<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>` : ""}
+    ${open && rb.length ? `<div class="hs"><span class="hsl">Recent builds</span><div class="hsr">${rb.map(d=>{ const L = d.leader && BY.get(d.leader); return `<button class="chip" data-rb="${d.id}"><span class="dot" style="background:${L?bandBg(L):"var(--line)"}"></span>${esc(d.name)} <span class="muted">${deckCount(d)}/50</span></button>`; }).join("")}</div></div>` : ""}
+    ${open && rv.length ? `<div class="hs"><span class="hsl">Recently viewed</span><div class="hsr">${rv.map(c=>`<button class="chip" data-open="${c.i}"><span class="dot" style="background:${bandBg(c)}"></span>${esc(c.n)} <span class="mono muted">${c.i}</span></button>`).join("")}</div></div>` : ""}`;
 }
 $("#sort").onchange = e => { S.prefs.sort = e.target.value; save(); renderResults(); };
 $("#gridBtn").onclick = () => { S.prefs.grid = S.prefs.grid === "l" ? "s" : "l"; save(); grid.dataset.size = S.prefs.grid; renderQuick(); };
@@ -945,6 +940,7 @@ V.addEventListener("click", e => {
   if (t.dataset.col){ F.colors.has(t.dataset.col) ? F.colors.delete(t.dataset.col) : F.colors.add(t.dataset.col); }
   else if (t.dataset.cat){ const k = t.dataset.cat; F.cats.has(k) ? F.cats.delete(k) : F.cats.add(k); }
   else if (t.dataset.rb){ workOn(t.dataset.rb); openBuild("add"); return; }
+  else if (t.id === "recentBtn"){ S.prefs.recentOpen = !S.prefs.recentOpen; save(); renderHome(); return; }
   else if (t.dataset.act3 === "switchBuild"){ openWorkOn(); return; }
   else if (t.dataset.act3 === "doneAdding"){ setCtx("cards"); return; }
   else if (t.id === "qLock"){ FB.lock = !FB.lock; }
@@ -1047,6 +1043,7 @@ function openFilters(){
     <div class="shead"><h2 class="h2">Filters</h2><button class="btn sm" id="fReset">Reset</button><button class="btn sm dark x" id="fDone">Show cards</button></div>
     <div class="fgroup"><div class="lab">Legal cards</div><div class="wrapchips">${[["all","All cards"],["noban","Hide banned"],["std","✓ Legal only"]].map(([v,l])=>`<button class="chip" data-fpool="${v}" aria-pressed="${S.prefs.pool===v}">${l}</button>`).join("")}</div>
       <p class="foot-note" style="margin-top:6px">Banned and rotated are separate. “Hide banned” removes only the ${META.banned.length} cards on the October 12, 2026 ban list. “Legal only” also removes rotated Block 1 cards, except the ${STD_PERMIT.size + STD_B4.size} that Bandai keeps legal.</p></div>
+    <div class="fgroup"><div class="lab">Card type</div><div class="wrapchips">${[["L","Leaders"],["C","Characters"],["E","Events"],["S","Stages"]].map(([k,l])=>`<button class="chip" data-fcat="${k}" aria-pressed="${F.cats.has(k)}">${l}</button>`).join("")}</div></div>
     <div class="fgroup"><div class="lab">Cost</div><div class="costgrid">${costChips}</div></div>
     <div class="fgroup"><div class="lab">Block icon</div><div class="costgrid blocks">${blockChips}</div></div>
     ${ctx === "build" ? `<div class="fgroup"><div class="lab">Leader compatibility</div><div class="wrapchips"><button class="chip" id="fCompat" aria-pressed="${S.prefs.compat}">Gray out cards that need a different leader</button></div></div>` : ""}
@@ -1062,6 +1059,7 @@ function openFilters(){
   sc.addEventListener("click", e => {
     const t = e.target.closest("button"); if (!t) return;
     if (t.dataset.fcost){ const k=+t.dataset.fcost; F.costs.has(k)?F.costs.delete(k):F.costs.add(k); t.setAttribute("aria-pressed",F.costs.has(k)); }
+    else if (t.dataset.fcat){ const k=t.dataset.fcat; F.cats.has(k)?F.cats.delete(k):F.cats.add(k); t.setAttribute("aria-pressed",F.cats.has(k)); }
     else if (t.dataset.fblock){ const k=+t.dataset.fblock; F.blocks.has(k)?F.blocks.delete(k):F.blocks.add(k); t.setAttribute("aria-pressed",F.blocks.has(k)); }
     else if (t.id === "fCompat"){ S.prefs.compat = !S.prefs.compat; save(); compatCache.clear(); t.setAttribute("aria-pressed", S.prefs.compat); }
     else if (t.dataset.fctr){ F.counter = t.dataset.fctr; sc.querySelectorAll("[data-fctr]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fctr===F.counter)); }
@@ -1134,26 +1132,17 @@ function openCard(id, suf, after){
       <div class="msg" id="addMsg" role="alert"></div>
     </div></details>`;
   };
-  // Quick add, right beside the card: the build you're on (or your most recent one this card fits).
+  // Quick add beside the card, only while you're inside a build: just + / count / −. For a leader: a single +.
   const quickHTML = d => {
     if (c.c === "L"){
       const asLeader = ctx === "build" && !d.ghost && !d.leader;
-      return `<div class="qadd lead">
-        <button class="qbtn big" id="${asLeader ? "setLeader" : "newL"}" aria-label="${asLeader ? `Use ${esc(c.n)} as the leader of ${esc(d.name)}` : `Start a new ${esc(c.n)} build`}">+</button>
-        <span class="qsub">${asLeader ? `Use as leader for <b>${esc(d.name)}</b>` : `New ${esc(c.n)} build`}</span>
-        <button class="qfav" id="favL" aria-pressed="${isFav(c.i)}">${isFav(c.i) ? "★ Favorite" : "☆ Favorite"}</button></div>`;
+      return `<div class="qadd"><button class="qbtn" id="${asLeader ? "setLeader" : "newL"}" aria-label="${asLeader ? `Use ${esc(c.n)} as the leader of ${esc(d.name)}` : `Start a new ${esc(c.n)} build`}">+</button><span class="qcap">${asLeader ? "Leader" : "New build"}</span></div>`;
     }
-    const tgt = offer.map(id => S.decks.find(x => x.id === id)).find(Boolean);
-    if (!tgt) return `<div class="qadd"><span class="qlab">No ${colorWord(c.co)} build yet</span>
-        <button class="qbtn big" data-act2="startDeck" aria-label="Start a ${colorWord(c.co)} build with this card">+</button>
-        <span class="qsub">Start one with this card</span></div>`;
-    const q = tgt.cards[c.i]?.q || 0, lim = limitFor(c);
-    return `<div class="qadd"><span class="qlab">In <b>${esc(tgt.name)}</b></span>
-        <button class="qbtn" data-bstep="${tgt.id}|1" aria-label="Add one to ${esc(tgt.name)}" ${q >= lim ? "disabled" : ""}>+</button>
-        <output class="qn" aria-live="polite">${q}</output>
-        <button class="qbtn" data-bstep="${tgt.id}|-1" aria-label="Remove one from ${esc(tgt.name)}" ${q ? "" : "disabled"}>−</button>
-        <span class="qsub">${deckCount(tgt)}/50 cards · max ${c.any ? "any" : 4}</span>
-        ${S.decks.length > 1 ? `<button class="linkbtn qmore" data-jump="1">Other builds ↓</button>` : ""}</div>`;
+    if (ctx !== "build" || d.ghost) return "";
+    const q = d.cards[c.i]?.q || 0;
+    return `<div class="qadd"><button class="qbtn" data-bstep="${d.id}|1" aria-label="Add one to ${esc(d.name)}" ${q >= limitFor(c) ? "disabled" : ""}>+</button>
+      <output class="qn" aria-live="polite" aria-label="${q} in ${esc(d.name)}">${q}</output>
+      <button class="qbtn minus" data-bstep="${d.id}|-1" aria-label="Remove one from ${esc(d.name)}" ${q ? "" : "disabled"}>−</button></div>`;
   };
   const draw = () => {
     const d = deck(); const L = d.leader && BY.get(d.leader);
@@ -1176,7 +1165,7 @@ function openCard(id, suf, after){
     $("#layer").innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.n)}"><div class="grab"></div><div class="gut">
       <div class="shead"><span class="mono muted">${c.i}${art}</span><button class="btn sm x" id="cClose">Close</button></div>
       <div class="pop">
-        <div><div class="popl"><div class="art grid" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>${quickHTML(d)}</div>
+        <div>${(() => { const qh = quickHTML(d); return `<div class="popl${qh ? " has-q" : ""}"><div class="art grid" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>${qh}</div>`; })()}
           ${c.v.length>1?`<div class="prints" role="group" aria-label="Printings">${c.v.map(v=>`<button data-art="${v[0]}" aria-pressed="${v[0]===art}">${esc(vlabel(v))}</button>`).join("")}</div>`:""}
         </div>
         <div style="min-width:0">
