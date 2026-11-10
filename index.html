@@ -706,15 +706,19 @@ function results(){
 }
 
 /* ================= tiles ================= */
+// Card art comes straight from Bandai's card list. Sent without a referrer (their server can refuse images
+// linked from other sites). A card whose picture fails just keeps its text tile; only if pictures fail
+// again and again with none loading do we stop asking (e.g. a host that blocks Bandai entirely).
+let imgFails = 0;
 function imgTag(id, suf){
   if (IMG_OK === false) return "";
-  return `<img alt="" loading="lazy" decoding="async" src="${IMG_BASE}${id}${suf||""}.png" data-img>`;
+  return `<img alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" src="${IMG_BASE}${id}${suf||""}.png" data-img>`;
 }
 document.addEventListener("error", e => {
   const el = e.target;
   if (el.tagName === "IMG" && el.hasAttribute("data-img")){
-    if (IMG_OK !== true){ IMG_OK = false; document.querySelectorAll("img[data-img]").forEach(i=>i.remove()); }
-    else el.remove();
+    el.remove();
+    if (IMG_OK !== true && ++imgFails >= 8){ IMG_OK = false; document.querySelectorAll("img[data-img]").forEach(i=>i.remove()); }
   }
 }, true);
 document.addEventListener("load", e => { if (e.target.tagName==="IMG" && e.target.hasAttribute("data-img")) IMG_OK = true; }, true);
