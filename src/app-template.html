@@ -259,6 +259,21 @@ button{cursor:pointer}
 .pop{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
 @media (min-width:600px){.pop{grid-template-columns:240px minmax(0,1fr)}}
 .pop .art{max-width:260px;width:100%;margin:0 auto}
+.popl{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:12px;align-items:center}
+.popl .art{margin:0}
+@media (max-width:599px){.pop .popl .art .face .nm{font-size:16px}.pop .popl .art .fx{-webkit-line-clamp:6;font-size:11px}}
+@media (min-width:600px){.popl{grid-template-columns:1fr;gap:12px}.popl .art{margin:0 auto}}
+.qadd{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:12px 8px;border-radius:14px;background:var(--sunk);border:1px solid var(--line)}
+.qadd .qlab{font-size:12.5px;line-height:1.25;color:var(--muted)}.qadd .qlab b{color:var(--ink);display:block;font-size:13.5px;overflow-wrap:anywhere}
+.qbtn{width:52px;height:52px;border-radius:26px;border:0;background:var(--accent-fill);color:var(--on-accent);font-size:28px;font-weight:700;line-height:1;display:grid;place-items:center}
+.qbtn + .qn + .qbtn{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.qbtn:disabled{opacity:.35}
+.qbtn.big{width:64px;height:64px;border-radius:32px;font-size:34px}
+.qadd .qn{font-family:var(--f-display);font-size:30px;font-weight:700;line-height:1}
+.qadd .qsub{font-size:12px;color:var(--muted);line-height:1.3}.qadd .qsub b{color:var(--ink)}
+.qadd .qmore{font-size:12.5px}
+.qfav{border:1px solid var(--line);background:transparent;border-radius:16px;padding:6px 10px;font-size:12.5px;font-weight:700;color:var(--ink)}
+.qfav[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .pop .art .face .nm{font-size:22px}.pop .art .fx{-webkit-line-clamp:9;font-size:12px}
 .prints{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;justify-content:center}
 .prints button{height:28px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:12px;padding:0 10px;font-weight:700}
@@ -1064,9 +1079,9 @@ function openCard(id, suf, after){
   const leaderCtl = d => {
     const mine = recentBuilds().filter(x=>x.leader===c.i), fav = isFav(c.i);
     return `<div class="target"><div class="savehd">This leader</div>
-      <div class="row"><button class="btn sm${fav?" dark":""}" id="favL" aria-pressed="${fav}">${fav?"★ Favorite":"☆ Favorite"}</button><button class="btn sm primary" id="newL">New ${esc(c.n)} build</button></div>
+      <div class="row"><button class="btn sm primary" data-q="newL">New ${esc(c.n)} build</button></div>
       ${mine.length ? `<div class="muted" style="font-size:13px">Your ${esc(c.n)} builds</div><div class="stack">${mine.map(x=>`<button class="btn sm" data-wo="${x.id}" style="justify-content:space-between"><span>Open ${esc(x.name)}</span><span class="muted">${deckCount(x)}/50</span></button>`).join("")}</div>` : ""}
-      ${ctx === "build" && !d.leader ? `<button class="btn sm" id="setLeader">Use as leader for “${esc(d.name)}”</button>` : ctx === "build" && d.leader !== c.i ? `<button class="linkbtn" id="setLeader">Change “${esc(d.name)}” to use this leader instead</button>` : ""}
+      ${ctx === "build" && !d.leader ? "" : ctx === "build" && d.leader !== c.i ? `<button class="linkbtn" data-q="setLeader">Change “${esc(d.name)}” to use this leader instead</button>` : ""}
     </div>`;
   };
   const targetHTML = () => {
@@ -1104,6 +1119,27 @@ function openCard(id, suf, after){
       <div class="msg" id="addMsg" role="alert"></div>
     </div></details>`;
   };
+  // Quick add, right beside the card: the build you're on (or your most recent one this card fits).
+  const quickHTML = d => {
+    if (c.c === "L"){
+      const asLeader = ctx === "build" && !d.ghost && !d.leader;
+      return `<div class="qadd lead">
+        <button class="qbtn big" id="${asLeader ? "setLeader" : "newL"}" aria-label="${asLeader ? `Use ${esc(c.n)} as the leader of ${esc(d.name)}` : `Start a new ${esc(c.n)} build`}">+</button>
+        <span class="qsub">${asLeader ? `Use as leader for <b>${esc(d.name)}</b>` : `New ${esc(c.n)} build`}</span>
+        <button class="qfav" id="favL" aria-pressed="${isFav(c.i)}">${isFav(c.i) ? "★ Favorite" : "☆ Favorite"}</button></div>`;
+    }
+    const tgt = offer.map(id => S.decks.find(x => x.id === id)).find(Boolean);
+    if (!tgt) return `<div class="qadd"><span class="qlab">No ${colorWord(c.co)} build yet</span>
+        <button class="qbtn big" data-act2="startDeck" aria-label="Start a ${colorWord(c.co)} build with this card">+</button>
+        <span class="qsub">Start one with this card</span></div>`;
+    const q = tgt.cards[c.i]?.q || 0, lim = limitFor(c);
+    return `<div class="qadd"><span class="qlab">In <b>${esc(tgt.name)}</b></span>
+        <button class="qbtn" data-bstep="${tgt.id}|1" aria-label="Add one to ${esc(tgt.name)}" ${q >= lim ? "disabled" : ""}>+</button>
+        <output class="qn" aria-live="polite">${q}</output>
+        <button class="qbtn" data-bstep="${tgt.id}|-1" aria-label="Remove one from ${esc(tgt.name)}" ${q ? "" : "disabled"}>−</button>
+        <span class="qsub">${deckCount(tgt)}/50 cards · max ${c.any ? "any" : 4}</span>
+        ${S.decks.length > 1 ? `<button class="linkbtn qmore" data-jump="1">Other builds ↓</button>` : ""}</div>`;
+  };
   const draw = () => {
     const d = deck(); const L = d.leader && BY.get(d.leader);
     const q = d.cards[c.i]?.q || 0;
@@ -1125,7 +1161,7 @@ function openCard(id, suf, after){
     $("#layer").innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.n)}"><div class="grab"></div><div class="gut">
       <div class="shead"><span class="mono muted">${c.i}${art}</span><button class="btn sm x" id="cClose">Close</button></div>
       <div class="pop">
-        <div><div class="art grid" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>
+        <div><div class="popl"><div class="art grid" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>${quickHTML(d)}</div>
           ${c.v.length>1?`<div class="prints" role="group" aria-label="Printings">${c.v.map(v=>`<button data-art="${v[0]}" aria-pressed="${v[0]===art}">${esc(vlabel(v))}</button>`).join("")}</div>`:""}
         </div>
         <div style="min-width:0">
@@ -1143,7 +1179,7 @@ function openCard(id, suf, after){
           <div class="txt">${c.e?`<p>${fmtText(c.e)}</p>`:`<p class="muted">No effect.</p>`}${c.tr?`<p>${fmtText(c.tr)}</p>`:""}</div>
           ${compatBox}
           ${issues.length?`<div class="issues">${issues.join("")}</div>`:""}
-          <div class="ctl">
+          <div class="ctl" id="ctlSec">
             ${isLeader ? leaderCtl(d) : targetHTML()}
             <div class="msg" id="cMsg" role="alert"></div>
             ${isLeader ? (poolCards(c.i).size ? `<button class="btn sm" id="openPool">Open ★ ${esc(c.n)} Pool (${poolCards(c.i).size} cards)</button>` : "") : addToHTML()}
@@ -1175,6 +1211,7 @@ function openCard(id, suf, after){
     const t = e.target.closest("button"); if (!t) return;
     const d = deck(); const msg = () => $("#cMsg");
     if (t.id === "cClose"){ closeSheet(); return; }
+    if (t.dataset.jump){ const el = $("#ctlSec"); el && el.scrollIntoView({behavior:"smooth", block:"start"}); return; }
     if (t.dataset.art !== undefined){ art = t.dataset.art; draw(); return; }
     if (t.id === "dPlus"){
       const cur = d.cards[c.i]?.q || 0;
@@ -1198,7 +1235,7 @@ function openCard(id, suf, after){
     }
     else if (t.id === "favL"){ toggleFav(c.i); renderResults(); }
     else if (t.dataset.wo){ workOn(t.dataset.wo); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild(); toast(`Building ${deck().name}`); return; }
-    else if (t.id === "newL"){ const nd = newBuild(c.i); workOn(nd.id); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild("add"); toast(`New ${c.n} build. Rename it in Build list.`); return; }
+    else if (t.id === "newL" || t.dataset.q === "newL"){ const nd = newBuild(c.i); workOn(nd.id); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild("add"); toast(`New ${c.n} build. Rename it in Build list.`); return; }
     else if (t.dataset.quick){ const dk = S.decks.find(x=>x.id===t.dataset.quick); const cur = dk.cards[c.i]?.q || 0;
       if (cur >= limitFor(c)){ toast(`${dk.name} already has 4`); return; }
       dk.cards[c.i] = {q:cur+1, art:dk.cards[c.i]?.art ?? art}; dk.updated = Date.now(); save(); renderDeckViews(); toast(`Added ${c.n} to ${dk.name} (${cur+1})`); }
@@ -1209,7 +1246,7 @@ function openCard(id, suf, after){
       renderAll(); openBuild("add"); window.scrollTo({top:0});
       toast(`New build started with ${c.n}. Pick a ${colorWord(c.co)} leader.`); return;
     }
-    else if (t.id === "setLeader"){
+    else if (t.id === "setLeader" || t.dataset.q === "setLeader"){
       d.leader = c.i; touch(d); compatCache.clear(); FB.lock = true;
       F.cats.delete("L"); F.colors.clear(); closeSheet();
       toast(`${c.n} is your leader. Showing cards in its colors.`);
