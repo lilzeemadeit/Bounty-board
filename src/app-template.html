@@ -1,0 +1,2019 @@
+<title>Bounty Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: mobile app shell — sticky search bar, card grid, bottom tab bar; on wide screens the deck sits in a right-hand panel. */
+:root{
+  --bg:#E4D8C0; --surface:#EFE6D3; --sunk:#D9CCB1; --ink:#2B2620; --muted:#6B6150; --line:#BFAF8E;
+  --accent:#7A5800; --accent-fill:#E8BC2E; --on-accent:#231800;
+  --ok:#1E6B3E; --warn:#85500A; --bad:#A3232A;
+  --t-red:#A3232A; --t-green:#1E6B3E; --t-blue:#1F5A9E; --t-purple:#6B3696; --t-black:#2B2620; --t-yellow:#7A5800;
+  --c-red:#D1343A; --c-green:#2A9358; --c-blue:#2E6FBA; --c-purple:#8646B5; --c-black:#3A4047; --c-yellow:#DDAA16;
+  --shadow:0 1px 2px rgba(43,38,32,.08),0 6px 18px rgba(43,38,32,.10);
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12110F; --surface:#1C1A17; --sunk:#161412; --ink:#EFE9DD; --muted:#A39A89; --line:#3A352E;
+  --accent:#EDBE52; --accent-fill:#EDBE52; --on-accent:#1E1500;
+  --ok:#4CC083; --warn:#E3A645; --bad:#F06A6E;
+  --t-red:#F06A6E; --t-green:#4CC083; --t-blue:#6AA5E8; --t-purple:#B884E0; --t-black:#C9C2B4; --t-yellow:#EDBE52;
+  --c-red:#E5484E; --c-green:#3CB872; --c-blue:#4C8EDB; --c-purple:#A46BD3; --c-black:#8C96A1; --c-yellow:#E8BC2E;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#12110F; --surface:#1C1A17; --sunk:#161412; --ink:#EFE9DD; --muted:#A39A89; --line:#3A352E;
+  --accent:#EDBE52; --accent-fill:#EDBE52; --on-accent:#1E1500;
+  --ok:#4CC083; --warn:#E3A645; --bad:#F06A6E;
+  --t-red:#F06A6E; --t-green:#4CC083; --t-blue:#6AA5E8; --t-purple:#B884E0; --t-black:#C9C2B4; --t-yellow:#EDBE52;
+  --c-red:#E5484E; --c-green:#3CB872; --c-blue:#4C8EDB; --c-purple:#A46BD3; --c-black:#8C96A1; --c-yellow:#E8BC2E;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35); color-scheme:dark }
+:root[data-theme="stone"]{
+  --bg:#A89C86; --surface:#B9AE99; --sunk:#9C907A; --ink:#1F1B16; --muted:#3E372D; --line:#857A66;
+  --accent:#4F3900; --accent-fill:#E8BC2E; --on-accent:#231800;
+  --ok:#12502D; --warn:#5E3A06; --bad:#7E1A20;
+  --t-red:#7E1A20; --t-green:#12502D; --t-blue:#163F70; --t-purple:#4F2570; --t-black:#1F1B16; --t-yellow:#4F3900;
+  --shadow:0 1px 2px rgba(31,27,22,.12),0 6px 18px rgba(31,27,22,.14); color-scheme:light }
+html{background:var(--bg)}
+#bgimg{position:fixed;inset:0;z-index:-1;background-size:cover;background-repeat:no-repeat;display:none}
+html[data-photo] #bgimg{display:block}
+html[data-photo] body{background:transparent}
+html[data-photo]{--frost:color-mix(in srgb, var(--bg) 74%, transparent)}
+html[data-photo] .brandbar,html[data-photo] .top,html[data-photo] .nav,html[data-photo] .aside{background:var(--frost)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+html[data-photo] .dtitle,html[data-photo] .lrow,html[data-photo] .resbar,html[data-photo] .dempty,html[data-photo] #homeStrip:not(:empty),html[data-photo] #leaderBanner:not(:empty){background:var(--frost);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:14px;padding:6px 10px;margin-inline:-10px}
+html[data-photo] .dtitle{display:inline-block;padding:4px 12px 6px}
+html[data-photo] .fpill:not([aria-pressed="true"]),html[data-photo] .roundbtn,html[data-photo] .newtile{background:var(--frost);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+html[data-photo] #v-lists,html[data-photo] #bHead,html[data-photo] #bBody,html[data-photo] #v-decks[data-mode="pool"]{background:var(--frost);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+/* Look sheet */
+.looks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.looks button{display:grid;gap:6px;justify-items:center;background:none;border:0;padding:0;font-size:12.5px;font-weight:700;color:var(--ink)}
+.looks .sw{width:100%;aspect-ratio:3/4;border-radius:12px;border:1px solid var(--line)}
+.looks button[aria-pressed="true"] .sw,.bgthumbs button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--ink)}
+.bgthumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
+.bgthumbs button,.bgthumbs label{aspect-ratio:9/16;border-radius:10px;border:1px solid var(--line);background:var(--sunk) center/cover no-repeat;padding:0;position:relative;cursor:pointer}
+.bgthumbs label{border-style:dashed;display:grid;place-items:center;color:var(--muted);font-weight:700;font-size:13px;text-align:center;line-height:1.2}
+.bgthumbs label:focus-within{outline:2px solid var(--ink)}
+.frame{position:relative;width:150px;aspect-ratio:9/19.5;border-radius:18px;border:1px solid var(--line);background:#222 center/cover no-repeat;touch-action:none;cursor:grab;margin:0 auto}
+.frame span{position:absolute;inset:auto 0 8px;text-align:center;font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none}
+.seg3{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg3 button{height:38px;padding:0 14px;border:0;background:transparent;font-weight:700;font-size:13.5px;color:var(--ink)}
+.seg3 button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.acdot{position:absolute;right:-1px;top:-1px;width:9px;height:9px;border-radius:5px;background:var(--ok);border:2px solid var(--surface)}
+.acdot.warn{background:var(--warn)}
+.fld input[type=email],.fld input[type=password]{height:46px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);padding:0 14px;font-size:16px;color:var(--ink)}
+.fld input[type=email]:focus,.fld input[type=password]:focus{border-color:var(--ink);outline:none}
+.authmsg{font-size:13.5px;margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--sunk)}
+.authmsg.bad{color:var(--bad)}
+.choice{display:grid;gap:8px;margin-top:6px}
+.choice button{text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink)}
+.choice button b{display:block;font-size:15px}
+.choice button span{font-size:13px;color:var(--muted)}
+@media (max-width:440px){.brand{gap:8px}.brand .pose{display:none}.brand h1{font-size:17px;letter-spacing:0}.deckchip .nm{display:none}.deckchip{padding:3px;flex:none;max-width:none}}
+.brand .lookbtn{position:relative;flex:none;width:34px;height:34px;border-radius:17px;border:1px solid var(--line);background:transparent;display:grid;place-items:center;color:var(--ink)}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:.82em;letter-spacing:.01em}
+.muted{color:var(--muted)}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* ---------- app frame ---------- */
+.app{display:grid;grid-template-columns:minmax(0,1fr);min-height:100%}
+.main{min-width:0;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+.aside{display:none}
+@media (min-width:1024px){
+  .app{grid-template-columns:minmax(0,1fr) 400px}
+  .aside{display:block;position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));overflow:auto;border-left:1px solid var(--line);background:var(--surface)}
+  .tab-deck{display:none!important}
+  .main{padding-bottom:84px}
+}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;padding-block:10px 6px}
+.brand h1{white-space:nowrap;font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.02em;margin:0;text-transform:uppercase;line-height:1}
+.brand .pose{width:22px;height:22px;flex:none}
+.deckchip{margin-left:auto;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--sunk);border-radius:999px;padding:4px 6px 4px 10px;min-width:0;max-width:52%}
+.deckchip .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;font-size:13px}
+.count{font-family:var(--f-display);font-weight:700;font-size:15px;background:var(--surface);border-radius:999px;padding:1px 8px;border:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+.count.full{background:var(--accent-fill);color:var(--on-accent);border-color:transparent}
+.searchrow{display:flex;gap:8px;padding-block:6px 8px}
+.search{flex:1;min-width:0;position:relative}
+.search input{width:100%;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:0 36px 0 36px;font-size:16px}
+.search svg{position:absolute;left:10px;top:11px;width:20px;height:20px;color:var(--muted)}
+.search .clr{position:absolute;right:4px;top:5px;width:32px;height:32px;border:0;background:none;border-radius:8px;color:var(--muted)}
+.iconbtn{height:42px;min-width:42px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;position:relative;font-weight:700;font-size:13px}
+.iconbtn svg{width:20px;height:20px}
+.iconbtn .badge{position:absolute;top:-6px;right:-6px;background:var(--accent-fill);color:var(--on-accent);border-radius:999px;font-size:11px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-block:0 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:32px;border-radius:999px;border:1px solid var(--line);background:var(--surface);padding:0 12px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chip .dot{width:12px;height:12px;border-radius:50%}
+.chip.color{padding:0 10px}
+.sep{flex:none;width:1px;background:var(--line);margin:4px 2px}
+
+/* ---------- results ---------- */
+.resbar{display:flex;align-items:center;gap:8px;padding-block:10px 4px;flex-wrap:wrap}
+.resbar .n{font-weight:700}
+.resbar select{height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:0 8px;font-size:13px;margin-left:auto}
+.note{font-size:13px;color:var(--muted);padding-block:2px 6px}
+.note button{background:none;border:0;padding:0;color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.banner{margin-block:8px;border:1px dashed var(--accent);background:color-mix(in srgb,var(--accent-fill) 14%,var(--surface));border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px}
+.banner .btn{margin-left:auto}
+.grid{display:grid;gap:10px;padding-block:6px 16px}
+.grid[data-size="l"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid[data-size="s"]{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+@media (min-width:640px){.grid[data-size="l"]{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}.grid[data-size="s"]{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}}
+.sect{grid-column:1/-1;font-family:var(--f-display);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:14px;color:var(--muted);padding-top:8px;display:flex;align-items:center;gap:8px}
+.sect::after{content:"";flex:1;height:1px;background:var(--line)}
+.empty{grid-column:1/-1;text-align:center;padding:40px 12px;color:var(--muted)}
+
+/* ---------- card tile (text fallback; real art overlays when the host allows images) ---------- */
+.tile{position:relative;border:0;padding:0;background:none;text-align:left;display:block;width:100%}
+.face{position:relative;aspect-ratio:63/88;max-width:100%;border-radius:9px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column;border:1px solid var(--line)}
+.grid[data-size="s"] .face{border-radius:6px}
+.band{height:30%;position:relative;padding:7px 8px;display:flex;justify-content:space-between;align-items:flex-start;color:#fff}
+.cost{font-family:var(--f-display);font-weight:700;font-size:20px;line-height:1;background:rgba(0,0,0,.28);border-radius:50%;width:30px;height:30px;display:grid;place-items:center}
+.cost.life{border-radius:7px;width:auto;padding:0 6px;font-size:15px}
+.pow{font-family:var(--f-display);font-weight:700;font-size:16px;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.cat{position:absolute;left:8px;bottom:5px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;opacity:.92}
+.body{flex:1;padding:6px 8px 7px;display:flex;flex-direction:column;gap:3px;min-height:0}
+.nm{font-family:var(--f-display);font-weight:700;font-size:17px;line-height:1.05;text-wrap:balance}
+.ty{font-size:11px;color:var(--muted);line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fx{font-size:11px;line-height:1.3;color:var(--ink);opacity:.85;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;margin-top:2px}
+.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:4px;font-size:11px}
+.ctr{font-family:var(--f-display);font-weight:700;font-size:13px;color:var(--muted)}
+.grid[data-size="s"] .band{padding:4px 5px}
+.grid[data-size="s"] .cost{width:22px;height:22px;font-size:15px}
+.grid[data-size="s"] .cost.life{font-size:12px;padding:0 4px}
+.grid[data-size="s"] .pow{font-size:12px}
+.grid[data-size="s"] .cat,.grid[data-size="s"] .ty,.grid[data-size="s"] .fx,.grid[data-size="s"] .ctr{display:none}
+.grid[data-size="s"] .body{padding:4px 5px}
+.grid[data-size="s"] .nm{font-size:12.5px}
+.grid[data-size="s"] .foot{font-size:9px}
+.face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface)}
+.qty{position:absolute;right:-4px;top:-4px;z-index:2;background:var(--accent-fill);color:var(--on-accent);font-family:var(--f-display);font-weight:700;font-size:15px;border-radius:999px;min-width:26px;height:26px;display:grid;place-items:center;padding:0 6px;box-shadow:0 0 0 2px var(--bg)}
+.grid[data-size="s"] .qty{min-width:20px;height:20px;font-size:12px}
+.flag{position:absolute;left:4px;bottom:4px;z-index:2;font-size:10px;font-weight:700;border-radius:999px;padding:2px 6px;background:var(--surface);border:1px solid var(--line)}
+.flag.ban{color:var(--bad);border-color:var(--bad)}
+.flag.part{color:var(--warn);border-color:var(--warn)}
+.flag.unk{color:var(--muted)}
+.tile.dim .face{filter:grayscale(1);opacity:.42}
+.tile.dim .flag{opacity:1}
+.grid[data-size="s"] .flag{font-size:8px;padding:1px 4px}
+
+/* ---------- panels / views ---------- */
+.view{padding-block:12px}
+.h2{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.01em;margin:0;line-height:1.1;text-wrap:balance}
+.h3{font-family:var(--f-display);font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:0 14px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.btn.primary{background:var(--accent-fill);color:var(--on-accent);border-color:transparent}
+.btn.dark{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn.danger{color:var(--bad)}
+.btn.sm{height:32px;padding:0 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.namein{font-family:var(--f-display);font-weight:700;font-size:24px;border:1px solid transparent;background:transparent;border-radius:8px;padding:2px 6px;margin-left:-6px;width:100%;min-width:0}
+.namein:hover,.namein:focus{border-color:var(--line);background:var(--bg)}
+.leaderbox{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface)}
+.leaderbox .sw{width:44px;height:60px;border-radius:6px;flex:none}
+.leaderbox .info{min-width:0;flex:1}
+.issues{display:grid;gap:6px;margin-top:10px}
+.issue{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;border-radius:10px;padding:8px 10px;background:var(--sunk)}
+.issue i{flex:none;width:8px;height:8px;border-radius:50%;margin-top:6px;background:var(--muted)}
+.issue.bad i{background:var(--bad)} .issue.warn i{background:var(--warn)} .issue.ok i{background:var(--ok)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--sunk)}
+.seg{max-width:100%}
+.seg button{border:0;background:transparent;height:34px;padding:0 12px;font-weight:700;font-size:13px;white-space:nowrap}
+.seg.full{display:flex;width:100%}.seg.full button{flex:1 1 auto;padding:0 6px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:380px){.seg.full button{font-size:12px;padding:0 4px}}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:var(--shadow)}
+.list{display:grid;gap:2px}
+.li{display:grid;grid-template-columns:6px 28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid var(--line);background:none;border-left:0;border-right:0;border-top:0;text-align:left;width:100%}
+.li .bar{width:6px;height:28px;border-radius:3px}
+.li .c{font-family:var(--f-display);font-weight:700;font-size:18px;text-align:center}
+.li .t{min-width:0}
+.li .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .q{font-family:var(--f-display);font-weight:700;font-size:18px;font-variant-numeric:tabular-nums;text-align:right}
+.li .own{font-size:11.5px;color:var(--muted);font-weight:400;display:block}
+.li .own.need{color:var(--bad)}
+.rh{display:grid;justify-items:end;line-height:1.05;text-align:right}
+.rh .run{font-family:var(--f-display);font-weight:700;font-size:22px;font-variant-numeric:tabular-nums}
+.rh .have{font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.rh .have.short{color:var(--bad)} .rh .have.ok{color:var(--ok)}
+.rhhead{display:flex;justify-content:space-between;align-items:flex-end}
+.rhlab{font-size:12px;text-align:right;line-height:1.1;letter-spacing:.06em}
+.rhlab small{font-size:10.5px}
+.buyrow{grid-template-columns:6px minmax(0,1fr) auto auto}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.stepper button{width:40px;height:38px;border:0;background:var(--sunk);font-size:20px;font-weight:700;display:grid;place-items:center}
+.stepper output{min-width:42px;text-align:center;font-family:var(--f-display);font-weight:700;font-size:22px;font-variant-numeric:tabular-nums}
+.stepper.sm button{width:32px;height:30px;font-size:16px}
+.stepper.sm output{min-width:30px;font-size:17px}
+
+/* stats */
+.stats{display:grid;gap:14px}
+.statgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stat{background:var(--sunk);border-radius:10px;padding:8px 10px}
+.stat b{display:block;font-family:var(--f-display);font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;color:var(--muted)}
+.curve{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:4px;align-items:end;height:130px;padding-top:16px;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0 31px,color-mix(in srgb,var(--line) 60%,transparent) 31px 32px)}
+.col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
+.col .v{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:2px}
+.col .b{width:100%;border-radius:4px 4px 0 0;background:var(--accent-fill);min-height:2px}
+.col .b.zero{background:var(--line)}
+.curvex{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:4px;font-size:11px;color:var(--muted);text-align:center;padding-top:3px;font-variant-numeric:tabular-nums}
+.bars{display:grid;gap:5px}
+.hbar{display:grid;grid-template-columns:minmax(0,9em) minmax(0,1fr) 2.2em;gap:8px;align-items:center;font-size:13px}
+.hbar .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar .track{height:10px;background:var(--sunk);border-radius:5px;overflow:hidden}
+.hbar .fill{height:100%;background:var(--ink);border-radius:5px;opacity:.75}
+.hbar .num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ---------- bottom nav ---------- */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+@media (min-width:1024px){.nav{right:400px}}
+.nav a{flex:1;max-width:140px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 10px;color:var(--muted);text-decoration:none;font-size:11.5px;font-weight:700;position:relative}
+.nav a svg{width:24px;height:24px}
+.nav a[aria-current="page"]{color:var(--ink)}
+.nav a[aria-current="page"]::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--accent-fill)}
+.nav .pill{position:absolute;top:4px;left:calc(50% + 8px);background:var(--accent-fill);color:var(--on-accent);font-size:10px;border-radius:999px;padding:0 5px;font-weight:700}
+
+/* ---------- sheet / popup ---------- */
+.scrim{position:fixed;inset:0;z-index:40;background:rgba(8,12,16,.5);display:flex;align-items:flex-end;justify-content:center;overscroll-behavior:contain}
+.sheet{background:var(--surface);width:100%;max-width:760px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:6px 0 calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.25);overscroll-behavior:contain}
+@media (min-width:760px){.scrim{align-items:center}.sheet{border-radius:18px;max-height:88vh}}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 6px}
+.shead{display:flex;align-items:center;gap:8px;padding-block:4px 8px}
+.shead .x{margin-left:auto}
+.pop{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:600px){.pop{grid-template-columns:240px minmax(0,1fr)}}
+.pop .art{max-width:260px;width:100%;margin:0 auto}
+.pop .art .face .nm{font-size:22px}.pop .art .fx{-webkit-line-clamp:9;font-size:12px}
+.prints{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;justify-content:center}
+.prints button{height:28px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:12px;padding:0 10px;font-weight:700}
+.prints button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tag{font-size:12px;border-radius:6px;padding:3px 8px;background:var(--sunk);font-weight:700}
+.txt{font-size:15px;line-height:1.55;background:var(--sunk);border-radius:12px;padding:12px}
+.txt p{margin:0 0 6px}.txt p:last-child{margin:0}
+.kw{display:inline-block;font-size:12px;font-weight:700;border-radius:4px;padding:0 5px;background:var(--ink);color:var(--surface);line-height:1.5;vertical-align:1px}
+.kw.trg{background:var(--c-yellow);color:#1b1500}
+.tyref{font-weight:700;color:var(--accent)}
+.compat{border-radius:12px;padding:10px 12px;font-size:14px;border:1px solid var(--line);margin-top:10px}
+.compat b{display:block}
+.compat.A{border-color:var(--ok)} .compat.B{border-color:var(--warn)} .compat.C{border-color:var(--bad)}
+.ctl{display:grid;gap:10px;margin-top:12px;grid-template-columns:minmax(0,1fr)}
+.ctlrow{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.ctlrow .lab{font-weight:700}
+.ctlrow .lab small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.msg{font-size:13px;color:var(--bad);min-height:0}
+.target{display:grid;gap:8px;grid-template-columns:minmax(0,1fr)}
+.tgt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--bg)}
+.tgt .sw{width:8px;height:34px;border-radius:3px;flex:none}
+.tgt b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tgt small{display:block;color:var(--muted);font-size:12px}
+.tgt > span{flex:1}
+.nofit{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;border:1px dashed var(--warn);border-radius:12px;padding:10px 12px;font-size:14px}
+.nofit p{margin:0}
+.chip.workon[aria-pressed="false"]{border-style:dashed}
+.flag.favf{color:var(--accent);border-color:var(--accent)}
+.ar.wo{width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font:inherit;color:inherit}
+.favbtn{margin-left:auto;background:none;border:0;font-size:22px;line-height:1;color:var(--accent);padding:2px 6px}
+.bhead{display:flex;align-items:center;gap:10px}
+.bhead .sw{width:8px;height:36px;border-radius:3px;flex:none}
+.bhead .bhn{flex:1;min-width:0}
+.bhead .bhn b{display:block;font-family:var(--f-display);font-size:20px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bhead .bhn small{display:block;color:var(--muted);font-size:12px}
+.banner .sw{width:8px;height:28px;border-radius:3px;flex:none}
+.rbs{display:grid;grid-template-columns:minmax(0,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.rb{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface)}
+.rb + .rb{border-top:1px solid var(--line)}
+.rb .sw{width:8px;height:32px;border-radius:3px;flex:none}
+.rb .rbn{flex:1;min-width:0}
+.rb .rbn b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rb .rbn small{display:block;color:var(--muted);font-size:12px}
+.hs{display:grid;gap:4px;padding-block:6px 2px}
+.hsl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.hsr{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.hsr::-webkit-scrollbar{display:none}
+.crumb{background:none;border:0;padding:0 0 6px;color:var(--muted);font-weight:700;font-size:13px}
+.bhead .bl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-right:2px}
+.brow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px;align-items:center}
+.brow .deckcard{grid-template-columns:minmax(0,1fr) auto}
+.starbtn{background:none;border:0;font-size:22px;line-height:1;color:var(--accent);width:36px;height:44px}
+.lname{background:none;border:0;padding:0;font:inherit;font-weight:700;color:inherit;text-align:left}
+.linkbtn{background:none;border:0;padding:0;text-align:left;color:var(--muted);text-decoration:underline;text-underline-offset:2px;font-size:13px;justify-self:start}
+.saveto{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;border-top:1px solid var(--line);padding-top:10px}
+.savehd{font-family:var(--f-display);font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.fgroup{padding-block:6px}
+details > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px}
+details > summary::-webkit-details-marker{display:none}
+details > summary::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin:-4px 4px 0 auto;transition:transform .15s}
+details[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
+.effects > summary{padding-block:8px;margin-bottom:0}
+.buckets{display:grid;gap:6px;margin-top:8px}
+.bucket{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.bucket > summary{padding:10px 12px;font-weight:700;font-size:14px}
+.bucket > .wrapchips{padding:0 12px 12px}
+.bcount{font-size:12px;font-weight:700;color:var(--muted);text-transform:none;letter-spacing:0}
+.bucket[open] .bcount,.effects .bcount{color:var(--accent)}
+.fgroup .lab{font-weight:700;font-size:13px;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.wrapchips{display:flex;gap:6px;flex-wrap:wrap}
+.field{height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:0 10px;width:100%;font-size:16px}
+textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13px;resize:vertical}
+.out{font-family:var(--f-mono);font-size:12.5px;white-space:pre;background:var(--sunk);border-radius:10px;padding:10px;max-height:240px;overflow:auto}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top,0px));z-index:60;background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center}
+.addto{border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.addto > summary{padding:11px 12px;font-weight:700}
+.addlist{padding:0 12px 12px;display:grid;gap:12px}
+.ag{display:grid}
+.agh{display:flex;align-items:center;gap:8px;font-weight:700;padding:6px 0 4px}
+.agh .sw,.lgh .sw{width:8px;height:20px;border-radius:3px;flex:none}
+.arw{display:flex;align-items:center;gap:8px}
+.arw .ar{flex:1}
+.ar{display:flex;align-items:center;gap:10px;padding:8px 0 8px 18px;border-top:1px solid var(--line);min-height:44px;cursor:pointer}
+.ar input{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.ar .nm2{flex:1;min-width:0}
+.ar .st{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap}
+.ar.pool .nm2{font-weight:700;color:var(--accent)}
+.addbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
+.lgroup{display:grid;gap:8px;margin-top:18px}
+/* My Decks (Atelier): leader rows with a split skull, colored color-words, swipeable build tiles with covers */
+.dhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:8px}
+.dtitle{margin:0;font-family:var(--f-display);font-size:52px;line-height:.9;font-weight:700;letter-spacing:-.01em}
+.roundbtn{flex:none;width:40px;height:40px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--ink);display:grid;place-items:center}
+.dfilt{display:flex;gap:8px;margin:14px 0 4px;flex-wrap:wrap}
+.fpill{height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--line);background:transparent;color:var(--ink);font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.fpill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.lsec{margin-top:24px;display:grid;gap:12px}
+.lrow{display:flex;align-items:center;gap:12px}
+.lrow .jolly{flex:none;width:42px;height:42px;display:block}
+.lrow .lt{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;background:none;border:0;padding:0;text-align:left;color:inherit}
+.lrow .lt b{font-family:var(--f-display);font-size:28px;line-height:1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctags{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13.5px;line-height:1.2}
+.ctags .sep{width:3px;height:3px;border-radius:2px;background:var(--muted)}
+.poollink{flex:none;background:none;border:0;color:var(--muted);font-size:14px;padding:10px 0 10px 8px;white-space:nowrap}
+.trow{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(-1 * var(--gut,16px));padding:2px var(--gut,16px) 6px;scroll-padding-inline:var(--gut,16px);scrollbar-width:none}
+.trow::-webkit-scrollbar{display:none}
+.btile{flex:none;position:relative;width:132px;height:184px;scroll-snap-align:start;border-radius:12px;overflow:hidden;background:#1E1C19;box-shadow:0 0 0 1px rgba(0,0,0,.22)}
+.btile.cur{box-shadow:0 0 0 2px var(--ink)}
+.btile .open{position:absolute;inset:0;border:0;padding:0;margin:0;background:none;color:#F2F2EF;text-align:left;width:100%;height:100%;display:block}
+.cov{position:absolute;inset:0;overflow:hidden}
+.cov img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.cov .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 8px 54px;font-family:var(--f-mono);font-size:10px;line-height:1.35;text-align:center;color:rgba(242,242,239,.62)}
+.btile .badges{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:5px;align-items:center;pointer-events:none}
+.btile .done{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;color:#1A1A1A;background:rgba(242,242,239,.92);border-radius:4px;padding:1px 5px}
+.btile .fav{margin-left:auto;color:#E8BC2E;font-size:21px;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.btile .bt-foot{position:absolute;left:0;right:0;bottom:0;padding:28px 10px 10px;background:linear-gradient(rgba(8,8,9,0),rgba(8,8,9,.92) 45%);display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.btile .bt-nm{font-weight:700;font-size:16px;line-height:1.15;padding-right:30px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:#F2F2EF}
+.btile .pbar{display:block;width:100%;flex:none;height:3px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.btile .pbar i{display:block;height:100%;background:#F2F2EF}
+.btile .bt-meta{font-family:var(--f-mono);font-size:10.5px;color:#B9B9B2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btile .edit{position:absolute;right:6px;bottom:38px;width:30px;height:30px;border-radius:15px;border:0;background:rgba(242,242,239,.18);display:grid;place-items:center;color:#F2F2EF}
+.btile .edit:hover{background:rgba(242,242,239,.3)}
+.newtile{flex:none;width:132px;height:184px;scroll-snap-align:start;border-radius:12px;border:1.5px dashed var(--line);background:transparent;color:var(--muted);font-weight:700;font-size:14px}
+.dempty{margin:28px 0 0;color:var(--muted);font-size:14px}
+/* edit-build sheet */
+.ebhead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:4px 0 16px}
+.ebhead b{display:block;font-family:var(--f-display);font-size:26px;line-height:1}
+.fld{display:grid;gap:6px;margin-bottom:16px}
+.fld > span{font-size:12.5px;font-weight:700;color:var(--muted)}
+.fld input[type=text]{height:46px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);padding:0 14px;font-size:16px;font-weight:700;color:var(--ink)}
+.fld input[type=text]:focus{border-color:var(--ink);outline:none}
+.ebcov{display:flex;gap:12px;align-items:stretch}
+.ebcov .mini{flex:none;position:relative;width:78px;height:109px;border-radius:9px;overflow:hidden;background:#1E1C19}
+.ebcov .mini .ph{padding-bottom:0;font-size:9px}
+.ebcov .opts{flex:1;display:grid;gap:8px;align-content:start}
+.optbtn{min-height:46px;border-radius:12px;border:1px solid var(--line);background:transparent;display:flex;align-items:center;gap:10px;padding:0 14px;font-weight:700;font-size:14px;text-align:left;color:var(--ink);cursor:pointer}
+.optbtn:focus-within{outline:2px solid var(--ink)}
+.pickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;margin-top:12px}
+.pickgrid button{position:relative;aspect-ratio:5/7;border-radius:8px;overflow:hidden;border:0;padding:0;background:#1E1C19}
+.pickgrid button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--accent-fill)}
+.pickgrid .ph{padding-bottom:0;font-size:9px}
+
+.lgh{display:flex;gap:8px;align-items:center;font-family:var(--f-display);font-size:19px}
+.lgh .mono{font-family:var(--f-mono);font-size:12px}
+.poolbtn{display:flex;align-items:center;gap:10px;border:1px dashed var(--accent);background:color-mix(in srgb,var(--accent-fill) 12%,var(--surface));border-radius:12px;padding:12px;text-align:left;width:100%;font-weight:700;color:var(--ink)}
+.poolbtn > span:first-child{color:var(--accent)}
+.poolbtn .chev{margin-left:auto;font-size:20px;line-height:1;color:var(--muted)}
+.indent{padding-left:12px;border-left:2px solid var(--line);margin-left:3px}
+.deckcard{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;width:100%;text-align:left}
+.deckcard .sw{width:8px;height:44px;border-radius:4px}
+.deckcard[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.stack{display:grid;gap:8px;grid-template-columns:minmax(0,1fr)}
+.stack > *{min-width:0}
+.out{max-width:100%}
+.foot-note{font-size:12.5px;color:var(--muted);margin-top:16px;line-height:1.5}
+.miniGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.miniGrid .nm{font-size:13px}.miniGrid .ty,.miniGrid .fx,.miniGrid .cat{display:none}
+.miniGrid .band{padding:4px 6px}.miniGrid .cost{width:22px;height:22px;font-size:14px}.miniGrid .pow{font-size:12px}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13.5px;background:var(--sunk);border-radius:10px;padding:8px 10px}
+</style>
+
+<div class="app">
+  <div class="main">
+    <div id="bgimg" aria-hidden="true"></div>
+    <header class="brandbar" style="background:var(--surface)">
+      <div class="brand gut">
+        <svg class="pose" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 3h14v18H5z"/><path d="M8 7h8"/><rect x="8.5" y="9.5" width="7" height="6" rx="1"/><path d="M8 18h8"/></svg>
+        <h1>Bounty Board</h1>
+        <button class="lookbtn" id="acctBtn" type="button" aria-label="Account and sync"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><i class="acdot" hidden></i></button>
+        <button class="lookbtn" id="lookBtn" type="button" aria-label="Background and colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></button>
+        <button class="deckchip" id="deckChip" type="button" aria-label="Open the build you're working on"><span class="nm" id="chipName"></span><span class="count" id="chipCount">0/50</span></button>
+      </div>
+    </header>
+    <section id="v-cards" class="view-cards"></section>
+    <section id="v-deck" hidden><div id="bHead" class="gut" style="padding-block:12px 4px"></div><div id="bAddSlot"></div><div id="bBody" class="view gut"></div></section>
+    <section id="v-decks" class="view gut" hidden></section>
+    <section id="v-lists" class="view gut" hidden></section>
+  </div>
+  <aside class="aside"><div id="asideDeck" class="view gut"></div></aside>
+</div>
+
+<nav class="nav" aria-label="Sections">
+  <a href="#cards" data-tab="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="10" rx="1.5"/><rect x="14" y="4" width="7" height="10" rx="1.5"/><circle cx="11" cy="18" r="3"/><path d="M13.2 20.2L15 22"/></svg>Cards</a>
+  <a href="#decks" data-tab="decks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="3" width="12" height="17" rx="2"/><path d="M3.5 6.5v12A2.5 2.5 0 006 21h9"/></svg>My Decks<span class="pill" id="navCount" hidden></span></a>
+  <a href="#lists" data-tab="lists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Lists</a>
+</nav>
+<div id="layer"></div>
+
+<script id="carddata" type="application/json">__DATA__</script>
+<script>
+(function(){
+"use strict";
+/* ================= data ================= */
+const DATA = JSON.parse(document.getElementById("carddata").textContent);
+const META = DATA.meta, CARDS = DATA.cards;
+const BY = new Map(CARDS.map(c => [c.i, c]));
+META.tags.push(["leadercond","Has a leader condition"]);
+const TAGLABEL = Object.fromEntries(META.tags);
+const CATNAME = {L:"Leader",C:"Character",E:"Event",S:"Stage"};
+const COLORS = ["Red","Green","Blue","Purple","Black","Yellow"];
+const IMG_BASE = "https://en.onepiece-cardgame.com/images/cardlist/card/";
+let IMG_OK = null;               // null = untested, false = this host blocks card images
+for (const c of CARDS){
+  c._name = c.n.toLowerCase();
+  c._id = c.i.toLowerCase(); c._idc = c._id.replace("-","");
+  c._types = (c.t.join(" / ") + (c.a && c.a !== "Unknown" ? " / " + c.a : "")).toLowerCase();
+  if (c.sg.some(s => s.c)) c.g.push("leadercond");
+  c._text = (c.e + " " + c.tr).toLowerCase();
+  c._tags = new Set(c.g);
+  c._order = CARDS.indexOf(c);
+}
+// search words that mean an effect, not literal text
+const SYN = {
+  rest:["rest"],rests:["rest"],resting:["rest"],rested:["rest"],lock:["rest"],
+  ko:["ko"],"k.o":["ko"],"k.o.":["ko"],kill:["ko"],destroy:["ko"],removal:["ko","bounce","bottom"],
+  bounce:["bounce"],return:["bounce"],
+  draw:["draw"],draws:["draw"],
+  search:["search"],look:["search"],tutor:["search"],dig:["search"],
+  ramp:["donadd"],
+  restand:["active"],untap:["active"],
+  debuff:["powdown"],buff:["powup"],
+  discard:["discard"],protect:["protect"],protection:["protect"],negate:["negate"],
+  recursion:["trash","play"],revive:["trash"],
+  rush:["rush"],blocker:["blocker"],banish:["banish"],unblockable:["unblock"],trigger:["trigger"],
+};
+const SYN_DESC = {rest:"rest an opponent's card",ko:"K.O. a card",bounce:"return a card to hand",draw:"draw cards",search:"look at / search your deck",donadd:"add DON!!",active:"set cards as active",powdown:"reduce power",powup:"give power",discard:"make the opponent trash",protect:"protect your cards",negate:"negate effects",trash:"use your trash",play:"play cards from hand, trash or deck",rush:"have or give Rush",blocker:"have or give Blocker",banish:"have or give Banish",unblock:"have Unblockable",trigger:"have a Trigger",bottom:"send cards to the bottom of the deck"};
+
+/* ================= storage ================= */
+const KEY = "bountyboard.v1";
+function load(){ try{ const s = localStorage.getItem(KEY) || localStorage.getItem("logpose.v1"); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
+let saveT;
+function save(){ clearTimeout(saveT); saveT = setTimeout(()=>{ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} if (typeof cloudDirty === "function") cloudDirty(); }, 250); }
+const uid = () => Math.random().toString(36).slice(2,9);
+
+function sampleDeck(){
+  const cards = {};
+  const pool = CARDS.filter(c => c.s === "ST-01" && c.c !== "L");
+  let n = 0;
+  for (const c of pool){ const q = Math.min(4, 50-n); if (q<=0) break; cards[c.i] = {q}; n += q; }
+  return {id:uid(), name:"Sample: Straw Hat Crew (ST-01 cards)", used: 0, leader:"ST01-001", cards, updated:Date.now(), sample:true};
+}
+let S = load() || {};
+S.decks = S.decks && S.decks.length ? S.decks : [sampleDeck()];
+S.cur = S.decks.find(d=>d.id===S.cur) ? S.cur : S.decks[0].id;
+S.owned = S.owned || {};
+S.wish = S.wish || [];
+for (const w of S.wish){            // Buy Lists: {items: extra copies added by hand, decks: deck ids to buy for, mode}
+  w.items = w.items || {};
+  if (!w.decks){ w.decks = w.fromDeck ? [w.fromDeck] : []; if (w.fromDeck) w.items = {}; delete w.fromDeck; }
+  w.mode = w.mode || "all";
+}
+S.treasure = S.treasure || [];
+S.favLeaders = S.favLeaders || [];
+S.pools = S.pools || {};      // leaderId -> {cards:{cardId: addedAt}}  (the ★ Leader Pool's own ideas)
+S.prefs = Object.assign({grid:"l", sort:"rel", compat:true, matchLeader:true, pool:"all", arts:false}, S.prefs||{});
+save();
+const deck = () => S.decks.find(d=>d.id===S.cur);
+
+/* ================= helpers ================= */
+const $ = (s,el=document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const colorVar = c => `var(--c-${c.toLowerCase()})`;
+function bandBg(c){ const cs = c.co.length ? c.co : ["Black"]; return cs.length===1 ? colorVar(cs[0]) : `linear-gradient(110deg, ${colorVar(cs[0])} 0 50%, ${colorVar(cs[1])} 50% 100%)`; }
+function toast(msg){ const t = document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 1900); }
+function deckCount(d){ let n=0; for (const k in d.cards) n += d.cards[k].q; return n; }
+function limitFor(c){ return c.any ? 99 : 4; }
+function leaderGroups(){
+  const ids = [];
+  for (const d of S.decks) if (d.leader && !ids.includes(d.leader)) ids.push(d.leader);
+  for (const k of Object.keys(S.pools)) if (!ids.includes(k) && Object.keys(S.pools[k].cards||{}).length) ids.push(k);
+  return { groups: ids.map(id => ({L: BY.get(id), decks: S.decks.filter(d=>d.leader===id)})).filter(g=>g.L),
+           none: S.decks.filter(d=>!d.leader) };
+}
+function inPool(lid, id){ return !!(S.pools[lid] && S.pools[lid].cards[id]); }
+function poolCards(lid){
+  const map = new Map();
+  const get = id => { if (!map.has(id)) map.set(id, {decks:[], idea:false}); return map.get(id); };
+  for (const d of S.decks) if (d.leader === lid) for (const [id,v] of Object.entries(d.cards)) get(id).decks.push([d, v.q]);
+  for (const id of Object.keys((S.pools[lid]||{}).cards||{})) if (BY.get(id)) get(id).idea = true;
+  return map;
+}
+function sharesColor(c, L){ return !L || c.co.some(x => L.co.includes(x)); }
+function fmtText(t){
+  return esc(t)
+    .replace(/\[(Trigger)\]/g,'<span class="kw trg">$1</span>')
+    .replace(/\[([^\]]{1,40})\]/g,(m,k)=> /^(On |When |Activate|Main|Counter|Blocker|Rush|Banish|Double Attack|Once Per Turn|DON!!|Your Turn|Opponent's Turn|End of Your Turn|Unblockable|On Your Opponent)/.test(k) ? `<span class="kw">${k}</span>` : `<b>[${k}]</b>`)
+    .replace(/\{([^}]{1,40})\}/g,'<span class="tyref">{$1}</span>');
+}
+const STD_PERMIT = new Set(META.stdPermitted), STD_B4 = new Set(META.stdBlock4);
+function stdStatus(c){
+  if (STD_PERMIT.has(c.i)) return {ok:true, note:"Bandai keeps this card legal in Standard whatever block icon is printed on it."};
+  if (STD_B4.has(c.i)) return {ok:true, note:"Bandai counts this card as Block 4, so it's legal in Standard through March 31, 2029."};
+  if (c.b === null || c.b >= 2) return {ok:true};
+  return {ok:false, note:"Rotated out of Standard: Block 1 cards left Standard on April 1, 2026. It's still fine for Extra format and casual play. This is separate from the ban list."};
+}
+function standardOK(c){ return stdStatus(c).ok; }
+
+/* ================= compatibility ================= */
+function altOK(a, L){
+  const [k,v] = a;
+  if (k==="name") return L.n === v;
+  if (k==="type") return L.t.includes(v);
+  if (k==="typeinc") return L.t.some(t=>t.includes(v));
+  if (k==="nameinc") return L.n.includes(v);
+  if (k==="multi") return L.co.length > 1;
+  if (k==="color") return L.co.includes(v);
+  if (k==="attr") return L.a === v;
+  return true;
+}
+const compatCache = new Map();
+function compat(c){
+  const d = deck(); const L = d && d.leader && BY.get(d.leader);
+  if (!L || c.c === "L") return null;
+  const key = L.i + "|" + c.i;
+  if (compatCache.has(key)) return compatCache.get(key);
+  let fails = [], primOK = 0, prim = 0, unk = false, still = [];
+  for (const s of c.sg){
+    if (s.u) unk = true;
+    const ok = !s.c || s.c.some(a => altOK(a, L));
+    if (s.k === "e"){ prim++; if (ok) primOK++; }
+    if (!ok) fails.push(s);
+  }
+  if (!fails.length){
+    const r = unk ? {st:"U", why:"Couldn't read one of this card's leader conditions. Check the card text."} : {st:"A"};
+    compatCache.set(key, r); return r;
+  }
+  const byType = fails.some(f => f.c.some(a => a[0]!=="name" && a[0]!=="nameinc"));
+  const conds = [...new Set(fails.map(f=>f.ct))];
+  if (c._tags.has("blocker")) still.push("Blocker"); if (c._tags.has("rush")) still.push("Rush"); if (c.tr) still.push("Trigger");
+  if (c.ct) still.push("+" + c.ct + " counter");
+  let r;
+  if (prim && primOK === 0){
+    r = {st:"C", head: byType ? "Requires a different leader type" : "Requires a different leader",
+         why: "Main effect needs: " + conds.join("; ") + "." + (still.length ? " Still usable: " + still.join(", ") + "." : "")};
+  } else {
+    r = {st:"B", head:"Conditional bonus unavailable",
+         why: "The rest of the card works. Bonus needs: " + conds.join("; ") + "."};
+  }
+  compatCache.set(key, r); return r;
+}
+
+/* ================= search ================= */
+// Two searches share one engine: the Cards tab searches everything; the Build tab's "Add cards"
+// searches for the open build, locked to its leader's colors until "Leader colors" is switched off.
+const mkF = () => ({ q:"", colors:new Set(), cats:new Set(), costs:new Set(), counter:"any", tags:new Set(), type:"", set:"", exact:false, lock:true });
+const FC = mkF(); let FB = mkF();
+let ctx = "cards", F = FC;
+const isFav = id => S.favLeaders.includes(id);
+function toggleFav(id){ const i = S.favLeaders.indexOf(id); if (i >= 0) S.favLeaders.splice(i,1); else S.favLeaders.unshift(id); save(); }
+const usedAt = d => d.used || d.updated || 0;
+const recentBuilds = () => [...S.decks].sort((a,b)=>usedAt(b)-usedAt(a));
+function workOn(deckId){
+  if (S.cur !== deckId){ FB = mkF(); if (ctx === "build"){ F = FB; qIn.value = ""; } }
+  S.cur = deckId; const d = deck(); d.used = Date.now(); compatCache.clear(); save();
+}
+function tokens(q){ return q.toLowerCase().trim().split(/\s+/).filter(Boolean); }
+function idQuery(t){ const m = t.match(/^([a-z]{1,3}\d{0,2})-?(\d{3})$/); return m ? (m[1]+"-"+m[2]) : null; }
+let lastSynTags = [];
+function scoreCard(c, toks){
+  let total = 0;
+  for (const t of toks){
+    let s = 0;
+    const idq = idQuery(t);
+    if (idq && (c._id === idq || c._id.endsWith(idq))) s = 200;
+    else if (c._id.includes(t) || c._idc.includes(t)) s = 120;
+    if (c._name === t) s = Math.max(s, 90);
+    else if (c._name.startsWith(t) || c._name.includes(" "+t) || c._name.includes("."+t)) s = Math.max(s, 60);
+    else if (c._name.includes(t)) s = Math.max(s, 40);
+    if (c._types.includes(t)) s = Math.max(s, 30);
+    const syn = !F.exact && SYN[t];
+    if (syn){ if (syn.some(g => c._tags.has(g))) s = Math.max(s, 35); }
+    else if (s === 0){
+      const i = c._text.indexOf(t);
+      if (i >= 0) s = (i===0 || /[^a-z]/.test(c._text[i-1])) ? 12 : 4;
+    }
+    if (s === 0) return -1;
+    total += s;
+  }
+  return total;
+}
+function passFilters(c, L, hideLeaders){
+  if (F.cats.size){ if (!F.cats.has(c.c)) return false; }
+  else if (hideLeaders && c.c === "L") return false;   // while building, other leaders only show under the Leaders chip
+  if (F.colors.size && !c.co.some(x=>F.colors.has(x))) return false;
+  if (L && c.c !== "L" && !sharesColor(c, L)) return false;
+  if (F.costs.size){ const k = c.k ?? 0; const b = k >= 9 ? 9 : k; if (!F.costs.has(b)) return false; }
+  if (F.counter === "none" && c.ct) return false;
+  if (F.counter === "has" && !c.ct) return false;
+  if ((F.counter === "1000" || F.counter === "2000") && String(c.ct) !== F.counter) return false;
+  for (const g of F.tags) if (!c._tags.has(g)) return false;
+  if (F.type){ const t = F.type.toLowerCase(); if (!c._types.includes(t)) return false; }
+  if (F.set && !c.v.some(v=>v[1]===F.set)) return false;
+  if (S.prefs.pool === "std" && (!standardOK(c) || c.ban)) return false;
+  if (S.prefs.pool === "noban" && c.ban) return false;
+  return true;
+}
+const CMP_RANK = {A:0, U:1, B:2, C:3};
+let leaderSections = false;
+function results(){
+  const d = deck(); const DL = ctx === "build" && d.leader ? BY.get(d.leader) : null;
+  const L = DL && FB.lock ? DL : null;
+  const myLeaders = new Set(leaderGroups().groups.map(g=>g.L.i));
+  const toks = tokens(F.q);
+  lastSynTags = F.exact ? [] : [...new Set(toks.flatMap(t => SYN[t] || []))];
+  const out = [];
+  for (const c of CARDS){
+    if (!passFilters(c, L, ctx === "build")) continue;
+    const sc = toks.length ? scoreCard(c, toks) : 0;
+    if (sc < 0) continue;
+    out.push({c, sc, cm: (S.prefs.compat && DL) ? compat(c) : null, lg: c.c === "L" ? (isFav(c.i) ? 0 : myLeaders.has(c.i) ? 1 : 2) : 3});
+  }
+  leaderSections = out.length > 0 && out.every(r => r.c.c === "L") && S.prefs.sort === "rel";
+  const sort = S.prefs.sort;
+  const byCost = (a,b) => ((a.c.k??0)-(b.c.k??0)) || (a.c._order-b.c._order);
+  let f;
+  if (sort === "rel"){
+    f = (a,b) => {
+      if (leaderSections && a.lg !== b.lg) return a.lg - b.lg;
+      if (a.cm || b.cm){ const r = (a.cm?CMP_RANK[a.cm.st]:-1) - (b.cm?CMP_RANK[b.cm.st]:-1); if (r) return r; }
+      return (b.sc - a.sc) || byCost(a,b);
+    };
+  } else if (sort === "costA") f = byCost;
+  else if (sort === "costD") f = (a,b)=>((b.c.k??0)-(a.c.k??0)) || (a.c._order-b.c._order);
+  else if (sort === "pow") f = (a,b)=>((b.c.p??0)-(a.c.p??0)) || byCost(a,b);
+  else if (sort === "color") f = (a,b)=>(COLORS.indexOf(a.c.co[0])-COLORS.indexOf(b.c.co[0])) || byCost(a,b);
+  else if (sort === "num") f = (a,b)=>a.c._order-b.c._order;
+  else if (sort === "name") f = (a,b)=>a.c.n.localeCompare(b.c.n) || byCost(a,b);
+  out.sort(f);
+  return out;
+}
+
+/* ================= tiles ================= */
+function imgTag(id, suf){
+  if (IMG_OK === false) return "";
+  return `<img alt="" loading="lazy" decoding="async" src="${IMG_BASE}${id}${suf||""}.png" data-img>`;
+}
+document.addEventListener("error", e => {
+  const el = e.target;
+  if (el.tagName === "IMG" && el.hasAttribute("data-img")){
+    if (IMG_OK !== true){ IMG_OK = false; document.querySelectorAll("img[data-img]").forEach(i=>i.remove()); }
+    else el.remove();
+  }
+}, true);
+document.addEventListener("load", e => { if (e.target.tagName==="IMG" && e.target.hasAttribute("data-img")) IMG_OK = true; }, true);
+
+function faceHTML(c, suf){
+  const isL = c.c === "L";
+  const costTxt = isL ? `${c.k ?? "–"}<small style="font-size:10px;margin-left:2px">LIFE</small>` : (c.k ?? "–");
+  return `<div class="face">
+    <div class="band" style="background:${bandBg(c)}">
+      <span class="cost${isL?" life":""}">${costTxt}</span>
+      <span class="pow">${c.p != null ? c.p : ""}</span>
+      <span class="cat">${CATNAME[c.c]}${c.a ? " · "+esc(c.a) : ""}</span>
+    </div>
+    <div class="body">
+      <div class="nm">${esc(c.n)}</div>
+      <div class="ty">${esc(c.t.join(" / "))}</div>
+      <div class="fx">${esc((c.e||"").replace(/\s*\([^)]*\)/g,""))}</div>
+      <div class="foot"><span class="ctr">${c.ct ? "+"+c.ct : ""}</span><span class="mono muted">${c.i}${suf||""}</span></div>
+    </div>
+    ${imgTag(c.i, suf)}
+  </div>`;
+}
+function tileHTML(r, suf){
+  const c = r.c, d = deck();
+  const q = ctx !== "build" ? 0 : (d.cards[c.i]?.q || (d.leader === c.i ? 1 : 0));
+  let flag = "", dim = false;
+  if (c.ban) flag = `<span class="flag ban">Banned</span>`;
+  else if (c.c === "L" && isFav(c.i)) flag = `<span class="flag favf">★ Favorite</span>`;
+  else if (r.cm){
+    if (r.cm.st === "C"){ dim = true; flag = `<span class="flag">Leader mismatch</span>`; }
+    else if (r.cm.st === "B") flag = `<span class="flag part">Partial</span>`;
+    else if (r.cm.st === "U") flag = `<span class="flag unk">Check text</span>`;
+  }
+  const label = `${c.n}, ${c.i}, ${CATNAME[c.c]}${c.k!=null? ", cost "+c.k:""}${q? ", "+q+" in this build":""}${dim?", effect needs a different leader":""}`;
+  return `<button class="tile${dim?" dim":""}" type="button" data-open="${c.i}" data-suf="${suf||""}" aria-label="${esc(label)}">${faceHTML(c, suf)}${q?`<span class="qty">${d.leader===c.i?"L":"×"+q}</span>`:""}${flag}</button>`;
+}
+
+/* ================= cards view ================= */
+const V = document.createElement("div"); V.id = "searchBlock";
+$("#v-cards").appendChild(V);
+V.innerHTML = `
+  <div class="top" style="position:sticky;top:env(safe-area-inset-top,0px);border-bottom:1px solid var(--line)">
+    <div class="searchrow gut">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Name, number, type or effect (try: rest, draw, KO)" autocomplete="off" aria-label="Search cards">
+        <button class="clr" id="qclr" type="button" aria-label="Clear search" hidden>✕</button>
+      </div>
+      <button class="iconbtn" id="openFilters" type="button" aria-label="Filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span class="badge" id="fcount" hidden></span></button>
+      <button class="iconbtn" id="gridBtn" type="button" aria-label="Change card size"></button>
+    </div>
+    <div class="chips gut" id="quick"></div>
+  </div>
+  <div class="gut">
+    <div id="leaderBanner"></div>
+    <div id="homeStrip"></div>
+    <div class="resbar">
+      <span><span class="n" id="rcount">0</span> <span class="muted">cards</span></span>
+      <label class="muted" for="sort" style="margin-left:auto;font-size:13px">Sort</label>
+      <select id="sort" style="margin-left:0">
+        <option value="rel">Relevance</option><option value="costA">Cost: low to high</option><option value="costD">Cost: high to low</option>
+        <option value="pow">Power: high to low</option><option value="color">Color</option><option value="num">Set & number</option><option value="name">Name</option>
+      </select>
+    </div>
+    <div class="note" id="synNote" hidden></div>
+    <div class="grid" id="grid"></div>
+    <div id="sentinel" style="height:1px"></div>
+  </div>`;
+const grid = $("#grid"), qIn = $("#q");
+let RES = [], shown = 0;
+const PAGE = 60;
+function renderQuick(){
+  const d = deck(); const DL = d.leader && BY.get(d.leader);
+  let h = "";
+  if (ctx === "build"){
+    if (DL){
+      h += `<button class="chip" id="qLock" aria-pressed="${FB.lock}" title="Only show cards that share a color with ${esc(DL.n)}">${FB.lock?"🔒 ":""}${esc(DL.co.join("/"))} only</button>`;
+      h += `<button class="chip" id="qCompat" aria-pressed="${S.prefs.compat}" title="Gray out cards whose effects need a different leader">Compatibility</button>`;
+      h += `<span class="sep"></span>`;
+    } else h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><span class="sep"></span>`;
+  } else {
+    h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><span class="sep"></span>`;
+  }
+  for (const col of COLORS) h += `<button class="chip color" data-col="${col}" aria-pressed="${F.colors.has(col)}" aria-label="${col}"><span class="dot" style="background:${colorVar(col)}"></span>${F.colors.has(col)?col:""}</button>`;
+  h += `<span class="sep"></span>`;
+  for (const [cat,lab] of [["C","Characters"],["E","Events"],["S","Stages"]]) h += `<button class="chip" data-cat="${cat}" aria-pressed="${F.cats.has(cat)}">${lab}</button>`;
+  $("#quick").innerHTML = h;  $("#quick").innerHTML = h;
+  $("#sort").value = S.prefs.sort;
+  const gb = $("#gridBtn");
+  gb.innerHTML = S.prefs.grid === "l"
+    ? `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="currentColor">${[3,8,13,18].map(x=>[3,8,13,18].map(y=>`<rect x="${x}" y="${y}" width="3.4" height="3.4" rx=".6"/>`).join("")).join("")}</svg>`;
+  gb.setAttribute("aria-label", S.prefs.grid === "l" ? "Showing 2 per row. Switch to 4 per row" : "Showing 4 per row. Switch to 2 per row");
+  const n = F.costs.size + F.tags.size + (F.counter!=="any") + !!F.type + !!F.set + (S.prefs.pool!=="all");
+  const fc = $("#fcount"); fc.hidden = !n; fc.textContent = n;
+  const lb = $("#leaderBanner");
+  const wide = innerWidth >= 1024;
+  lb.innerHTML = ctx !== "build" ? "" :
+    (wide ? `<div class="banner"><span class="sw" style="background:${DL?bandBg(DL):"var(--line)"}"></span><span>Adding cards to <b>${esc(d.name)}</b>${DL?"":", which has no leader yet"}.</span><button class="btn sm" data-act3="switchBuild">Switch build</button><button class="btn sm dark" data-act3="doneAdding">Done</button></div>` : "")
+    + (!DL ? `<div class="banner"><span>“${esc(d.name)}” has no leader yet. Its colors and compatibility checks come from the leader.</span><button class="btn sm primary" id="pickLeader">Show leaders</button></div>` : "");
+  renderHome();
+}
+function renderResults(keepScroll){
+  RES = results();
+  shown = 0; grid.innerHTML = "";
+  grid.dataset.size = S.prefs.grid;
+  $("#rcount").textContent = RES.length.toLocaleString();
+  const sn = $("#synNote");
+  if (lastSynTags.length){
+    sn.hidden = false;
+    sn.innerHTML = `Showing cards that ${lastSynTags.map(t=>SYN_DESC[t]||TAGLABEL[t]).join(" or ")}. <button id="exactBtn">Search the exact words instead</button>`;
+  } else if (F.exact && tokens(F.q).some(t=>SYN[t])){
+    sn.hidden = false; sn.innerHTML = `Matching exact card text. <button id="exactBtn">Search by effect instead</button>`;
+  } else sn.hidden = true;
+  more();
+}
+function more(){
+  if (!RES.length && !shown){ grid.innerHTML = `<div class="empty">No cards match. Try fewer filters or a shorter search.</div>`; return; }
+  const d = deck(); const showSections = S.prefs.sort === "rel" && RES.some(r=>r.cm);
+  const LGNAME = ["★ Favorite leaders", "Leaders you have builds or pools for", "All leaders"];
+  let h = "";
+  const end = Math.min(RES.length, shown + PAGE);
+  for (let i = shown; i < end; i++){
+    const r = RES[i];
+    if (leaderSections && (i === 0 || RES[i-1].lg !== r.lg)) h += `<div class="sect">${LGNAME[r.lg]}</div>`;
+    if (showSections){
+      const prev = i ? RES[i-1].cm?.st : null, cur = r.cm?.st;
+      const grp = s => s==="A"||s==="U" ? "Works with your leader" : s==="B" ? "Partly works with your leader" : s==="C" ? "Effect needs a different leader" : "Leaders";
+      if (i===0 || grp(prev)!==grp(cur)) h += `<div class="sect">${grp(cur)}</div>`;
+    }
+    if (S.prefs.arts && r.c.v.length > 1) for (const v of r.c.v) h += tileHTML(r, v[0]);
+    else h += tileHTML(r, "");
+  }
+  grid.insertAdjacentHTML("beforeend", h);
+  shown = end;
+}
+new IntersectionObserver(es => { if (es[0].isIntersecting && shown < RES.length) more(); }, {rootMargin:"900px"}).observe($("#sentinel"));
+let qT;
+qIn.addEventListener("input", () => { $("#qclr").hidden = !qIn.value; clearTimeout(qT); qT = setTimeout(()=>{ F.q = qIn.value; F.exact = false; renderResults(); window.scrollTo({top:0}); }, 140); });
+$("#qclr").onclick = () => { qIn.value=""; F.q=""; $("#qclr").hidden = true; renderHome(); renderResults(); qIn.focus(); };
+qIn.addEventListener("input", () => setTimeout(renderHome, 150));
+// Cards tab "home": recent builds and recently viewed cards, shown until you search or filter
+function renderHome(){
+  const el = $("#homeStrip"); if (!el) return;
+  const busy = F.q || F.colors.size || F.cats.size || F.costs.size || F.tags.size || F.counter !== "any" || F.type || F.set;
+  if (ctx !== "cards" || busy){ el.innerHTML = ""; return; }
+  const rb = recentBuilds().slice(0,3), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
+  el.innerHTML = `${rb.length ? `<div class="hs"><span class="hsl">Recent builds</span><div class="hsr">${rb.map(d=>{ const L = d.leader && BY.get(d.leader); return `<button class="chip" data-rb="${d.id}"><span class="dot" style="background:${L?bandBg(L):"var(--line)"}"></span>${esc(d.name)} <span class="muted">${deckCount(d)}/50</span></button>`; }).join("")}</div></div>` : ""}
+    ${rv.length ? `<div class="hs"><span class="hsl">Recently viewed</span><div class="hsr">${rv.map(c=>`<button class="chip" data-open="${c.i}"><span class="dot" style="background:${bandBg(c)}"></span>${esc(c.n)} <span class="mono muted">${c.i}</span></button>`).join("")}</div></div>` : ""}`;
+}
+$("#sort").onchange = e => { S.prefs.sort = e.target.value; save(); renderResults(); };
+$("#gridBtn").onclick = () => { S.prefs.grid = S.prefs.grid === "l" ? "s" : "l"; save(); grid.dataset.size = S.prefs.grid; renderQuick(); };
+V.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.open){ openCard(t.dataset.open, t.dataset.suf); return; }
+  if (t.dataset.col){ F.colors.has(t.dataset.col) ? F.colors.delete(t.dataset.col) : F.colors.add(t.dataset.col); }
+  else if (t.dataset.cat){ const k = t.dataset.cat; F.cats.has(k) ? F.cats.delete(k) : F.cats.add(k); }
+  else if (t.dataset.rb){ workOn(t.dataset.rb); openBuild("add"); return; }
+  else if (t.dataset.act3 === "switchBuild"){ openWorkOn(); return; }
+  else if (t.dataset.act3 === "doneAdding"){ setCtx("cards"); return; }
+  else if (t.id === "qLock"){ FB.lock = !FB.lock; }
+  else if (t.id === "qCompat"){ S.prefs.compat = !S.prefs.compat; save(); }
+  else if (t.id === "pickLeader"){ F.cats = new Set(["L"]); F.lock = false; }
+  else if (t.id === "exactBtn"){ F.exact = !F.exact; }
+  else if (t.id === "openFilters"){ openFilters(); return; }
+  else return;
+  renderQuick(); renderResults();
+});
+
+/* ================= switching between the two searches ================= */
+const scrollCtx = {cards:0, build:0};
+function setCtx(c){
+  if (c !== ctx){ scrollCtx[ctx] = scrollY; ctx = c; F = c === "build" ? FB : FC; qIn.value = F.q; $("#qclr").hidden = !F.q; }
+  const slot = c === "build" && innerWidth < 1024 ? $("#bAddSlot") : $("#v-cards");
+  if (V.parentElement !== slot) slot.appendChild(V);
+  renderQuick(); renderResults();
+}
+let bSub = "add";
+// Open a build for editing: on a phone, the Build tab; on a wide screen, the left side switches to adding cards.
+function openBuild(sub){
+  if (sub) bSub = sub;
+  if (innerWidth >= 1024){ setCtx("build"); renderDeckViews(); go("cards"); window.scrollTo({top:0}); }
+  else go("build");
+}
+
+/* ================= filters sheet ================= */
+function sheet(inner, label){
+  const L = $("#layer");
+  L.innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(label)}"><div class="grab"></div><div class="gut">${inner}</div></div></div>`;
+  const sc = $("#scrim");
+  sc.addEventListener("click", e => { if (e.target === sc) closeSheet(); });
+  setTimeout(()=>{ const f = sc.querySelector("[autofocus]") || sc.querySelector(".x"); f && f.focus(); }, 30);
+  return sc;
+}
+let onClose = null;
+function closeSheet(){ $("#layer").innerHTML = ""; const f = onClose; onClose = null; f && f(); }
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#scrim")) closeSheet(); });
+
+// after picking a leader from the Cards tab's Leaders list, put that search back to "everything"
+function leaveLeaderBrowse(){ if (FC.cats.has("L")){ FC.cats.delete("L"); FC.q = ""; if (ctx === "cards"){ qIn.value = ""; $("#qclr").hidden = true; } } }
+function newBuild(leaderId){
+  const L = leaderId && BY.get(leaderId);
+  const n = L ? S.decks.filter(d=>d.leader===leaderId).length + 1 : 0;
+  const nd = {id:uid(), name: L ? `${L.n} build ${n}` : "New build", leader: leaderId || null, cards:{}, updated:Date.now(), used:Date.now()};
+  S.decks.unshift(nd); save(); return nd;
+}
+function openWorkOn(after){
+  const {groups, none} = leaderGroups();
+  const favs = S.favLeaders.map(id=>BY.get(id)).filter(Boolean), favIds = new Set(favs.map(x=>x.i));
+  const deckRow = d => `<button class="ar wo" data-wo="${d.id}"><span class="nm2">${esc(d.name)}${d.id===S.cur ? ' <small class="muted">· open now</small>' : ""}</span><span class="st">${deckCount(d)}/50</span></button>`;
+  const block = (L) => `<div class="ag"><div class="agh"><span class="sw" style="background:${bandBg(L)}"></span>${esc(L.n)} <span class="mono muted">${L.i}</span>
+      <button class="favbtn" data-fav="${L.i}" aria-pressed="${favIds.has(L.i)}" aria-label="${favIds.has(L.i)?"Remove from favorites":"Add to favorites"}">${favIds.has(L.i)?"★":"☆"}</button></div>
+      ${S.decks.filter(d=>d.leader===L.i).map(deckRow).join("")}
+      <button class="ar wo" data-wonew="${L.i}"><span class="nm2 muted">+ New ${esc(L.n)} build</span></button></div>`;
+  const rest = groups.filter(g=>!favIds.has(g.L.i));
+  const sc = sheet(`
+    <div class="shead"><h2 class="h2">Switch build</h2><button class="btn sm x" id="woClose">Close</button></div>
+    <p class="muted" style="font-size:13px;margin:0 0 6px">Add cards stays locked to that deck's leader colors until you change it.</p>
+    ${favs.length ? `<div class="h3">★ Favorite leaders</div><div class="addlist" style="padding:0">${favs.map(block).join("")}</div>` : ""}
+    ${rest.length ? `<div class="h3">Your leaders</div><div class="addlist" style="padding:0">${rest.map(g=>block(g.L)).join("")}</div>` : ""}
+    ${none.length ? `<div class="h3">No leader yet</div><div class="addlist" style="padding:0"><div class="ag">${none.map(deckRow).join("")}</div></div>` : ""}
+    <div class="row" style="margin-top:14px"><button class="btn sm primary" id="woBrowse">Browse all leaders</button></div>
+    <p class="foot-note">Tap ☆ next to a leader to keep it at the top here and in the Leaders list.</p>`, "Work on a deck");
+  onClose = null;
+  sc.addEventListener("click", e => {
+    const t = e.target.closest("button"); if (!t) return;
+    if (t.id === "woClose"){ closeSheet(); return; }
+    if (t.dataset.fav){ toggleFav(t.dataset.fav); openWorkOn(after); renderResults(); return; }
+    if (t.dataset.wo){ workOn(t.dataset.wo); closeSheet(); renderAll(); toast(`Building ${deck().name}`); if (after) after(); else openBuild(); return; }
+    if (t.dataset.wonew){ const L = BY.get(t.dataset.wonew); const nd = newBuild(L.i); workOn(nd.id); closeSheet(); renderAll(); toast(`New ${L.n} build. Rename it in Build list.`); if (after) after(); else openBuild("add"); return; }
+    if (t.id === "woBrowse"){ closeSheet(); setCtx("cards"); FC.cats = new Set(["L"]); FC.q = ""; qIn.value = ""; renderQuick(); renderResults(); go("cards"); window.scrollTo({top:0}); return; }
+  });
+}
+const allTypes = [...new Set(CARDS.flatMap(c=>c.t))].sort();
+const ATTRS = ["Slash","Strike","Ranged","Special","Wisdom"];
+const BUCKETS = [
+  ["Removal & disruption", ["ko","bounce","bottom","rest","powdown","costdown","discard","negate","noatk"]],
+  ["Draw, search & recursion", ["draw","search","play","trash"]],
+  ["DON!! & setting active", ["donadd","dongive","donminus","active"]],
+  ["Power, protection & Life", ["powup","protect","life"]],
+  ["Keywords", ["rush","blocker","banish","double","unblock","trigger"]],
+  ["Timing", ["onplay","whenatk","onko","actmain","counter_ev","onblock","oppattack"]],
+];
+{ const used = new Set(BUCKETS.flatMap(b=>b[1])); const misc = META.tags.map(t=>t[0]).filter(k=>!used.has(k)); if (misc.length) BUCKETS.push(["Misc", misc]); }
+function openFilters(){
+  const bucketHTML = BUCKETS.map(([name, keys]) => {
+    const on = keys.filter(k=>F.tags.has(k)).length;
+    return `<details class="bucket"${on?" open":""}><summary><span>${esc(name)}</span><span class="bcount" data-bcount>${on?on+" selected":""}</span></summary>
+      <div class="wrapchips">${keys.map(k=>`<button class="chip" data-ftag="${k}" aria-pressed="${F.tags.has(k)}">${esc(TAGLABEL[k])}</button>`).join("")}</div></details>`;
+  }).join("");
+  const effOn = F.tags.size;
+  const costChips = [0,1,2,3,4,5,6,7,8,9].map(k=>`<button class="chip" data-fcost="${k}" aria-pressed="${F.costs.has(k)}">${k===9?"9+":k}</button>`).join("");
+  const sc = sheet(`
+    <div class="shead"><h2 class="h2">Filters</h2><button class="btn sm" id="fReset">Reset</button><button class="btn sm dark x" id="fDone">Show cards</button></div>
+    <div class="fgroup"><div class="lab">Cost</div><div class="wrapchips">${costChips}</div></div>
+    <div class="fgroup"><div class="lab">Counter</div><div class="wrapchips">${[["any","Any"],["has","Has counter"],["1000","+1000"],["2000","+2000"],["none","No counter"]].map(([v,l])=>`<button class="chip" data-fctr="${v}" aria-pressed="${F.counter===v}">${l}</button>`).join("")}</div></div>
+    <details class="fgroup effects"${effOn?" open":""}><summary class="lab">What the card does <span class="bcount" id="effCount">${effOn?effOn+" selected":""}</span></summary>
+      <div class="buckets">${bucketHTML}</div></details>
+    <div class="fgroup"><label class="lab" for="fType">Type, trait or attribute</label><input class="field" id="fType" list="typeList" placeholder="e.g. Fish-Man, Navy, Slash, Wisdom" value="${esc(F.type)}"><datalist id="typeList">${ATTRS.map(a=>`<option value="${a}" label="Attribute">`).join("")}${allTypes.map(t=>`<option value="${esc(t)}">`).join("")}</datalist>
+      <div class="wrapchips" style="margin-top:8px">${ATTRS.map(a=>`<button class="chip" data-fattr="${a}" aria-pressed="${F.type.toLowerCase()===a.toLowerCase()}">${a}</button>`).join("")}</div></div>
+    <div class="fgroup"><label class="lab" for="fSet">Set</label><select class="field" id="fSet"><option value="">All sets</option>${META.sets.map(s=>`<option ${F.set===s?"selected":""}>${esc(s)}</option>`).join("")}</select></div>
+    <div class="fgroup"><div class="lab">Card pool</div><div class="wrapchips">${[["all","Everything"],["noban","Hide banned"],["std","Standard legal only"]].map(([v,l])=>`<button class="chip" data-fpool="${v}" aria-pressed="${S.prefs.pool===v}">${l}</button>`).join("")}</div>
+      <p class="foot-note" style="margin-top:6px">Banned and rotated are separate. “Hide banned” removes only the ${META.banned.length} cards on the October 12, 2026 ban list. “Standard legal only” also removes Block 1 cards, except the ${STD_PERMIT.size + STD_B4.size} that Bandai keeps legal.</p></div>
+    <div class="fgroup"><div class="lab">Display</div><div class="wrapchips"><button class="chip" id="fArts" aria-pressed="${S.prefs.arts}">Show every printing (alt arts, parallels)</button></div></div>
+    <p class="foot-note">Card list: ${CARDS.length.toLocaleString()} cards and ${CARDS.reduce((n,c)=>n+c.v.length,0).toLocaleString()} printings, through ${META.through}, including promos. Last updated October 30, 2026. Automatic nightly updates start when the app is hosted.</p>
+  `, "Filters");
+  onClose = () => { renderQuick(); renderResults(); };
+  sc.addEventListener("click", e => {
+    const t = e.target.closest("button"); if (!t) return;
+    if (t.dataset.fcost){ const k=+t.dataset.fcost; F.costs.has(k)?F.costs.delete(k):F.costs.add(k); t.setAttribute("aria-pressed",F.costs.has(k)); }
+    else if (t.dataset.fctr){ F.counter = t.dataset.fctr; sc.querySelectorAll("[data-fctr]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fctr===F.counter)); }
+    else if (t.dataset.ftag){ const k=t.dataset.ftag; F.tags.has(k)?F.tags.delete(k):F.tags.add(k); t.setAttribute("aria-pressed",F.tags.has(k));
+      const det = t.closest(".bucket"), n = det.querySelectorAll('[aria-pressed="true"]').length;
+      det.querySelector("[data-bcount]").textContent = n ? n+" selected" : "";
+      $("#effCount").textContent = F.tags.size ? F.tags.size+" selected" : ""; }
+    else if (t.dataset.fattr){ const a = t.dataset.fattr; F.type = F.type.toLowerCase()===a.toLowerCase() ? "" : a; $("#fType").value = F.type;
+      sc.querySelectorAll("[data-fattr]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fattr.toLowerCase()===F.type.toLowerCase())); }
+    else if (t.dataset.fpool){ S.prefs.pool = t.dataset.fpool; save(); sc.querySelectorAll("[data-fpool]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fpool===S.prefs.pool)); }
+    else if (t.id === "fArts"){ S.prefs.arts = !S.prefs.arts; save(); t.setAttribute("aria-pressed", S.prefs.arts); }
+    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),counter:"any",tags:new Set(),type:"",set:""}); S.prefs.pool="all"; save(); closeSheet(); }
+    else if (t.id === "fDone") closeSheet();
+  });
+  $("#fType").addEventListener("input", e => { F.type = e.target.value.trim(); sc.querySelectorAll("[data-fattr]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fattr.toLowerCase()===F.type.toLowerCase())); });
+  $("#fSet").addEventListener("change", e => F.set = e.target.value);
+}
+
+/* ================= card popup ================= */
+function openCard(id, suf, after){
+  const c = BY.get(id); if (!c) return;
+  let art = suf || "";
+  let addOpen = false, addN = 1; const sel = new Set();
+  S.recent = [id, ...(S.recent||[]).filter(x=>x!==id)].slice(0,12); save();
+  // the builds offered in this popup: the open build first when you're in the Build tab, then your most recent builds this card fits
+  const fitsBuild = d => !d.leader || sharesColor(c, BY.get(d.leader));
+  const primary = ctx === "build" ? deck() : null;
+  const offer = (primary ? [primary, ...recentBuilds().filter(d=>d.id!==primary.id && fitsBuild(d))] : recentBuilds().filter(fitsBuild)).slice(0,3).map(d=>d.id);
+  const colorWord = cs => cs.join("/");
+  const leaderCtl = d => {
+    const mine = recentBuilds().filter(x=>x.leader===c.i), fav = isFav(c.i);
+    return `<div class="target"><div class="savehd">This leader</div>
+      <div class="row"><button class="btn sm${fav?" dark":""}" id="favL" aria-pressed="${fav}">${fav?"★ Favorite":"☆ Favorite"}</button><button class="btn sm primary" id="newL">New ${esc(c.n)} build</button></div>
+      ${mine.length ? `<div class="muted" style="font-size:13px">Your ${esc(c.n)} builds</div><div class="stack">${mine.map(x=>`<button class="btn sm" data-wo="${x.id}" style="justify-content:space-between"><span>Open ${esc(x.name)}</span><span class="muted">${deckCount(x)}/50</span></button>`).join("")}</div>` : ""}
+      ${ctx === "build" && !d.leader ? `<button class="btn sm" id="setLeader">Use as leader for “${esc(d.name)}”</button>` : ctx === "build" && d.leader !== c.i ? `<button class="linkbtn" id="setLeader">Change “${esc(d.name)}” to use this leader instead</button>` : ""}
+    </div>`;
+  };
+  const targetHTML = () => {
+    const rows = offer.map(id => S.decks.find(d=>d.id===id)).filter(Boolean);
+    const rowHTML = d => { const L = d.leader && BY.get(d.leader), q = d.cards[c.i]?.q || 0, fit = fitsBuild(d);
+      return `<div class="rb"><span class="sw" style="background:${L?bandBg(L):"var(--line)"}"></span>
+        <span class="rbn"><b>${esc(d.name)}</b><small>${L ? esc(L.n) : "No leader yet"}${primary && d.id===primary.id ? " · open now" : ""}${fit ? "" : ` · <span style="color:var(--warn)">off-color</span>`}</small></span>
+        <span class="stepper sm"><button data-bstep="${d.id}|-1" aria-label="Remove one from ${esc(d.name)}">−</button><output aria-live="polite">${q}</output><button data-bstep="${d.id}|1" aria-label="Add one to ${esc(d.name)}">+</button></span></div>`; };
+    let out = `<div class="target"><div class="savehd">Add to a build</div>`;
+    if (rows.length) out += `<div class="rbs">${rows.map(rowHTML).join("")}</div><div class="muted" style="font-size:12px">${primary ? "The build you're working on, then your most recent builds this card fits." : "Your 3 most recent builds this card fits."} Max ${c.any?"any number":"4"} per build.</div>`;
+    else {
+      const myLeaders = new Set(leaderGroups().groups.map(g=>g.L.i));
+      const leaders = CARDS.filter(x => x.c === "L" && sharesColor(c, x)).sort((a,b)=>a.n.localeCompare(b.n));
+      const mine = leaders.filter(x=>myLeaders.has(x.i)), others = leaders.filter(x=>!myLeaders.has(x.i));
+      const opt = x => `<option value="${x.i}">${esc(x.n)} · ${colorWord(x.co)} · ${x.i}</option>`;
+      out += `<div class="nofit"><p><b>You don't have a ${colorWord(c.co)} build yet.</b> ${esc(c.n)} is ${colorWord(c.co)}, so it doesn't fit your current builds.</p>
+        <div class="row"><button class="btn sm primary" data-act2="startDeck">Start a ${colorWord(c.co)} build with this card</button></div>
+        <div class="row" style="gap:6px"><select class="btn sm" id="poolLeader" aria-label="Leader pool" style="max-width:100%;min-width:0;flex:1 1 200px">${mine.length?`<optgroup label="Your leaders">${mine.map(opt).join("")}</optgroup>`:""}<optgroup label="All ${colorWord(c.co)} leaders">${others.map(opt).join("")}</optgroup></select><button class="btn sm" data-act2="toPool">Add to ★ Pool</button></div></div>`;
+    }
+    return out + `</div>`;
+  };  const addToHTML = () => {
+    const {groups, none} = leaderGroups();
+    const deckRow = d => { const q = d.cards[c.i]?.q || 0; const key = "d:"+d.id;
+      return `<label class="ar"><input type="checkbox" data-sel="${key}" ${sel.has(key)?"checked":""}><span class="nm2">${esc(d.name)}${d.leader && !sharesColor(c, BY.get(d.leader)) ? ' <small style="color:var(--warn)">· off-color</small>' : ""}</span><span class="st">${q?"×"+q+" in build":""}</span></label>`; };
+    const nSel = sel.size;
+    return `<details class="addto" id="addTo" ${addOpen?"open":""}><summary>More builds &amp; ★ Leader Pools</summary><div class="addlist">
+      ${groups.map(g => { const key = "p:"+g.L.i, ip = inPool(g.L.i, c.i);
+        return `<div class="ag"><div class="agh"><span class="sw" style="background:${bandBg(g.L)}"></span>${esc(g.L.n)} <span class="mono muted">${g.L.i}</span></div>
+          <div class="arw"><label class="ar pool"><input type="checkbox" data-sel="${key}" ${sel.has(key)?"checked":""} ${ip?"disabled":""}><span class="nm2">★ ${esc(g.L.n)} Pool</span><span class="st">${ip?"In pool ✓":""}</span></label>${ip?`<button class="btn sm" data-unpool="${g.L.i}">Remove</button>`:""}</div>
+          ${g.decks.map(deckRow).join("")}</div>`; }).join("")}
+      ${none.length ? `<div class="ag"><div class="agh"><span class="sw" style="background:var(--line)"></span>No leader yet</div>${none.map(deckRow).join("")}</div>` : ""}
+      <div class="addbar"><span class="lab" style="font-weight:700">Copies<small style="display:block;font-weight:400;color:var(--muted);font-size:12px">for each build picked</small></span>
+        <span class="stepper sm"><button data-addn="-1" aria-label="Fewer copies">−</button><output>${addN}</output><button data-addn="1" aria-label="More copies">+</button></span>
+        <button class="btn primary sm" id="addGo" ${nSel?"":"disabled"}>${nSel ? `Add to ${nSel} selected` : "Pick builds or a pool"}</button></div>
+      <div class="msg" id="addMsg" role="alert"></div>
+    </div></details>`;
+  };
+  const draw = () => {
+    const d = deck(); const L = d.leader && BY.get(d.leader);
+    const q = d.cards[c.i]?.q || 0;
+    const own = S.owned[c.i] || 0;
+    const cm = ctx === "build" ? compat(c) : null;
+    const vlabel = v => (v[0] ? v[0].replace("_p","Parallel ").replace("_r","Reprint ") : "Standard") + " · " + v[1];
+    const issues = [];
+    if (c.ban) issues.push(`<div class="issue bad"><i></i>Banned on the October 12, 2026 list. Can't be used in any deck for official events.</div>`);
+    const std = stdStatus(c);
+    if (std.note) issues.push(`<div class="issue ${std.ok?"ok":"warn"}"><i></i>${std.note}</div>`);
+    if (ctx === "build" && L && c.c!=="L" && !sharesColor(c, L)) issues.push(`<div class="issue warn"><i></i>Doesn't share a color with ${esc(L.n)}. You can still add it to experiment.</div>`);
+    let compatBox = "";
+    if (cm){
+      const head = cm.st==="A" ? "Works with your leader" : cm.st==="U" ? "Compatibility uncertain" : cm.head;
+      compatBox = `<div class="compat ${cm.st==="U"?"":cm.st}"><b>${head}</b>${cm.why ? `<span>${esc(cm.why)}</span>` : `<span class="muted">No leader conditions on this card${c.sg.some(s=>s.c)?" that your leader misses":""}.</span>`}</div>`;
+    }
+    const lists = S.wish.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join("");
+    const isLeader = c.c === "L";
+    $("#layer").innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.n)}"><div class="grab"></div><div class="gut">
+      <div class="shead"><span class="mono muted">${c.i}${art}</span><button class="btn sm x" id="cClose">Close</button></div>
+      <div class="pop">
+        <div><div class="art grid" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>
+          ${c.v.length>1?`<div class="prints" role="group" aria-label="Printings">${c.v.map(v=>`<button data-art="${v[0]}" aria-pressed="${v[0]===art}">${esc(vlabel(v))}</button>`).join("")}</div>`:""}
+        </div>
+        <div style="min-width:0">
+          <h2 class="h2">${esc(c.n)}</h2>
+          <div class="meta">
+            <span class="tag">${CATNAME[c.c]}</span>
+            ${c.co.map(x=>`<span class="tag" style="background:${colorVar(x)};color:#fff">${x}</span>`).join("")}
+            <span class="tag">${isLeader?"Life":"Cost"} ${c.k ?? "–"}</span>
+            ${c.p!=null?`<span class="tag">Power ${c.p}</span>`:""}
+            <span class="tag">Counter ${c.ct ? "+"+c.ct : "—"}</span>
+            ${c.a?`<span class="tag">${esc(c.a)}</span>`:""}
+            <span class="tag">${esc(c.sn || c.s)}</span>
+          </div>
+          <div class="muted" style="margin-bottom:8px">${esc(c.t.join(" / "))}</div>
+          <div class="txt">${c.e?`<p>${fmtText(c.e)}</p>`:`<p class="muted">No effect.</p>`}${c.tr?`<p>${fmtText(c.tr)}</p>`:""}</div>
+          ${compatBox}
+          ${issues.length?`<div class="issues">${issues.join("")}</div>`:""}
+          <div class="ctl">
+            ${isLeader ? leaderCtl(d) : targetHTML()}
+            <div class="msg" id="cMsg" role="alert"></div>
+            ${isLeader ? (poolCards(c.i).size ? `<button class="btn sm" id="openPool">Open ★ ${esc(c.n)} Pool (${poolCards(c.i).size} cards)</button>` : "") : addToHTML()}
+            ${d.cards[c.i] && art !== (d.cards[c.i].art||"") ? `<div><button class="btn sm" id="useArt">Use this art in this build</button></div>`:""}
+            <div class="saveto">
+              <div class="savehd">Save to</div>
+              <div class="row">
+                ${S.wish.length?`<span class="row" style="gap:4px"><button class="btn sm" id="wAdd">Buy List</button><select class="btn sm" id="wSel" aria-label="Which Buy List">${lists}</select></span>`:`<button class="btn sm" id="wNew">Buy List</button>`}
+                <button class="btn sm${S.treasure.includes(c.i)?" dark":""}" id="tBox" aria-pressed="${S.treasure.includes(c.i)}">☆Treasure Box☆${S.treasure.includes(c.i)?" ✓":""}</button>
+              </div>
+              <div class="ctlrow"><span class="lab">My Collection<small>Copies I own · all printings count toward your builds</small></span>
+                <span class="stepper sm"><button id="oMinus" aria-label="Own one fewer">−</button><output aria-live="polite">${own}</output><button id="oPlus" aria-label="Own one more">+</button></span></div>
+            </div>
+            <div class="ctlrow" style="border-top:1px solid var(--line);padding-top:10px">
+              <span class="lab">Market price<small>TCGplayer prices arrive with the nightly price sync</small></span>
+              <a class="btn sm" href="https://www.tcgplayer.com/search/one-piece-card-game/product?q=${encodeURIComponent(c.i)}" target="_blank" rel="noopener">Find on TCGplayer ↗</a>
+            </div>
+          </div>
+        </div>
+      </div></div></div></div>`;
+    const sc = $("#scrim");
+    sc.addEventListener("click", e => { if (e.target === sc) closeSheet(); });
+    const at = $("#addTo"); if (at) at.addEventListener("toggle", () => { addOpen = at.open; });
+  };
+  onClose = () => { refreshTileState(); after && after(); };
+  draw();
+  const sc0 = $("#layer");
+  const handler = e => {
+    const t = e.target.closest("button"); if (!t) return;
+    const d = deck(); const msg = () => $("#cMsg");
+    if (t.id === "cClose"){ closeSheet(); return; }
+    if (t.dataset.art !== undefined){ art = t.dataset.art; draw(); return; }
+    if (t.id === "dPlus"){
+      const cur = d.cards[c.i]?.q || 0;
+      if (cur >= limitFor(c)){ msg().textContent = `You already have ${cur}. A build can hold up to 4 copies of a card.`; return; }
+      d.cards[c.i] = {q: cur+1, art: d.cards[c.i]?.art ?? art}; touch(d);
+      toast(`Added ${c.n} (${cur+1}/${c.any?"∞":4}) · ${deckCount(d)}/50`);
+    } else if (t.id === "dMinus"){
+      const cur = d.cards[c.i]?.q || 0; if (!cur) return;
+      if (cur === 1) delete d.cards[c.i]; else d.cards[c.i].q = cur-1; touch(d);
+      toast(`Removed ${c.n} · ${deckCount(d)}/50`);
+    } else if (t.id === "oPlus"){ S.owned[c.i] = (S.owned[c.i]||0)+1; save(); renderDeckViews(); }
+    else if (t.id === "oMinus"){ const o = (S.owned[c.i]||0)-1; if (o<=0) delete S.owned[c.i]; else S.owned[c.i]=o; save(); renderDeckViews(); }
+    else if (t.dataset.bstep){
+      const [bid, dl] = t.dataset.bstep.split("|"); const dk = S.decks.find(x=>x.id===bid); if (!dk) return;
+      const cur = dk.cards[c.i]?.q || 0;
+      if (+dl > 0){
+        if (cur >= limitFor(c)){ msg().textContent = `${dk.name} already has ${cur}. A build can hold up to 4 copies of a card.`; return; }
+        dk.cards[c.i] = {q:cur+1, art: dk.cards[c.i]?.art ?? art}; toast(`Added ${c.n} to ${dk.name} (${cur+1}) · ${deckCount(dk)}/50`);
+      } else { if (!cur) return; if (cur === 1) delete dk.cards[c.i]; else dk.cards[c.i].q = cur-1; toast(`Removed ${c.n} from ${dk.name} · ${deckCount(dk)}/50`); }
+      dk.updated = dk.used = Date.now(); save(); renderDeckViews(); updateChip();
+    }
+    else if (t.id === "favL"){ toggleFav(c.i); renderResults(); }
+    else if (t.dataset.wo){ workOn(t.dataset.wo); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild(); toast(`Building ${deck().name}`); return; }
+    else if (t.id === "newL"){ const nd = newBuild(c.i); workOn(nd.id); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild("add"); toast(`New ${c.n} build. Rename it in Build list.`); return; }
+    else if (t.dataset.quick){ const dk = S.decks.find(x=>x.id===t.dataset.quick); const cur = dk.cards[c.i]?.q || 0;
+      if (cur >= limitFor(c)){ toast(`${dk.name} already has 4`); return; }
+      dk.cards[c.i] = {q:cur+1, art:dk.cards[c.i]?.art ?? art}; dk.updated = Date.now(); save(); renderDeckViews(); toast(`Added ${c.n} to ${dk.name} (${cur+1})`); }
+    else if (t.dataset.act2 === "toPool"){ const lid = $("#poolLeader").value; (S.pools[lid] = S.pools[lid] || {cards:{}}).cards[c.i] = Date.now(); save(); toast(`Added to ★ ${BY.get(lid).n} Pool`); }
+    else if (t.dataset.act2 === "startDeck"){
+      const nd = newBuild(null); nd.cards[c.i] = {q:1, art}; workOn(nd.id); closeSheet();
+      FB.cats = new Set(["L"]); FB.colors = new Set(c.co); FB.lock = false;
+      renderAll(); openBuild("add"); window.scrollTo({top:0});
+      toast(`New build started with ${c.n}. Pick a ${colorWord(c.co)} leader.`); return;
+    }
+    else if (t.id === "setLeader"){
+      d.leader = c.i; touch(d); compatCache.clear(); FB.lock = true;
+      F.cats.delete("L"); F.colors.clear(); closeSheet();
+      toast(`${c.n} is your leader. Showing cards in its colors.`);
+      renderQuick(); renderResults(); renderDeckViews(); return;
+    }
+    else if (t.id === "tBox"){ const i = S.treasure.indexOf(c.i); if (i>=0) S.treasure.splice(i,1); else S.treasure.unshift(c.i); save(); toast(i>=0?"Removed from ☆Treasure Box☆":"Saved to ☆Treasure Box☆"); }
+    else if (t.id === "wAdd"){ const w = S.wish.find(x=>x.id===$("#wSel").value); w.items[c.i] = (w.items[c.i]||0)+1; save(); toast(`Added to ${w.name} (need ${w.items[c.i]})`); }
+    else if (t.id === "wNew"){ const w = {id:uid(), name:"My Buy List", items:{[c.i]:1}, decks:[], mode:"all"}; S.wish.push(w); save(); toast("Started “My Buy List”"); }
+    else if (t.id === "useArt"){ d.cards[c.i].art = art; touch(d); toast("This build uses this art now"); }
+    else if (t.dataset.addn){ addN = Math.max(1, Math.min(limitFor(c) > 4 ? 10 : 4, addN + +t.dataset.addn)); }
+    else if (t.dataset.unpool){ delete S.pools[t.dataset.unpool].cards[c.i]; save(); toast(`Removed from ★ ${BY.get(t.dataset.unpool).n} Pool`); }
+    else if (t.id === "openPool"){ closeSheet(); poolView = c.i; renderDecks(); go("decks"); return; }
+    else if (t.id === "addGo"){
+      const done = [], full = [];
+      for (const key of sel){
+        const [kind, id] = key.split(":");
+        if (kind === "d"){
+          const dk = S.decks.find(x=>x.id===id); if (!dk) continue;
+          const cur = dk.cards[c.i]?.q || 0, nq = Math.min(limitFor(c), cur + addN);
+          if (nq === cur){ full.push(dk.name); continue; }
+          dk.cards[c.i] = {q:nq, art: dk.cards[c.i]?.art ?? art}; dk.updated = Date.now(); done.push(`${dk.name} (×${nq})`);
+        } else {
+          (S.pools[id] = S.pools[id] || {cards:{}}).cards[c.i] = Date.now(); done.push(`★ ${BY.get(id).n} Pool`);
+        }
+      }
+      sel.clear(); save(); renderDeckViews(); updateChip();
+      if (done.length) toast(done.length === 1 ? `Added to ${done[0]}` : `Added to ${done.length} places`);
+      draw();
+      if (full.length) $("#addMsg").textContent = `Already at the 4-copy limit in: ${full.join(", ")}.`;
+      return;
+    }
+    else return;
+    draw();
+  };
+  const onSel = e => {
+    const k = e.target.dataset && e.target.dataset.sel; if (!k) return;
+    e.target.checked ? sel.add(k) : sel.delete(k);
+    const b = $("#addGo"); b.disabled = !sel.size; b.textContent = sel.size ? `Add to ${sel.size} selected` : "Pick builds or a pool";
+  };
+  sc0.addEventListener("click", handler);
+  sc0.addEventListener("change", onSel);
+  const prevClose = onClose;
+  onClose = () => { sc0.removeEventListener("click", handler); sc0.removeEventListener("change", onSel); prevClose && prevClose(); };
+}
+function touch(d){ d.updated = d.used = Date.now(); if (d.sample && deckCount(d)!==50) {} save(); renderDeckViews(); updateChip(); }
+function refreshTileState(){
+  // update quantity badges in place so the scroll position stays put
+  const d = deck();
+  grid.querySelectorAll("[data-open]").forEach(b => {
+    const id = b.dataset.open; const q = ctx !== "build" ? 0 : (d.cards[id]?.q || (d.leader===id?1:0));
+    let badge = b.querySelector(".qty");
+    if (q){ if (!badge){ badge = document.createElement("span"); badge.className="qty"; b.appendChild(badge); } badge.textContent = d.leader===id ? "L" : "×"+q; }
+    else if (badge) badge.remove();
+  });
+}
+
+/* ================= deck analysis ================= */
+function deckRows(d){
+  return Object.entries(d.cards).map(([id,v]) => ({c:BY.get(id), q:v.q, art:v.art||""})).filter(r=>r.c)
+    .sort((a,b)=>"CES".indexOf(a.c.c)-"CES".indexOf(b.c.c) || (a.c.k??0)-(b.c.k??0) || a.c._order-b.c._order);
+}
+function issuesFor(d){
+  const out = [], L = d.leader && BY.get(d.leader), rows = deckRows(d), n = deckCount(d);
+  if (!L) out.push(["bad","No leader yet. Pick one from Cards → Leaders."]);
+  if (n !== 50) out.push([n>50?"bad":"warn", `Deck has ${n} of 50 cards.`]);
+  for (const r of rows){
+    if (r.q > limitFor(r.c)) out.push(["bad", `${r.c.n} (${r.c.i}): ${r.q} copies. The maximum is 4.`]);
+    if (L && !sharesColor(r.c, L)) out.push(["warn", `${r.c.n} (${r.c.i}) doesn't share a color with your leader.`]);
+    if (r.c.ban) out.push(["bad", `${r.c.n} (${r.c.i}) is banned.`]);
+    if (r.c.c === "L") out.push(["bad", `${r.c.n} is a leader card in the main deck.`]);
+  }
+  if (L?.ban) out.push(["bad", `Your leader ${L.n} is banned.`]);
+  const ids = new Set([...rows.map(r=>r.c.i), d.leader]);
+  for (const [a,b] of META.pairs) if (ids.has(a) && ids.has(b)) out.push(["bad", `${BY.get(a).n} (${a}) and ${BY.get(b).n} (${b}) can't be in the same deck.`]);
+  const old = rows.filter(r=>!standardOK(r.c));
+  if (old.length) out.push(["info", `${old.length} card${old.length>1?"s have":" has"} rotated out of Standard (Block 1, not on Bandai's exception list): ${old.slice(0,4).map(r=>r.c.i).join(", ")}${old.length>4?"…":""}. Fine for Extra format.`]);
+  if (L?.ru){
+    for (const rule of L.ru){
+      out.push(["info", "Leader rule: " + rule.replace("Under the rules of this game, ","")]);
+      const m = rule.match(/cannot include (cards|Events|Characters) with a cost of (\d+) or more/);
+      if (m){
+        const lim = +m[2], cat = {cards:null, Events:"E", Characters:"C"}[m[1]];
+        const bad = rows.filter(r => (cat===null || r.c.c===cat) && (r.c.k??0) >= lim);
+        if (bad.length) out.push(["bad", `Breaks the leader rule: ${bad.map(r=>r.c.n).join(", ")}.`]);
+      }
+    }
+  }
+  if (!out.some(o=>o[0]==="bad"||o[0]==="warn")) out.unshift(["ok","Deck is legal: one leader, 50 cards, copy limits and colors check out."]);
+  return out;
+}
+function statsFor(d){
+  const rows = deckRows(d); const n = deckCount(d);
+  const curve = Array(11).fill(0), ctr = {0:0,1000:0,2000:0}, cats = {C:0,E:0,S:0}, types = {}, abil = {}, colors = {};
+  let trig = 0, ctrTotal = 0, costSum = 0;
+  const AB = ["rush","blocker","banish","double","ko","rest","bounce","bottom","powdown","draw","search","donadd","active","play"];
+  for (const r of rows){
+    const c = r.c, q = r.q;
+    curve[Math.min(10, c.k ?? 0)] += q; costSum += (c.k??0)*q;
+    ctr[c.ct||0] = (ctr[c.ct||0]||0) + q; ctrTotal += (c.ct||0)*q;
+    cats[c.c] = (cats[c.c]||0) + q;
+    if (c.tr) trig += q;
+    for (const t of c.t) types[t] = (types[t]||0) + q;
+    for (const a of AB) if (c._tags.has(a)) abil[a] = (abil[a]||0) + q;
+    for (const col of c.co) colors[col] = (colors[col]||0) + q;
+  }
+  let maxCost = 0; curve.forEach((v,i)=>{ if (v) maxCost = i; });
+  return {n, curve: curve.slice(0, Math.max(maxCost, 7)+1), ctr, cats, types, abil, colors, trig, ctrTotal, avg: n ? (costSum/n) : 0, uniq: rows.length};
+}
+function hbars(obj, labelFn, max){
+  const ent = Object.entries(obj).filter(([,v])=>v).sort((a,b)=>b[1]-a[1]).slice(0, max||8);
+  if (!ent.length) return `<p class="muted">Nothing yet.</p>`;
+  const top = ent[0][1];
+  return `<div class="bars">${ent.map(([k,v])=>`<div class="hbar"><span class="lbl">${esc(labelFn?labelFn(k):k)}</span><span class="track"><span class="fill" style="display:block;width:${Math.round(v/top*100)}%"></span></span><span class="num">${v}</span></div>`).join("")}</div>`;
+}
+function statsHTML(d){
+  const s = statsFor(d);
+  const top = Math.max(1, ...s.curve);
+  const curve = `<div class="curve" style="--n:${s.curve.length}" role="img" aria-label="Cost curve: ${s.curve.map((v,i)=>`${v} at cost ${i}${i===10?"+":""}`).join(", ")}">${s.curve.map(v=>`<div class="col"><span class="v">${v||""}</span><span class="b${v?"":" zero"}" style="height:${v/top*100}%"></span></div>`).join("")}</div>
+    <div class="curvex" style="--n:${s.curve.length}">${s.curve.map((_,i)=>`<span>${i===10?"10+":i}</span>`).join("")}</div>`;
+  return `<div class="stats">
+    <div class="statgrid">
+      <div class="stat"><b>${s.avg.toFixed(2)}</b><span>Avg cost</span></div>
+      <div class="stat"><b>${s.trig}</b><span>Triggers</span></div>
+      <div class="stat"><b>${(s.ctrTotal/1000).toFixed(0)}k</b><span>Total counter</span></div>
+      <div class="stat"><b>${s.uniq}</b><span>Unique cards</span></div>
+    </div>
+    <div><div class="h3" style="margin-top:4px">Cost curve</div>${curve}</div>
+    <div class="statgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="stat"><b>${s.ctr[0]||0}</b><span>No counter</span></div>
+      <div class="stat"><b>${s.ctr[1000]||0}</b><span>+1000</span></div>
+      <div class="stat"><b>${s.ctr[2000]||0}</b><span>+2000</span></div>
+    </div>
+    <div class="statgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="stat"><b>${s.cats.C}</b><span>Characters</span></div>
+      <div class="stat"><b>${s.cats.E}</b><span>Events</span></div>
+      <div class="stat"><b>${s.cats.S}</b><span>Stages</span></div>
+    </div>
+    <div><div class="h3" style="margin-top:4px">Types &amp; traits</div>${hbars(s.types)}</div>
+    <div><div class="h3" style="margin-top:4px">Abilities</div>${hbars(s.abil, k=>TAGLABEL[k], 14)}</div>
+    <div><div class="h3" style="margin-top:4px">Colors</div>${hbars(s.colors)}</div>
+  </div>`;
+}
+
+/* ================= import / export ================= */
+const ID_RX = /(?:^|[^A-Za-z0-9]|(?<=\d)[x×])((?:OP|ST|EB|PRB|P)\d{0,2}-\d{3})(_[pr]\d+)?(?!\d)/i;
+function parseList(text){
+  const found = new Map(), errors = [], notes = []; let leader = null;
+  for (const raw of text.split(/\r?\n/)){
+    const line = raw.trim(); if (!line) continue;
+    const m = line.match(ID_RX);
+    if (!m){ if (/\d/.test(line) && /[a-z]/i.test(line) && !/^(leader|characters?|events?|stages?|main|deck)\b/i.test(line)) notes.push(`Skipped a line with no card number: “${line.slice(0,40)}”`); continue; }
+    const id = m[1].toUpperCase(), art = (m[2]||"").toLowerCase();
+    let q = 1; const qm = line.match(/^(\d+)\s*[x×]?\s*/i) || line.match(/[x×]\s*(\d+)\s*$/i) || line.match(/\s(\d+)\s*$/);
+    if (qm) q = +qm[1]; else notes.push(`No quantity on “${line.slice(0,30)}”, so it counts as 1.`);
+    const c = BY.get(id);
+    if (!c){ errors.push(`Card not found: ${id}`); continue; }
+    if (c.c === "L"){ if (leader && leader !== id) notes.push(`More than one leader listed. Using ${BY.get(leader).n}.`); else leader = id; continue; }
+    if (found.has(id)){ notes.push(`${id} listed more than once. Combined the copies.`); found.get(id).q += q; }
+    else found.set(id, {q, art});
+  }
+  const cards = {}; let n = 0; for (const [id,v] of found){ cards[id] = v; n += v.q; }
+  return {leader, cards, n, errors, notes};
+}
+function exportList(d, fmt){
+  const rows = deckRows(d), L = d.leader && BY.get(d.leader), lines = [];
+  const line = (q, c) => fmt === "sim" ? `${q}x${c.i}` : fmt === "ids" ? `${q} ${c.i}` : `${q} ${c.i} ${c.n}`;
+  if (L) lines.push(line(1, L));
+  for (const r of rows) lines.push(line(r.q, r.c));
+  return lines.join("\n");
+}
+async function copyText(text, el){
+  try{ await navigator.clipboard.writeText(text); toast("Copied"); }
+  catch(e){ if (el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } toast("Press Copy on your keyboard or menu"); }
+}
+function openImportExport(start){
+  const d = deck(); let fmt = "egman", parsed = null, mode = start || "export";
+  const draw = () => {
+    const sc = sheet(`
+      <div class="shead"><h2 class="h2">Import / Export</h2><button class="btn sm x" id="ieClose">Close</button></div>
+      <div class="seg" role="group" aria-label="Mode"><button data-mode="export" aria-pressed="${mode==="export"}">Export</button><button data-mode="import" aria-pressed="${mode==="import"}">Import</button></div>
+      ${mode==="export" ? `
+        <div class="fgroup"><div class="lab">Format</div><div class="wrapchips">
+          <button class="chip" data-fmt="egman" aria-pressed="${fmt==="egman"}">Number + name (4 OP01-016 Nami)</button>
+          <button class="chip" data-fmt="sim" aria-pressed="${fmt==="sim"}">OPTCGSim (4xOP01-016)</button>
+          <button class="chip" data-fmt="ids" aria-pressed="${fmt==="ids"}">Numbers only (4 OP01-016)</button></div></div>
+        <div class="out" id="exOut" tabindex="0">${esc(exportList(d, fmt)) || "This build is empty."}</div>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="exCopy">Copy deck list</button><span class="muted" style="font-size:13px">${deckCount(d)+(d.leader?1:0)} cards incl. leader. Image and PDF export come with hosting.</span></div>`
+      : `
+        <p class="muted" style="margin:10px 0 6px;font-size:14px">Paste a list from OPTCGSim, Egman, Limitless or most deck sites. One card per line with a quantity and card number.</p>
+        <textarea class="field" id="imText" placeholder="1 OP12-001 Silvers Rayleigh&#10;4 OP01-016 Nami&#10;4xOP03-008" autofocus></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn dark" id="imCheck">Check list</button></div>
+        <div id="imResult"></div>`}
+    `, "Import or export");
+    onClose = null;
+    sc.addEventListener("click", e => {
+      const t = e.target.closest("button"); if (!t) return;
+      if (t.id === "ieClose") closeSheet();
+      else if (t.dataset.mode){ mode = t.dataset.mode; draw(); }
+      else if (t.dataset.fmt){ fmt = t.dataset.fmt; draw(); }
+      else if (t.id === "exCopy") copyText(exportList(d, fmt), $("#exOut"));
+      else if (t.id === "imCheck"){
+        parsed = parseList($("#imText").value);
+        const L = parsed.leader && BY.get(parsed.leader);
+        $("#imResult").innerHTML = `<div class="issues">
+          <div class="issue ${L?"ok":"warn"}"><i></i>${L ? `Leader: ${esc(L.n)} (${L.i})` : "No leader in this list. You can pick one after importing."}</div>
+          <div class="issue ${parsed.n===50?"ok":"warn"}"><i></i>${parsed.n} main-deck cards, ${Object.keys(parsed.cards).length} different.</div>
+          ${parsed.errors.map(x=>`<div class="issue bad"><i></i>${esc(x)}</div>`).join("")}
+          ${parsed.notes.map(x=>`<div class="issue"><i></i>${esc(x)}</div>`).join("")}
+        </div>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="imNew" ${parsed.n||L?"":"disabled"}>Import as new build</button><button class="btn" id="imReplace" ${parsed.n||L?"":"disabled"}>Replace “${esc(d.name.slice(0,24))}”</button></div>`;
+      }
+      else if (t.id === "imNew" || t.id === "imReplace"){
+        const L = parsed.leader && BY.get(parsed.leader);
+        if (t.id === "imNew"){
+          const nd = {id:uid(), name: L ? `${L.n} (imported)` : "Imported build", leader: parsed.leader, cards: parsed.cards, updated: Date.now(), used: Date.now()};
+          S.decks.unshift(nd); workOn(nd.id);
+        } else { d.leader = parsed.leader || d.leader; d.cards = parsed.cards; d.sample = false; d.updated = Date.now(); }
+        compatCache.clear(); save(); closeSheet(); toast(`Imported ${parsed.n} cards`);
+        renderAll(); openBuild("list");
+      }
+    });
+  };
+  draw();
+}
+
+/* ================= build view ================= */
+let deckTab = "list", confirmDel = false;     // desktop panel: Build list / Stats
+function buildBodyHTML(tab){
+  const d = deck(); const L = d.leader && BY.get(d.leader);
+  const rows = deckRows(d), n = deckCount(d);
+  const iss = issuesFor(d);
+  const missing = rows.reduce((m,r)=>m + Math.max(0, r.q - (S.owned[r.c.i]||0)), 0) + (L && !S.owned[L.i] ? 1 : 0);
+  let list = "";
+  for (const cat of ["C","E","S"]){
+    const rs = rows.filter(r=>r.c.c===cat); if (!rs.length) continue;
+    list += `<div class="h3 rhhead"><span>${CATNAME[cat]}s · ${rs.reduce((a,r)=>a+r.q,0)}</span><span class="rhlab">Plan to run<br><small>Have</small></span></div><div class="list">`;
+    for (const r of rs){
+      const own = S.owned[r.c.i]||0, need = Math.max(0, r.q-own);
+      list += `<button class="li" data-open="${r.c.i}" data-suf="${r.art}" aria-label="${esc(r.c.n)}: run ${r.q}, have ${own}${need?", need "+need:""}"><span class="bar" style="background:${bandBg(r.c)}"></span><span class="c">${r.c.k??"–"}</span>
+        <span class="t"><b>${esc(r.c.n)}</b><span class="mono muted">${r.c.i}${r.art}</span></span>
+        <span class="rh"><span class="run">${r.q}</span><span class="have ${need?"short":"ok"}">Have ${own}${need?` · need ${need}`:" ✓"}</span></span></button>`;
+    }
+    list += `</div>`;
+  }
+  return `
+    <input class="namein" id="deckName" value="${esc(d.name)}" aria-label="Build name">
+    <div class="row muted" style="font-size:13px;margin:2px 0 10px"><span class="count ${n===50?"full":""}">${n}/50</span><span>Saved on this device · ${new Date(d.updated).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"})}</span></div>
+    ${L ? `<button class="leaderbox" data-open="${L.i}" style="width:100%;text-align:left"><span class="sw" style="background:${bandBg(L)}"></span><span class="info"><span class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Leader · ${L.co.join("/")} · Life ${L.k}</span><b style="display:block;font-family:var(--f-display);font-size:20px">${esc(L.n)}</b><span class="mono muted">${L.i}</span></span></button>`
+        : `<div class="banner"><span>No leader yet.</span><button class="btn sm primary" data-act="pickLeader">Choose a leader</button></div>`}
+    <div class="row" style="margin-top:10px">
+      <button class="btn sm dark" data-act="ie">Import / Export</button>
+      ${L ? `<button class="btn sm" data-act="pool">★ Pool</button>` : ""}
+      <button class="btn sm" data-act="dup">Copy as new build</button>
+      <button class="btn sm" data-act="newdeck">${L ? `New ${esc(L.n)} build` : "New build"}</button>
+      <button class="btn sm danger" data-act="del">Delete</button>
+    </div>
+    ${confirmDel?`<div class="confirm" style="margin-top:8px">Delete “${esc(d.name)}”? This can't be undone. <button class="btn sm danger" data-act="delYes">Delete build</button><button class="btn sm" data-act="delNo">Keep</button></div>`:""}
+    <div class="issues">${iss.map(([k,m])=>`<div class="issue ${k}"><i></i><span>${esc(m)}</span></div>`).join("")}</div>
+    ${tab === "stats" ? `<div style="margin-top:14px">${statsHTML(d)}</div>`
+      : `${rows.length?`<div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn sm" data-act="wishMissing" ${missing===0?"disabled":""}>${missing?`Buy List for this build (${missing} to buy)`:"Nothing to buy ✓"}</button></div>`:""}
+         ${list || `<p class="muted" style="margin-top:16px">No cards yet. Use Add cards, then + in a card's popup.</p>`}`}
+    ${d.sample?`<p class="foot-note">This sample build was made automatically from ST-01 cards so you can try the app. It isn't a tuned list.</p>`:""}`;
+}
+function buildHeadHTML(){
+  const d = deck(), L = d.leader && BY.get(d.leader), n = deckCount(d);
+  return `<button class="crumb" data-act="toDecks">‹ My Decks</button>
+    <div class="bhead"><span class="sw" style="background:${L?bandBg(L):"var(--line)"}"></span>
+    <span class="bhn"><b>${L ? esc(L.n) + " Deck" : "New deck"}</b><small><span class="bl">Build</span> ${esc(d.name)}${d.star?' <span style="color:var(--accent)">★</span>':""}</small></span>
+    <span class="count ${n===50?"full":""}">${n}/50</span><button class="btn sm" data-act="switch">Switch build</button></div>`;
+}
+function renderDeckViews(){
+  const a = $("#asideDeck"), st = a.scrollTop;
+  a.innerHTML = buildHeadHTML() + `<div class="row" style="margin:10px 0 4px;justify-content:space-between">
+      <button class="btn sm ${ctx==="build"?"dark":"primary"}" data-act="addCards">${ctx==="build" ? "Adding cards ✓" : "Add cards"}</button>
+      <div class="seg" role="group" aria-label="Build view"><button data-dtab="list" aria-pressed="${deckTab==="list"}">Build list</button><button data-dtab="stats" aria-pressed="${deckTab==="stats"}">Stats</button></div></div>
+    <div style="margin-top:10px">${buildBodyHTML(deckTab)}</div>`;
+  a.scrollTop = st;
+  $("#bHead").innerHTML = buildHeadHTML() + `<div class="seg full" role="group" aria-label="Build view" style="margin-top:10px"><button data-bsub="add" aria-pressed="${bSub==="add"}">Add cards</button><button data-bsub="list" aria-pressed="${bSub==="list"}">Build list</button><button data-bsub="stats" aria-pressed="${bSub==="stats"}">Stats</button></div>`;
+  $("#bBody").innerHTML = bSub === "add" ? "" : buildBodyHTML(bSub);
+  $("#bAddSlot").hidden = bSub !== "add";
+  updateChip();
+}
+function deckClick(e){
+  if (e.target.closest("#searchBlock")) return;      // the search has its own click handling
+  const nm = e.target.closest("#deckName"); if (nm) return;
+  const t = e.target.closest("button"); if (!t) return;
+  const d = deck();
+  if (t.dataset.open){ openCard(t.dataset.open, t.dataset.suf); return; }
+  if (t.dataset.dtab){ deckTab = t.dataset.dtab; renderDeckViews(); return; }
+  if (t.dataset.bsub){ bSub = t.dataset.bsub; if (bSub === "add") setCtx("build"); renderDeckViews(); window.scrollTo({top:0}); return; }
+  const a = t.dataset.act;
+  if (a === "ie") openImportExport();
+  else if (a === "switch") openWorkOn();
+  else if (a === "toDecks"){ if (innerWidth >= 1024 && ctx === "build") setCtx("cards"); go("decks"); }
+  else if (a === "addCards"){ if (ctx === "build") setCtx("cards"); else openBuild("add"); renderDeckViews(); }
+  else if (a === "pool"){ poolView = d.leader; poolFilter = "all"; renderDecks(); go("decks"); }
+  else if (a === "pickLeader"){ FB.cats = new Set(["L"]); FB.lock = false; openBuild("add"); if (ctx === "build"){ renderQuick(); renderResults(); } }
+  else if (a === "dup"){ const nd = JSON.parse(JSON.stringify(d)); nd.id = uid(); nd.name = d.name.replace(/ \(copy.*\)$/,"") + " (copy)"; nd.updated = nd.used = Date.now(); nd.sample = false; S.decks.unshift(nd); workOn(nd.id); renderAll(); toast("Copied as a new build. Rename it above."); setTimeout(()=>{ const i = document.querySelector(innerWidth>=1024?"#asideDeck #deckName":"#v-deck #deckName"); i && (i.focus(), i.select()); }, 50); }
+  else if (a === "newdeck"){ const nd = newBuild(d.leader); workOn(nd.id); if (!d.leader) FB.cats = new Set(["L"]); renderAll(); openBuild("add"); toast(d.leader ? "New build started. Rename it in Build list." : "New build. Pick a leader."); }
+  else if (a === "del"){ confirmDel = true; renderDeckViews(); }
+  else if (a === "delNo"){ confirmDel = false; renderDeckViews(); }
+  else if (a === "delYes"){ confirmDel = false; (S.gone = S.gone || {})[d.id] = Date.now(); S.decks = S.decks.filter(x=>x.id!==d.id); if (!S.decks.length) newBuild(null); S.cur = recentBuilds()[0].id; FB = mkF(); if (ctx === "build") F = FB; compatCache.clear(); save(); renderAll(); toast("Build deleted"); }
+  else if (a === "wishMissing"){
+    let w = S.wish.find(x=>x.decks.length===1 && x.decks[0]===d.id);
+    if (!w){ w = {id:uid(), name:`${d.name} — Buy List`, items:{}, decks:[d.id], mode:"all"}; S.wish.unshift(w); }
+    save(); toast(`Buy List ready: ${buyRows(w).total} cards to buy`); listTab = "wish"; renderLists(); go("lists");
+  }
+}
+for (const el of [$("#v-deck"), $("#asideDeck")]){
+  el.addEventListener("click", deckClick);
+  el.addEventListener("change", e => { if (e.target.id === "deckName"){ const d = deck(); d.name = e.target.value.trim() || "Untitled build"; d.updated = Date.now(); save(); renderDeckViews(); renderDecks(); renderHome(); } });
+}
+function updateChip(){
+  const d = deck(), n = deckCount(d);
+  $("#chipName").textContent = d.name;
+  const cc = $("#chipCount"); cc.textContent = `${n}/50`; cc.classList.toggle("full", n===50);
+  const nc = $("#navCount"); nc.hidden = !n; nc.textContent = n;
+}
+$("#deckChip").onclick = () => openBuild();
+
+/* ================= my decks ================= */
+let poolView = null, poolFilter = "all";
+let openAll = new Set();   // leaders whose full build list is expanded
+// Split skull & crossbones in the leader's two colors (left half / right half). Holes are cut in the page color.
+let jollyN = 0;
+const JOLLY_BONES = (() => {
+  const C = 20, E = 14.5, k = [];
+  for (const [sx, sy] of [[-1,-1],[1,1],[1,-1],[-1,1]]){
+    const ex = C+sx*E, ey = C+sy*E, px = -sy/Math.SQRT2, py = sx/Math.SQRT2;
+    for (const m of [-1,1]) k.push(`<circle cx="${(ex+px*2.3*m).toFixed(2)}" cy="${(ey+py*2.3*m).toFixed(2)}" r="2.5"/>`);
+  }
+  return `<g stroke-width="3.8" stroke-linecap="round" fill="none"><line x1="${C-E}" y1="${C-E}" x2="${C+E}" y2="${C+E}"/><line x1="${C+E}" y1="${C-E}" x2="${C-E}" y2="${C+E}"/></g><g stroke="none">${k.join("")}</g>`;
+})();
+const JOLLY_HEAD = `<circle cx="20" cy="18.2" r="8.6"/><rect x="14.5" y="22.5" width="11" height="7.5" rx="2.6"/>`;
+function jollyHTML(cs){
+  const a = colorVar(cs[0] || "Black"), b = colorVar(cs[1] || cs[0] || "Black"), u = "jy" + (jollyN++);
+  const half = (side, col, inner) => `<g clip-path="url(#${u}${side})" fill="${col}" stroke="${col}">${inner}</g>`;
+  return `<svg class="jolly" viewBox="0 0 40 40" aria-hidden="true"><defs><clipPath id="${u}L"><rect width="20" height="40"/></clipPath><clipPath id="${u}R"><rect x="20" width="20" height="40"/></clipPath></defs>
+    ${half("L", a, JOLLY_BONES)}${half("R", b, JOLLY_BONES)}
+    <g fill="var(--bg)"><circle cx="20" cy="18.2" r="10.2"/><rect x="12.9" y="20.9" width="14.2" height="10.7" rx="4"/></g>
+    <g stroke="none">${half("L", a, JOLLY_HEAD)}${half("R", b, JOLLY_HEAD)}</g>
+    <g fill="var(--bg)"><ellipse cx="16.7" cy="18.6" rx="2.3" ry="2.6"/><ellipse cx="23.3" cy="18.6" rx="2.3" ry="2.6"/><path d="M20 21.6l-1.3 2.1h2.6z"/></g>
+    <path d="M17.7 26.4v3.1M20 26.4v3.1M22.3 26.4v3.1" stroke="var(--bg)" stroke-width="1.1" stroke-linecap="round"/></svg>`;
+}
+const colorWords = cs => `<span class="ctags">${cs.map(c => `<span style="color:var(--t-${c.toLowerCase()})">${c}</span>`).join(`<span class="sep" aria-hidden="true"></span>`)}</span>`;
+
+// A build's cover: your photo, a card you picked, or (default) the leader card. Card art shows when the host allows it;
+// otherwise a striped tile in the leader's colors with the card number.
+function coverId(d){ return (d.cover && d.cover.card) || d.leader || Object.keys(d.cards)[0] || null; }
+function coverHTML(d, idOverride){
+  const L = d.leader && BY.get(d.leader), cs = (L && L.co.length) ? L.co : ["Black"];
+  const a = colorVar(cs[0]), b = colorVar(cs[1] || cs[0]);
+  const bg = `repeating-linear-gradient(135deg, color-mix(in oklab, ${a} 34%, #141210) 0 10px, color-mix(in oklab, ${b} 30%, #171512) 10px 20px)`;
+  if (!idOverride && d.cover && d.cover.photo) return `<span class="cov" style="background:${bg}"><img alt="" src="${d.cover.photo}"></span>`;
+  const id = idOverride || coverId(d), c = id && BY.get(id);
+  return `<span class="cov" style="background:${bg}"><span class="ph">${c ? `<span>${c.i}</span><span>${esc(c.n)}</span>` : "No cover"}</span>${c ? imgTag(c.i) : ""}</span>`;
+}
+const shortDate = t => new Date(t).toLocaleDateString([], {month:"short", day:"numeric"}).toLowerCase();
+function tileHTMLb(d){
+  const n = deckCount(d), done = n === 50;
+  const label = `${d.name}, ${n} of 50 cards${done ? ", completed" : ""}${d.star ? ", favorite" : ""}`;
+  return `<div class="btile${d.id===S.cur ? " cur" : ""}">
+    <button class="open" data-deck="${d.id}" aria-label="${esc(label)}">${coverHTML(d)}</button>
+    <span class="badges">${done ? `<span class="done">COMPLETED</span>` : ""}${d.star ? `<span class="fav" aria-hidden="true">★</span>` : ""}</span>
+    <span class="bt-foot"><span class="bt-nm">${esc(d.name)}</span><span class="pbar"><i style="width:${Math.min(100, n*2)}%"></i></span><span class="bt-meta">${n}/50 · ${shortDate(usedAt(d))}</span></span>
+    <button class="edit" data-bedit="${d.id}" aria-label="Edit ${esc(d.name)}: rename or change cover"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+  </div>`;
+}
+const DF = [["recent","Recent",""],["fav","Favorited",`<svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.3 4.8 5.2.7-3.8 3.6.9 5.2L10 14.3l-4.6 2.5.9-5.2L2.5 8l5.2-.7z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`],["done","Completed",`<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M6.6 10.2l2.3 2.3 4.6-4.8"/></svg>`]];
+function renderDecks(){
+  const v = $("#v-decks");
+  v.dataset.mode = (poolView && BY.get(poolView)) ? "pool" : "home";
+  if (poolView && BY.get(poolView)) return renderPool(v, poolView);
+  poolView = null; jollyN = 0;
+  const df = S.prefs.deckFilter || "recent";
+  const keep = d => df === "fav" ? !!d.star : df === "done" ? deckCount(d) === 50 : true;
+  const {groups, none} = leaderGroups();
+  const last = g => Math.max(0, ...g.decks.map(usedAt));
+  groups.sort((a,b) => (isFav(b.L.i) - isFav(a.L.i)) || (last(b) - last(a)));
+  const byRecent = ds => ds.filter(keep).sort((a,b) => usedAt(b) - usedAt(a));
+  let body = "";
+  for (const g of groups){
+    const ds = byRecent(g.decks);
+    if (df !== "recent" && !ds.length) continue;
+    const pc = poolCards(g.L.i).size;
+    body += `<section class="lsec" aria-label="${esc(g.L.n)}"><div class="lrow">${jollyHTML(g.L.co)}
+        <button class="lt" data-open="${g.L.i}"><b>${esc(g.L.n)}</b>${colorWords(g.L.co.length ? g.L.co : ["Black"])}</button>
+        <button class="poollink" data-pool="${g.L.i}">Pool ${pc} →</button></div>
+      <div class="trow">${ds.map(tileHTMLb).join("")}${df === "recent" ? `<button class="newtile" data-newb="${g.L.i}" aria-label="New ${esc(g.L.n)} build">+ New build</button>` : ""}</div></section>`;
+  }
+  const loose = byRecent(none);
+  if (loose.length) body += `<section class="lsec"><div class="lrow">${jollyHTML([])}<span class="lt"><b>No leader yet</b><span class="ctags" style="color:var(--muted)">Pick a leader inside the build</span></span></div><div class="trow">${loose.map(tileHTMLb).join("")}</div></section>`;
+  if (!body) body = `<p class="dempty">${df === "fav" ? "No favorite builds yet. Tap the pencil on a build and choose ★ Favorite." : df === "done" ? "No completed builds yet. A build counts as completed at 50/50." : "No decks yet. Tap + to start one."}</p>`;
+  v.innerHTML = `<div class="dhead"><h2 class="dtitle">Decks</h2><button class="roundbtn" data-act="new" aria-label="New deck"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></button></div>
+    <div class="dfilt" role="group" aria-label="Show builds">${DF.map(([k,l,ic]) => `<button class="fpill" data-df="${k}" aria-pressed="${df===k}">${ic}${l}</button>`).join("")}</div>
+    ${body}`;
+}
+
+// Pencil → Edit build: rename, favorite, and choose the cover (a card from the build or your own photo).
+function shrinkPhoto(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => { const s = Math.min(1, 520 / Math.max(im.width, im.height * 0.72));
+      const cv = document.createElement("canvas"); cv.width = Math.round(im.width*s); cv.height = Math.round(im.height*s);
+      cv.getContext("2d").drawImage(im, 0, 0, cv.width, cv.height); URL.revokeObjectURL(url); res(cv.toDataURL("image/jpeg", 0.8)); };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error("bad image")); };
+    im.src = url;
+  });
+}
+function saveNow(){ try { localStorage.setItem(KEY, JSON.stringify(S)); return true; } catch(e){ return false; } }
+function editBuild(id){
+  const d = S.decks.find(x => x.id === id); if (!d) return;
+  const L = d.leader && BY.get(d.leader);
+  let picking = false;
+  const draw = () => {
+    const ids = [...new Set([d.leader, ...Object.keys(d.cards)].filter(Boolean))];
+    const cur = d.cover && d.cover.photo ? null : coverId(d);
+    const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">${esc((L ? L.n : "No leader") .toUpperCase())} DECK</span><b>Edit build</b></span><button class="btn primary" data-eb="done">Done</button></div>
+      <label class="fld"><span>Name</span><input type="text" id="ebName" maxlength="40" value="${esc(d.name)}" autocomplete="off"></label>
+      <div class="fld"><span>Favorite</span><div><button class="fpill" data-eb="fav" aria-pressed="${!!d.star}">${d.star ? "★ Favorited" : "☆ Favorite this build"}</button></div></div>
+      <div class="fld"><span>Cover</span>
+        <div class="ebcov"><span class="mini">${coverHTML(d)}</span>
+          <span class="opts"><button class="optbtn" data-eb="pick" aria-expanded="${picking}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7.5" height="10" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="10" rx="1.5"/><rect x="3" y="15.5" width="18" height="5.5" rx="1.5"/></svg>Pick a card from this build</button>
+            <label class="optbtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-8 8"/></svg>Upload your own photo<input type="file" accept="image/*" id="ebFile" style="position:absolute;width:1px;height:1px;opacity:0"></label>
+            ${d.cover ? `<button class="linkbtn" data-eb="reset">Go back to the leader card</button>` : ""}</span></div>
+        ${picking ? `<div class="pickgrid" role="group" aria-label="Cards in this build">${ids.map(cid => { const c = BY.get(cid); return c ? `<button data-ebc="${cid}" aria-pressed="${cid===cur}" aria-label="${esc(c.n)} ${cid}">${coverHTML(d, cid)}</button>` : ""; }).join("")}</div>` : ""}
+      </div>`, "Edit build");
+    const nm = $("#ebName", sc);
+    nm.addEventListener("input", () => { d.name = nm.value.trim() || "Untitled build"; d.updated = Date.now(); save(); });
+    $("#ebFile", sc).addEventListener("change", async e => {
+      const file = e.target.files && e.target.files[0]; if (!file) return;
+      const prev = d.cover;
+      try { d.cover = {photo: await shrinkPhoto(file)}; } catch(err){ toast("That file couldn't be opened as a photo."); return; }
+      if (!saveNow()){ d.cover = prev; toast("Not enough space on this phone to keep that photo."); return; }
+      picking = false; draw();
+    });
+    sc.addEventListener("click", e => {
+      const t = e.target.closest("button"); if (!t) return;
+      if (t.dataset.eb === "done"){ closeSheet(); return; }
+      if (t.dataset.eb === "fav"){ d.star = !d.star; save(); draw(); return; }
+      if (t.dataset.eb === "pick"){ picking = !picking; draw(); return; }
+      if (t.dataset.eb === "reset"){ delete d.cover; save(); draw(); return; }
+      if (t.dataset.ebc){ d.cover = {card: t.dataset.ebc}; save(); draw(); return; }
+    });
+  };
+  onClose = () => { renderDecks(); updateChip(); renderDeckViews(); renderHome(); };
+  draw();
+}
+function renderPool(v, lid){
+  const L = BY.get(lid), map = poolCards(lid), decks = S.decks.filter(d=>d.leader===lid);
+  let rows = [...map.entries()].map(([id,info]) => ({c:BY.get(id), ...info})).filter(r=>r.c)
+    .sort((a,b)=>"CES".indexOf(a.c.c)-"CES".indexOf(b.c.c) || (a.c.k??0)-(b.c.k??0) || a.c._order-b.c._order);
+  const ideasOnly = rows.filter(r=>!r.decks.length).length;
+  if (poolFilter === "ideas") rows = rows.filter(r=>!r.decks.length);
+  if (poolFilter === "decks") rows = rows.filter(r=>r.decks.length);
+  let list = "";
+  for (const cat of ["C","E","S"]){
+    const rs = rows.filter(r=>r.c.c===cat); if (!rs.length) continue;
+    list += `<div class="h3">${CATNAME[cat]}s · ${rs.length}</div><div class="list">${rs.map(r => {
+      const src = r.decks.map(([d,q])=>`${esc(d.name)} ×${q}`); if (r.idea) src.push("★ Idea");
+      return `<button class="li" data-open="${r.c.i}"><span class="bar" style="background:${bandBg(r.c)}"></span><span class="c">${r.c.k??"–"}</span>
+        <span class="t"><b>${esc(r.c.n)}</b><span class="mono muted">${r.c.i}</span><span class="own">${src.join(" · ")}</span></span>
+        <span class="q" style="font-size:14px">${r.decks.length ? r.decks.length+" build"+(r.decks.length>1?"s":"") : "Idea"}</span></button>`; }).join("")}</div>`;
+  }
+  v.innerHTML = `<button class="btn sm" data-act="back">‹ My Decks</button>
+    <div class="leaderbox" style="margin-top:10px"><span class="sw" style="background:${bandBg(L)}"></span><span class="info"><span class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Leader Pool · ${L.i}</span><b style="display:block;font-family:var(--f-display);font-size:22px">★ ${esc(L.n)} Pool</b>
+      <span class="muted" style="font-size:13px">${map.size} cards: ${map.size-ideasOnly} from ${decks.length} build${decks.length===1?"":"s"}, ${ideasOnly} idea${ideasOnly===1?"":"s"} only here</span></span></div>
+    <p class="muted" style="font-size:13px;margin:8px 0">Every card in your ${esc(L.n)} builds plus ideas you add. To add a card, open it and use “More builds &amp; ★ Leader Pools”.</p>
+    <div class="row" style="justify-content:space-between"><div class="seg" role="group" aria-label="Show"><button data-pf="all" aria-pressed="${poolFilter==="all"}">All</button><button data-pf="decks" aria-pressed="${poolFilter==="decks"}">In builds</button><button data-pf="ideas" aria-pressed="${poolFilter==="ideas"}">Ideas only</button></div>
+      <button class="btn sm" data-act="poolSearch">Find more cards</button></div>
+    ${list || `<p class="muted" style="margin-top:14px">Nothing here yet.</p>`}`;
+}
+$("#v-decks").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.open){ openCard(t.dataset.open, "", renderDecks); return; }
+  if (t.dataset.pool){ poolView = t.dataset.pool; poolFilter = "all"; renderDecks(); window.scrollTo({top:0}); return; }
+  if (t.dataset.pf){ poolFilter = t.dataset.pf; renderDecks(); return; }
+  if (t.dataset.act === "back"){ poolView = null; renderDecks(); return; }
+  if (t.dataset.act === "poolSearch"){
+    const d0 = S.decks.find(d=>d.leader===poolView);
+    if (d0){ workOn(d0.id); renderAll(); openBuild("add"); } else { setCtx("cards"); go("cards"); }
+    toast(`Open a card and use “More builds & ★ Leader Pools” to pool it.`); return;
+  }
+  if (t.dataset.df){ S.prefs.deckFilter = t.dataset.df; save(); renderDecks(); return; }
+  if (t.dataset.bedit){ editBuild(t.dataset.bedit); return; }
+  if (t.dataset.bstar){ const d = S.decks.find(x=>x.id===t.dataset.bstar); d.star = !d.star; save(); renderDecks(); toast(d.star ? `★ Bookmarked ${d.name}` : "Bookmark removed"); return; }
+  if (t.dataset.lfav){ toggleFav(t.dataset.lfav); renderDecks(); return; }
+  if (t.dataset.allb){ const k = t.dataset.allb; openAll.has(k) ? openAll.delete(k) : openAll.add(k); renderDecks(); return; }
+  if (t.dataset.newb){ const L = BY.get(t.dataset.newb); const nd = newBuild(L.i); workOn(nd.id); renderAll(); openBuild("add"); toast(`New ${L.n} build. Rename it in Build list.`); return; }
+  if (t.dataset.deck){ workOn(t.dataset.deck); renderAll(); openBuild(); }
+  else if (t.dataset.act === "new"){ const nd = newBuild(null); workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast("New deck. Pick its leader."); }
+});
+
+/* ================= lists: buy lists, collection, treasure box ================= */
+let listTab = "wish", collQ = "", renameId = null;
+let pickOpen = new Set();
+// What to buy for a Buy List: for each card, how many each selected deck still needs after My Collection,
+// plus extra copies added by hand. "all" = build every deck at once (owned copies go to the first deck listed first);
+// "share" = you'll move copies between decks, so you only need enough for the deck that runs the most.
+function buyRows(w){
+  const decks = w.decks.map(id=>S.decks.find(d=>d.id===id)).filter(Boolean);
+  const runs = new Map();
+  const addRun = (id, d, q) => { if (!runs.has(id)) runs.set(id, []); runs.get(id).push([d, q]); };
+  for (const d of decks){ if (d.leader) addRun(d.leader, d, 1); for (const [id,v] of Object.entries(d.cards)) addRun(id, d, v.q); }
+  const ids = new Set([...runs.keys(), ...Object.keys(w.items).filter(k=>w.items[k]>0)]);
+  const rows = []; let covered = 0;
+  const perDeck = new Map(decks.map(d=>[d.id, 0]));
+  for (const id of ids){
+    const c = BY.get(id); if (!c) continue;
+    const owned = S.owned[id]||0, extra = w.items[id]||0, rs = runs.get(id) || [];
+    const parts = []; let fromDecks = 0;
+    if (w.mode === "share" && rs.length > 1){
+      const max = Math.max(...rs.map(r=>r[1])); fromDecks = Math.max(0, max - owned);
+      if (fromDecks){ const top = rs.find(r=>r[1]===max)[0]; parts.push([`${fromDecks} shared by ${rs.map(r=>esc(r[0].name)).join(" & ")}`, top.id, fromDecks]); }
+    } else {
+      let left = owned;
+      for (const [d,q] of rs){ const use = Math.min(left, q); left -= use; const need = q - use; if (need){ parts.push([`${need} for ${esc(d.name)}`, d.id, need]); fromDecks += need; } }
+    }
+    for (const p of parts) perDeck.set(p[1], perDeck.get(p[1]) + p[2]);
+    const total = fromDecks + extra;
+    if (rs.length && !total) covered++;
+    if (total) rows.push({c, total, parts: parts.map(p=>p[0]), extra});
+  }
+  rows.sort((a,b)=>"LCES".indexOf(a.c.c)-"LCES".indexOf(b.c.c) || (a.c.k??0)-(b.c.k??0) || a.c._order-b.c._order);
+  return {rows, decks, covered, perDeck, total: rows.reduce((n,r)=>n+r.total,0)};
+}
+function wishText(w){
+  const b = buyRows(w);
+  const strip = t => t.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  const lines = b.rows.map(r => `Need ${r.total}× ${r.c.i} ${r.c.n}` + ((r.parts.length > 1 || (r.parts.length && r.extra)) ? ` (${strip([...r.parts, ...(r.extra?[r.extra+" extra"]:[])].join(", "))})` : ""));
+  return `${w.name}\n${lines.join("\n") || "Nothing to buy."}`;
+}
+function buyListHTML(w){
+  const b = buyRows(w);
+  const {groups, none} = leaderGroups();
+  const deckBox = d => `<label class="ar"><input type="checkbox" data-wdeck="${w.id}|${d.id}" ${w.decks.includes(d.id)?"checked":""}><span class="nm2">${esc(d.name)}</span><span class="st">${deckCount(d)}/50</span></label>`;
+  const picker = `<details class="addto" data-pick="${w.id}" ${pickOpen.has(w.id)?"open":""}><summary>Buying for: ${b.decks.length ? b.decks.map(d=>esc(d.name)).join(", ") : "pick builds"}</summary><div class="addlist">
+      ${groups.map(g=>`<div class="ag"><div class="agh"><span class="sw" style="background:${bandBg(g.L)}"></span>${esc(g.L.n)}</div>${g.decks.map(deckBox).join("")}</div>`).join("")}
+      ${none.length?`<div class="ag"><div class="agh"><span class="sw" style="background:var(--line)"></span>No leader yet</div>${none.map(deckBox).join("")}</div>`:""}
+    </div></details>`;
+  const shared = b.decks.length > 1 ? `<div class="row" style="margin-top:8px"><div class="seg" role="group" aria-label="When builds share a card"><button data-wmode="${w.id}|all" aria-pressed="${w.mode!=="share"}">Own copies for each build</button><button data-wmode="${w.id}|share" aria-pressed="${w.mode==="share"}">Share my copies</button></div></div>
+    <p class="muted" style="font-size:12.5px;margin:4px 0 0">${w.mode==="share" ? "You'll move cards between builds, so you only buy enough for the build that runs the most." : "Every build gets its own copies. Cards you own count toward the first build listed."}</p>` : "";
+  const deckTotals = b.decks.length > 1 && w.mode !== "share" ? `<div class="row" style="margin-top:8px;font-size:13px">${b.decks.map(d=>`<span class="tag">${esc(d.name)}: ${b.perDeck.get(d.id)}</span>`).join("")}</div>` : "";
+  const manual = !b.decks.length;
+  const rows = b.rows.map(r => `<div class="li buyrow"><span class="bar" style="background:${bandBg(r.c)}"></span>
+      <button class="t" data-open="${r.c.i}" style="border:0;background:none;padding:0;text-align:left"><b>${esc(r.c.n)}</b><span class="mono muted">${r.c.i}</span>
+        ${r.parts.length||r.extra ? `<span class="own">${[...r.parts, ...(r.extra?[`${r.extra} extra`]:[])].join(" · ")}</span>` : ""}</button>
+      <span class="rh"><span class="run">${r.total}</span><span class="have">to buy</span></span>
+      ${manual || r.extra ? `<span class="stepper sm" title="Extra copies"><button data-wq="${w.id}|${r.c.i}|-1" aria-label="One fewer extra">−</button><output>${r.extra}</output><button data-wq="${w.id}|${r.c.i}|1" aria-label="One more extra">+</button></span>` : `<span></span>`}
+    </div>`).join("");
+  return `<div class="leaderbox" style="display:block">
+    <div class="row" style="justify-content:space-between">${renameId===w.id?`<input class="field" id="wName" value="${esc(w.name)}" style="max-width:260px" autofocus>`:`<b style="font-family:var(--f-display);font-size:19px">${esc(w.name)}</b>`}<span class="count ${b.total?"":"full"}">${b.total ? b.total+" to buy" : "All set"}</span></div>
+    <div style="margin-top:8px">${picker}</div>${shared}${deckTotals}
+    <div class="list" style="margin-top:6px">${rows || `<p class="muted">${b.decks.length ? "My Collection already covers these builds." : "Pick builds above, or add cards from their popup."}</p>`}</div>
+    ${b.covered ? `<p class="muted" style="font-size:12.5px;margin:6px 0 0">${b.covered} card${b.covered===1?" is":"s are"} already covered by My Collection.</p>` : ""}
+    <div class="out" id="wt-${w.id}" style="margin-top:8px;max-height:120px">${esc(wishText(w))}</div>
+    <div class="row" style="margin-top:8px"><button class="btn sm dark" data-wcopy="${w.id}">Copy for friends</button><button class="btn sm" data-wren="${w.id}">${renameId===w.id?"Save name":"Rename"}</button><button class="btn sm danger" data-wdel="${w.id}">Delete</button></div>
+  </div>`;
+}
+function renderLists(){
+  const v = $("#v-lists");
+  let body = "";
+  if (listTab === "wish"){
+    body = `<div class="row" style="justify-content:space-between;margin:12px 0"><span class="muted" style="font-size:13px">Shared lists show what you need, never what you own.</span><button class="btn sm primary" data-act="newWish">New Buy List</button></div>
+      <div class="stack">${S.wish.length ? S.wish.map(buyListHTML).join("") : `<p class="muted">No Buy Lists yet. Start one here and pick the builds you're buying for, or open a build and tap “Buy List for this build”.</p>`}</div>
+      <p class="foot-note">Prices, purchase links and share links that open the list on a friend's phone come with hosting and the price sync.</p>`;
+  } else if (listTab === "coll"){
+    const q = collQ.toLowerCase();
+    const ent = Object.entries(S.owned).map(([id,n])=>({c:BY.get(id), n})).filter(r=>r.c && (!q || r.c._name.includes(q) || r.c._id.includes(q))).sort((a,b)=>a.c._order-b.c._order);
+    const tot = Object.values(S.owned).reduce((a,b)=>a+b,0);
+    body = `<p class="muted" style="font-size:13px;margin:12px 0 8px">${tot} cards owned across ${Object.keys(S.owned).length} different cards. Set what you own from any card's popup, or adjust here.</p>
+      <input class="field" id="collQ" placeholder="Find in my collection" value="${esc(collQ)}" aria-label="Find in my collection">
+      <div class="list" style="margin-top:8px">${ent.map(r=>`<div class="li"><span class="bar" style="background:${bandBg(r.c)}"></span><span class="c">${r.c.k??"–"}</span><button class="t" data-open="${r.c.i}" style="border:0;background:none;padding:0;text-align:left"><b>${esc(r.c.n)}</b><span class="mono muted">${r.c.i}</span></button>
+        <span class="stepper sm"><button data-own="${r.c.i}|-1" aria-label="Own one fewer">−</button><output>${r.n}</output><button data-own="${r.c.i}|1" aria-label="Own one more">+</button></span></div>`).join("") || `<p class="muted" style="margin-top:12px">Nothing tracked yet.</p>`}</div>`;
+  } else {
+    body = `<p class="muted" style="font-size:13px;margin:12px 0">Cards you starred, kept on this device for quick reference at the shop. Full offline use with card images comes with the installable app.</p>
+      <div class="miniGrid grid" data-size="l">${S.treasure.map(id=>{ const c = BY.get(id); return c?`<button class="tile" data-open="${id}">${faceHTML(c,"")}</button>`:""; }).join("") || `<p class="muted" style="grid-column:1/-1">Empty. Tap “Save to ☆Treasure Box☆” in a card's popup to save it here.</p>`}</div>`;
+  }
+  v.innerHTML = `<h2 class="h2">Lists</h2>
+    <div class="seg full" role="group" aria-label="List type" style="margin-top:10px"><button data-lt="wish" aria-pressed="${listTab==="wish"}">Buy Lists</button><button data-lt="box" aria-pressed="${listTab==="box"}">☆Treasure Box☆</button><button data-lt="coll" aria-pressed="${listTab==="coll"}">My Collection</button></div>${body}`;
+}
+$("#v-lists").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.lt){ listTab = t.dataset.lt; renderLists(); return; }
+  if (t.dataset.open){ openCard(t.dataset.open, "", renderLists); return; }
+  if (t.dataset.act === "newWish"){ const w = {id:uid(), name:"New Buy List", items:{}, decks:[], mode:"all"}; S.wish.unshift(w); renameId = w.id; pickOpen.add(w.id); save(); renderLists(); return; }
+  if (t.dataset.wmode){ const [wid,m] = t.dataset.wmode.split("|"); S.wish.find(x=>x.id===wid).mode = m; save(); renderLists(); return; }
+  if (t.dataset.wq){ const [wid,id,dlt] = t.dataset.wq.split("|"); const w = S.wish.find(x=>x.id===wid); w.items[id] = Math.max(0,(w.items[id]||0)+ +dlt); if (!w.items[id]) delete w.items[id]; save(); renderLists(); return; }
+  if (t.dataset.wcopy){ const w = S.wish.find(x=>x.id===t.dataset.wcopy); copyText(wishText(w), $("#wt-"+w.id)); return; }
+  if (t.dataset.wren){ if (renameId === t.dataset.wren){ const w = S.wish.find(x=>x.id===renameId); const v = $("#wName").value.trim(); if (v) w.name = v; renameId = null; save(); } else renameId = t.dataset.wren; renderLists(); return; }
+  if (t.dataset.wdel){ S.wish = S.wish.filter(x=>x.id!==t.dataset.wdel); save(); renderLists(); toast("Buy List deleted"); return; }
+  if (t.dataset.own){ const [id,dlt] = t.dataset.own.split("|"); const n = (S.owned[id]||0)+ +dlt; if (n<=0) delete S.owned[id]; else S.owned[id]=n; save(); renderLists(); renderDeckViews(); return; }
+});
+$("#v-lists").addEventListener("change", e => {
+  const k = e.target.dataset && e.target.dataset.wdeck; if (!k) return;
+  const [wid, did] = k.split("|"); const w = S.wish.find(x=>x.id===wid);
+  w.decks = e.target.checked ? [...w.decks.filter(x=>x!==did), did] : w.decks.filter(x=>x!==did);
+  pickOpen.add(wid); save(); renderLists();
+});
+$("#v-lists").addEventListener("toggle", e => { const p = e.target.dataset && e.target.dataset.pick; if (p){ e.target.open ? pickOpen.add(p) : pickOpen.delete(p); } }, true);
+$("#v-lists").addEventListener("input", e => { if (e.target.id === "collQ"){ collQ = e.target.value; const pos = e.target.selectionStart; renderLists(); const i = $("#collQ"); i.focus(); i.setSelectionRange(pos,pos); } });
+
+/* ================= routing ================= */
+const TABS = ["cards","build","decks","lists"];
+const scrollMem = {};
+let curTab = "cards";
+function go(tab){ if (location.hash !== "#"+tab) location.hash = tab; else show(tab); }
+function show(tab){
+  if (tab === "deck") tab = "build"; if (tab === "builds") tab = "decks";
+  if (!TABS.includes(tab)) tab = "cards";
+  const wide = innerWidth >= 1024;
+  if (tab === "build" && wide){ setCtx("build"); tab = "cards"; }
+  scrollMem[curTab] = scrollY;
+  curTab = tab;
+  $("#v-cards").hidden = tab !== "cards";
+  $("#v-deck").hidden = tab !== "build";
+  $("#v-decks").hidden = tab !== "decks";
+  $("#v-lists").hidden = tab !== "lists";
+  const navTab = tab === "build" ? "decks" : tab;      // a build lives inside My Decks
+  document.querySelectorAll(".nav a").forEach(a => a.setAttribute("aria-current", a.dataset.tab===navTab ? "page" : "false"));
+  if (tab === "cards" && !wide && ctx !== "cards") setCtx("cards");     // on a phone the Cards tab always searches everything
+  if (tab === "build"){ if (bSub === "add") setCtx("build"); renderDeckViews(); }
+  if (tab === "decks") renderDecks();
+  if (tab === "lists") renderLists();
+  window.scrollTo({top: scrollMem[tab] || 0});
+}
+addEventListener("hashchange", () => show(location.hash.slice(1)));
+let wasWide = innerWidth >= 1024;
+addEventListener("resize", () => { const w = innerWidth >= 1024; if (w !== wasWide){ wasWide = w; setCtx(ctx); if (w && curTab === "build") go("cards"); else show(curTab); } });
+
+
+/* ================= look: background colors & your own photos ================= */
+// Colors: Match phone (sand / warm black), Light, In-between (stone), Dark.
+// Photos are kept on this device in IndexedDB (too big for normal storage). With a photo on, text sits on a
+// frosted backing; Auto picks a light or dark backing from the photo's brightness.
+const LOOKS = [["phone","Match phone","linear-gradient(135deg,#E4D8C0 0 50%,#12110F 50% 100%)"],["light","Light","#E4D8C0"],["stone","In-between","#A89C86"],["dark","Dark","#12110F"]];
+let bgPhotos = [], bgURLs = new Map(), memOnly = false;
+const IDB = {
+  db: null,
+  open(){ if (this.db) return Promise.resolve(this.db);
+    return new Promise((res, rej) => { try { const r = indexedDB.open("bountyboard-media", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("bg", {keyPath: "id"});
+      r.onsuccess = () => { this.db = r.result; res(this.db); }; r.onerror = () => rej(r.error); } catch(e){ rej(e); } }); },
+  run(mode, fn){ return this.open().then(db => new Promise((res, rej) => { const t = db.transaction("bg", mode), q = fn(t.objectStore("bg")); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); })); }
+};
+async function loadPhotos(){
+  try { bgPhotos = await IDB.run("readonly", st => st.getAll()) || []; } catch(e){ memOnly = true; }
+  for (const p of bgPhotos) if (!bgURLs.has(p.id)) bgURLs.set(p.id, URL.createObjectURL(p.blob));
+}
+async function storePhoto(p){ if (!memOnly) { try { await IDB.run("readwrite", st => st.put(p)); } catch(e){ memOnly = true; } } }
+async function dropPhoto(id){ if (!memOnly) { try { await IDB.run("readwrite", st => st.delete(id)); } catch(e){} } }
+function photoFromFile(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      const k = Math.min(1, 1600 / Math.max(im.width, im.height));
+      const cv = document.createElement("canvas"); cv.width = Math.round(im.width*k); cv.height = Math.round(im.height*k);
+      cv.getContext("2d").drawImage(im, 0, 0, cv.width, cv.height);
+      const sm = document.createElement("canvas"); sm.width = sm.height = 24; const sx = sm.getContext("2d"); sx.drawImage(im, 0, 0, 24, 24);
+      const px = sx.getImageData(0, 0, 24, 24).data; let L = 0;
+      const lin = v => { v /= 255; return v <= .04045 ? v/12.92 : ((v+.055)/1.055)**2.4; };
+      for (let j = 0; j < px.length; j += 4) L += .2126*lin(px[j]) + .7152*lin(px[j+1]) + .0722*lin(px[j+2]);
+      URL.revokeObjectURL(url);
+      cv.toBlob(b => b ? res({id: uid(), blob: b, lum: L/(px.length/4), x: 50, y: 50, added: Date.now()}) : rej(new Error("encode")), "image/jpeg", 0.85);
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error("bad image")); };
+    im.src = url;
+  });
+}
+const curPhoto = () => S.prefs.bgPhoto ? bgPhotos.find(p => p.id === S.prefs.bgPhoto) : null;
+const backingFor = p => S.prefs.backing === "light" || S.prefs.backing === "dark" ? S.prefs.backing : (p.lum > 0.4 ? "light" : "dark");
+function applyLook(){
+  const root = document.documentElement, layer = $("#bgimg"), p = curPhoto();
+  if (p){
+    root.dataset.photo = ""; root.dataset.theme = backingFor(p);
+    layer.style.backgroundImage = `url("${bgURLs.get(p.id)}")`; layer.style.backgroundPosition = `${p.x}% ${p.y}%`;
+  } else {
+    delete root.dataset.photo; layer.style.backgroundImage = "";
+    const look = S.prefs.look || "phone";
+    if (look === "phone") delete root.dataset.theme; else root.dataset.theme = look;
+  }
+}
+function openLook(){
+  const draw = () => {
+    const p = curPhoto();
+    const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">BOUNTY BOARD</span><b>Background</b></span><button class="btn primary" data-lk="done">Done</button></div>
+      <div class="fld"><span>Colors</span><div class="looks" role="group" aria-label="Colors">${LOOKS.map(([k,l,bg]) => `<button data-look="${k}" aria-pressed="${!p && (S.prefs.look||"phone")===k}"><span class="sw" style="background:${bg}"></span>${l}</button>`).join("")}</div></div>
+      <div class="fld"><span>Your photos</span><div class="bgthumbs" role="group" aria-label="Your photos">
+        <label>+ Add<br>photo<input type="file" accept="image/*" id="lkFile" style="position:absolute;width:1px;height:1px;opacity:0"></label>
+        ${[...bgPhotos].sort((a,b)=>b.added-a.added).map(ph => `<button data-ph="${ph.id}" aria-pressed="${p && p.id===ph.id}" aria-label="Use this photo" style="background-image:url('${bgURLs.get(ph.id)}');background-position:${ph.x}% ${ph.y}%"></button>`).join("")}
+      </div>${memOnly ? `<p class="muted" style="font-size:12.5px;margin:6px 0 0">This preview can't keep photos after you close it. The installed app will.</p>` : ""}</div>
+      ${p ? `<div class="fld"><span>Text backing</span><div><div class="seg3" role="group" aria-label="Text backing">${[["auto","Auto"],["light","Light"],["dark","Dark"]].map(([k,l]) => `<button data-bk="${k}" aria-pressed="${(S.prefs.backing||"auto")===k}">${l}</button>`).join("")}</div>
+          <p class="muted" style="font-size:12.5px;margin:6px 0 0">${(S.prefs.backing||"auto")==="auto" ? `Auto picked ${backingFor(p)} for this photo.` : "Behind text, so it stays readable."}</p></div></div>
+        <div class="fld"><span>Framing · drag the photo</span><div class="frame" id="lkFrame" style="background-image:url('${bgURLs.get(p.id)}');background-position:${p.x}% ${p.y}%"><span>Drag to move</span></div></div>
+        <div class="row" style="gap:16px"><button class="linkbtn" data-lk="none">Stop using a photo</button><button class="linkbtn" data-lk="del" style="color:var(--bad)">Remove this photo</button></div>` : ""}`, "Background");
+    $("#lkFile", sc).addEventListener("change", async e => {
+      const file = e.target.files && e.target.files[0]; if (!file) return;
+      try { const ph = await photoFromFile(file); bgPhotos.push(ph); bgURLs.set(ph.id, URL.createObjectURL(ph.blob)); await storePhoto(ph); S.prefs.bgPhoto = ph.id; save(); applyLook(); draw(); }
+      catch(err){ toast("That file couldn't be opened as a photo."); }
+    });
+    const fr = $("#lkFrame", sc);
+    if (fr && p){
+      let start = null;
+      fr.addEventListener("pointerdown", e => { start = {x: e.clientX, y: e.clientY, px: p.x, py: p.y}; fr.setPointerCapture(e.pointerId); });
+      fr.addEventListener("pointermove", e => { if (!start) return;
+        const r = fr.getBoundingClientRect();
+        p.x = Math.max(0, Math.min(100, start.px - (e.clientX - start.x) / r.width * 100));
+        p.y = Math.max(0, Math.min(100, start.py - (e.clientY - start.y) / r.height * 100));
+        fr.style.backgroundPosition = `${p.x}% ${p.y}%`; applyLook(); });
+      const end = () => { if (start){ start = null; storePhoto(p); } };
+      fr.addEventListener("pointerup", end); fr.addEventListener("pointercancel", end);
+    }
+    sc.addEventListener("click", async e => {
+      const t = e.target.closest("button"); if (!t) return;
+      if (t.dataset.lk === "done"){ closeSheet(); return; }
+      if (t.dataset.look){ S.prefs.look = t.dataset.look; S.prefs.bgPhoto = null; save(); applyLook(); draw(); return; }
+      if (t.dataset.ph){ S.prefs.bgPhoto = t.dataset.ph; save(); applyLook(); draw(); return; }
+      if (t.dataset.bk){ S.prefs.backing = t.dataset.bk; save(); applyLook(); draw(); return; }
+      if (t.dataset.lk === "none"){ S.prefs.bgPhoto = null; save(); applyLook(); draw(); return; }
+      if (t.dataset.lk === "del" && p){ bgPhotos = bgPhotos.filter(x => x.id !== p.id); URL.revokeObjectURL(bgURLs.get(p.id)); bgURLs.delete(p.id); await dropPhoto(p.id); S.prefs.bgPhoto = null; save(); applyLook(); draw(); toast("Photo removed"); return; }
+    });
+  };
+  draw();
+}
+$("#lookBtn").onclick = openLook;
+applyLook();
+loadPhotos().then(applyLook);
+
+/* ================= account & cloud sync (Supabase) ================= */
+// Email + password sign-in. Your whole app state is saved to your account and kept in step across devices:
+// every change is pushed a moment later, and the app checks for changes from your other devices when it opens
+// or comes back to the front. Background photos stay on each device.
+const SB_URL = "https://ebsgqefxokkgihfjrvvh.supabase.co", SB_KEY = "sb_publishable_NW0xhb1zRJ4DNj-zLc80xg_9AnJaZGK";
+const SYNC_KEY = "bountyboard.sync";
+let sb = null, sbUser = null, sbState = "off", pushT = null, busy = false, recovering = false;
+let syncMeta = (() => { try { return JSON.parse(localStorage.getItem(SYNC_KEY)) || {}; } catch(e){ return {}; } })();
+const saveMeta = () => { try { localStorage.setItem(SYNC_KEY, JSON.stringify(syncMeta)); } catch(e){} };
+function setSync(st){ sbState = st; const dot = $("#acctBtn .acdot"); if (dot){ dot.hidden = !sbUser; dot.classList.toggle("warn", st === "error"); } }
+function stHash(o){ const t = JSON.stringify(o); let h = 2166136261; for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 16777619); return (h >>> 0).toString(36); }
+function cloudDirty(){ if (!sbUser || busy) return; if (!syncMeta.dirty && stHash(S) === syncMeta.hash) return; syncMeta.dirty = true; saveMeta(); clearTimeout(pushT); pushT = setTimeout(push, 1500); }
+const isBlank = st => !st || !st.decks || st.decks.every(d => d.sample) && !Object.keys(st.owned||{}).length && !(st.wish||[]).length && !(st.treasure||[]).length;
+function adopt(data, msg){ busy = true; syncMeta.hash = stHash(data); saveMeta(); try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){} if (msg) sessionStorage.setItem("bb.toast", msg); location.reload(); }
+async function push(){
+  if (!sbUser || !sb) return; clearTimeout(pushT);
+  try {
+    const {data: cur} = await sb.from("user_state").select("updated_at").eq("user_id", sbUser.id).maybeSingle();
+    if (cur && syncMeta.at && cur.updated_at !== syncMeta.at && syncMeta.uid === sbUser.id){ return pull(); }   // another device saved first
+    const {data, error} = await sb.from("user_state").upsert({user_id: sbUser.id, data: S}).select("updated_at").single();
+    if (error) throw error;
+    syncMeta = {uid: sbUser.id, at: data.updated_at, dirty: false, hash: stHash(S)}; saveMeta(); setSync("ok");
+  } catch(e){ setSync("error"); clearTimeout(pushT); pushT = setTimeout(push, 20000); }
+}
+async function pull(){
+  if (!sbUser || !sb) return;
+  try {
+    const {data, error} = await sb.from("user_state").select("data,updated_at").eq("user_id", sbUser.id).maybeSingle();
+    if (error) throw error;
+    if (!data){ return push(); }                                            // brand-new account: upload this device
+    if (syncMeta.uid !== sbUser.id){                                         // first time this account is used on this device
+      if (isBlank(S)) { syncMeta = {uid: sbUser.id, at: data.updated_at, dirty: false}; saveMeta(); return adopt(data.data, "Loaded your decks from your account"); }
+      if (isBlank(data.data)) return push();
+      return askCombine(data);
+    }
+    if (data.updated_at === syncMeta.at){ setSync("ok"); if (syncMeta.dirty) push(); return; }
+    if (!syncMeta.dirty){ syncMeta.at = data.updated_at; saveMeta(); return adopt(data.data, "Updated from your other device"); }
+    const merged = combine(S, data.data);                                   // both changed: keep everything from both
+    syncMeta = {uid: sbUser.id, at: data.updated_at, dirty: true}; saveMeta();
+    localStorage.setItem(KEY, JSON.stringify(merged)); await (async () => { S = merged; await push(); })();
+    adopt(merged, "Combined changes from your other device");
+  } catch(e){ setSync("error"); }
+}
+// Combine two saves: builds by id (newer edit wins, deleted stays deleted), the higher owned count per card,
+// lists and Treasure Box by id, pools and favorites merged; this device's settings win.
+function combine(a, b){
+  const gone = Object.assign({}, b.gone||{}, a.gone||{});
+  const byId = new Map();
+  for (const d of [...(b.decks||[]), ...(a.decks||[])]){ if (gone[d.id] || d.sample) continue; const o = byId.get(d.id); if (!o || (d.updated||0) >= (o.updated||0)) byId.set(d.id, d); }
+  const owned = Object.assign({}, b.owned||{}); for (const [k,v] of Object.entries(a.owned||{})) owned[k] = Math.max(v, owned[k]||0);
+  const union = (x, y, key) => { const m = new Map(); for (const it of [...(y||[]), ...(x||[])]) m.set(key ? it[key] : JSON.stringify(it), it); return [...m.values()]; };
+  const pools = JSON.parse(JSON.stringify(b.pools||{})); for (const [l,p] of Object.entries(a.pools||{})){ pools[l] = pools[l] || {cards:{}}; Object.assign(pools[l].cards, p.cards||{}); }
+  const decks = [...byId.values()];
+  return Object.assign({}, b, a, {decks: decks.length ? decks : (a.decks||[]), owned, gone, pools,
+    wish: union(a.wish, b.wish, "id"), treasure: union(a.treasure, b.treasure), favLeaders: [...new Set([...(a.favLeaders||[]), ...(b.favLeaders||[])])]});
+}
+function askCombine(row){
+  const nA = S.decks.filter(d=>!d.sample).length, nB = (row.data.decks||[]).filter(d=>!d.sample).length;
+  const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">ACCOUNT</span><b>Two sets of decks</b></span></div>
+    <p style="margin:0 0 6px">This device has ${nA} build${nA===1?"":"s"} that aren't in your account yet, and your account has ${nB}. What should happen?</p>
+    <div class="choice"><button data-cb="both"><b>Keep both (recommended)</b><span>Everything from this device and your account, together.</span></button>
+      <button data-cb="acct"><b>Use my account's</b><span>Replace what's on this device with your account.</span></button>
+      <button data-cb="here"><b>Use this device's</b><span>Replace your account with what's on this device.</span></button></div>`, "Two sets of decks");
+  sc.addEventListener("click", e => { const t = e.target.closest("[data-cb]"); if (!t) return;
+    syncMeta = {uid: sbUser.id, at: row.updated_at, dirty: t.dataset.cb !== "acct"}; saveMeta();
+    if (t.dataset.cb === "acct") return adopt(row.data, "Loaded your decks from your account");
+    if (t.dataset.cb === "here"){ closeSheet(); syncMeta.at = null; return push().then(()=>toast("Saved this device's decks to your account")); }
+    const merged = combine(S, row.data); S = merged; push().then(() => adopt(merged, "Combined this device with your account"));
+  });
+}
+function authErr(e){
+  const m = (e && (e.message || e.error_description)) || "";
+  if (/invalid login/i.test(m)) return "That email and password don't match. Check them, or tap “Forgot password”.";
+  if (/not confirmed/i.test(m)) return "Confirm your email first: open the link we sent you, then sign in.";
+  if (/already registered/i.test(m)) return "There's already an account with that email. Sign in instead.";
+  if (/password.*(6|characters|weak)/i.test(m)) return "Use a password with at least 8 characters.";
+  if (/rate|too many/i.test(m)) return "Too many tries. Wait a minute and try again.";
+  if (/fetch|network/i.test(m)) return "Can't reach the server. Check your connection.";
+  return m || "Something went wrong. Try again.";
+}
+function openAccount(msg, bad){
+  if (!sb){ sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">ACCOUNT</span><b>Sign in</b></span><button class="btn primary" data-ac="done">Done</button></div>
+      <p class="authmsg">Sign-in works in the installed app. This preview can't reach the server, so your decks are saved on this device only.</p>`, "Account").addEventListener("click", e => { if (e.target.closest("[data-ac=done]")) closeSheet(); }); return; }
+  const when = syncMeta.at ? new Date(syncMeta.at).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}) : "";
+  const status = sbState === "error" ? `<span style="color:var(--warn)">Couldn't reach the server. Your changes are safe on this device and will sync when you're back online.</span>` : syncMeta.dirty ? "Saving…" : when ? `Synced · ${when}` : "Syncing…";
+  const body = recovering ? `<label class="fld"><span>New password</span><input type="password" id="acPw" autocomplete="new-password" minlength="8" autofocus></label>
+      <button class="btn primary" data-ac="setpw" style="width:100%;justify-content:center;height:46px">Save new password</button>`
+    : sbUser ? `<p style="margin:0 0 4px">Signed in as <b>${esc(sbUser.email)}</b></p><p class="muted" style="margin:0 0 16px;font-size:13.5px">${status}</p>
+      <div class="row" style="gap:8px"><button class="btn" data-ac="sync">Sync now</button><button class="btn" data-ac="out">Sign out</button></div>
+      <p class="muted" style="font-size:12.5px;margin:16px 0 0">Builds, collection, Buy Lists, Treasure Box, pools and settings sync to your account. Background photos stay on each device.</p>`
+    : `<p class="muted" style="margin:0 0 14px;font-size:14px">Sign in to keep your decks safe and the same on all your devices.</p>
+      <label class="fld"><span>Email</span><input type="email" id="acEmail" autocomplete="email" inputmode="email" autofocus></label>
+      <label class="fld"><span>Password</span><input type="password" id="acPw" autocomplete="current-password"></label>
+      <div class="row" style="gap:8px"><button class="btn primary" data-ac="in" style="flex:1;justify-content:center;height:46px">Sign in</button><button class="btn" data-ac="up" style="flex:1;justify-content:center;height:46px">Create account</button></div>
+      <button class="linkbtn" data-ac="forgot" style="margin-top:14px">Forgot password?</button>`;
+  const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">BOUNTY BOARD</span><b>${recovering ? "New password" : sbUser ? "Account" : "Sign in"}</b></span><button class="btn" data-ac="done">Close</button></div>
+    ${msg ? `<p class="authmsg${bad ? " bad" : ""}" role="status">${esc(msg)}</p>` : ""}${body}`, "Account");
+  const val = id => ($("#"+id, sc) || {}).value || "";
+  sc.addEventListener("click", async e => {
+    const t = e.target.closest("[data-ac]"); if (!t) return; const a = t.dataset.ac;
+    if (a === "done"){ closeSheet(); return; }
+    const email = val("acEmail").trim(), pw = val("acPw");
+    try {
+      if (a === "in"){ if (!email || !pw) return openAccount("Enter your email and password.", true);
+        t.disabled = true; const {error} = await sb.auth.signInWithPassword({email, password: pw}); if (error) throw error; openAccount("Signed in. Your decks are syncing."); }
+      else if (a === "up"){ if (!email || pw.length < 8) return openAccount("Enter your email and a password with at least 8 characters.", true);
+        t.disabled = true; const {data, error} = await sb.auth.signUp({email, password: pw, options: {emailRedirectTo: location.origin + location.pathname}}); if (error) throw error;
+        openAccount(data.session ? "Account created. Your decks are syncing." : `Almost done: we sent a link to ${email}. Open it on this device, then sign in.`); }
+      else if (a === "forgot"){ if (!email) return openAccount("Type your email above first, then tap “Forgot password?”.", true);
+        const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname}); if (error) throw error; openAccount(`We sent a reset link to ${email}.`); }
+      else if (a === "setpw"){ if (pw.length < 8) return openAccount("Use at least 8 characters.", true);
+        const {error} = await sb.auth.updateUser({password: pw}); if (error) throw error; recovering = false; openAccount("Password changed. You're signed in."); }
+      else if (a === "sync"){ await pull(); openAccount(sbState === "error" ? "" : "Up to date."); }
+      else if (a === "out"){ await sb.auth.signOut(); syncMeta = {}; saveMeta(); openAccount("Signed out. Your decks stay on this device."); }
+    } catch(err){ openAccount(authErr(err), true); }
+  });
+}
+$("#acctBtn").onclick = () => openAccount();
+function loadSupabase(){
+  if (!/^https?:$/.test(location.protocol)) return;
+  const sc = document.createElement("script");
+  sc.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
+  sc.onload = async () => {
+    try { sb = window.supabase.createClient(SB_URL, SB_KEY, {auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "bountyboard.auth"}}); } catch(e){ sb = null; return; }
+    let first = true;
+    sb.auth.onAuthStateChange((ev, session) => {
+      const was = sbUser && sbUser.id; sbUser = session ? session.user : null; setSync(sbUser ? sbState : "off");
+      if (ev === "PASSWORD_RECOVERY"){ recovering = true; openAccount("Choose a new password."); return; }
+      if (sbUser && (first || was !== sbUser.id)) setTimeout(pull, 0);
+      first = false;
+    });
+  };
+  document.head.appendChild(sc);
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && sbUser) pull(); else if (document.visibilityState === "hidden" && sbUser && syncMeta.dirty) push(); });
+(() => { const m = sessionStorage.getItem("bb.toast"); if (m){ sessionStorage.removeItem("bb.toast"); setTimeout(() => toast(m), 300); } })();
+loadSupabase();
+if ("serviceWorker" in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(()=>{});
+function renderAll(){ compatCache.clear(); renderQuick(); renderResults(); renderDeckViews(); renderDecks(); renderLists(); updateChip(); }
+renderAll();
+show(location.hash.slice(1) || "cards");
+})();
+</script>

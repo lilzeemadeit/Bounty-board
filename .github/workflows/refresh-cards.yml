@@ -1,0 +1,31 @@
+name: Refresh card data
+# Every night: pull the latest official English card list (community scrape: buhbbl/punk-records),
+# rebuild cards.json and index.html, and publish if anything changed.
+on:
+  schedule:
+    - cron: "23 8 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Get latest card list
+        run: git clone --depth 1 https://github.com/buhbbl/punk-records /tmp/punk-records
+      - name: Build data and page
+        run: |
+          python3 -I tools/build_data.py /tmp/punk-records/english tools/cards.json
+          python3 -I tools/build_pages.py
+      - name: Publish if changed
+        run: |
+          if git diff --quiet; then echo "No changes"; exit 0; fi
+          git config user.name "bounty-board-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/cards.json index.html
+          git commit -m "Nightly card data refresh"
+          git push
