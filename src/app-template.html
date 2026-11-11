@@ -202,6 +202,7 @@ button{cursor:pointer}
 .seg button{border:0;background:transparent;height:34px;padding:0 12px;font-weight:700;font-size:13px;white-space:nowrap}
 .seg.full{display:flex;width:100%}.seg.full button{flex:1 1 auto;padding:0 6px;min-width:0;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:380px){.seg.full button{font-size:12px;padding:0 4px}}
+@media (max-width:480px){.seg.full.lt4{display:grid;grid-template-columns:1fr 1fr}.seg.full.lt4 button{min-height:38px}}
 .seg button[aria-pressed="true"]{background:var(--surface);box-shadow:var(--shadow)}
 .list{display:grid;gap:2px}
 .li{display:grid;grid-template-columns:6px 28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid var(--line);background:none;border-left:0;border-right:0;border-top:0;text-align:left;width:100%}
@@ -331,6 +332,9 @@ button{cursor:pointer}
 .lname{background:none;border:0;padding:0;font:inherit;font-weight:700;color:inherit;text-align:left}
 .linkbtn{background:none;border:0;padding:0;text-align:left;color:var(--muted);text-decoration:underline;text-underline-offset:2px;font-size:13px;justify-self:start}
 .saveto{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;border-top:1px solid var(--line);padding-top:10px}
+.savebtns{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px}
+.buypick{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:4px}
+.savesub{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 2px}
 .savehd{font-family:var(--f-display);font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .fgroup{padding-block:6px}
 details > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px}
@@ -549,6 +553,7 @@ for (const w of S.wish){            // Buy Lists: {items: extra copies added by 
   w.mode = w.mode || "all";
 }
 S.treasure = S.treasure || [];
+S.want = S.want || [];          // Wish List: cards you have your eye on (not tied to a build)
 S.favLeaders = S.favLeaders || [];
 S.pools = S.pools || {};      // leaderId -> {cards:{cardId: addedAt}}  (the ★ Leader Pool's own ideas)
 S.prefs = Object.assign({grid:"l", sort:"rel", compat:true, matchLeader:true, pool:"all", arts:true}, S.prefs||{});
@@ -1074,6 +1079,7 @@ function openFilters(){
 }
 
 /* ================= card popup ================= */
+let buyTarget = null;
 function openCard(id, suf, after){
   const c = BY.get(id); if (!c) return;
   let art = suf || "";
@@ -1098,7 +1104,7 @@ function openCard(id, suf, after){
       return `<div class="rb"><span class="sw" style="background:${L?bandBg(L):"var(--line)"}"></span>
         <span class="rbn"><b>${esc(d.name)}</b><small>${L ? esc(L.n) : "No leader yet"}${primary && d.id===primary.id ? " · open now" : ""}${fit ? "" : ` · <span style="color:var(--warn)">off-color</span>`}</small></span>
         <span class="stepper sm"><button data-bstep="${d.id}|-1" aria-label="Remove one from ${esc(d.name)}">−</button><output aria-live="polite">${q}</output><button data-bstep="${d.id}|1" aria-label="Add one to ${esc(d.name)}">+</button></span></div>`; };
-    let out = `<div class="target"><div class="savehd">Add to a build</div>`;
+    let out = `<div class="target"><div class="savesub">Builds</div>`;
     if (rows.length) out += `<div class="rbs">${rows.map(rowHTML).join("")}</div><div class="muted" style="font-size:12px">${primary ? "The build you're working on, then your most recent builds this card fits." : "Your 3 most recent builds this card fits."} Max ${c.any?"any number":"4"} per build.</div>`;
     else {
       const myLeaders = new Set(leaderGroups().groups.map(g=>g.L.i));
@@ -1155,7 +1161,9 @@ function openCard(id, suf, after){
       const head = cm.st==="A" ? "Works with your leader" : cm.st==="U" ? "Compatibility uncertain" : cm.head;
       compatBox = `<div class="compat ${cm.st==="U"?"":cm.st}"><b>${head}</b>${cm.why ? `<span>${esc(cm.why)}</span>` : `<span class="muted">No leader conditions on this card${c.sg.some(s=>s.c)?" that your leader misses":""}.</span>`}</div>`;
     }
-    const lists = S.wish.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join("");
+    if (!S.wish.find(w => w.id === buyTarget)) buyTarget = S.wish[0] ? S.wish[0].id : null;
+    const lists = S.wish.map(w=>`<option value="${w.id}" ${w.id===buyTarget?"selected":""}>${esc(w.name)}</option>`).join("");
+    const inBuy = S.wish.reduce((n, w) => n + (w.items[c.i] || 0), 0);
     const isLeader = c.c === "L";
     $("#layer").innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.n)}"><div class="grab"></div><div class="gut">
       <div class="shead"><span class="mono muted">${c.i}${art}</span><button class="btn sm x" id="cClose">Close</button></div>
@@ -1179,19 +1187,19 @@ function openCard(id, suf, after){
           ${compatBox}
           ${issues.length?`<div class="issues">${issues.join("")}</div>`:""}
           <div class="ctl" id="ctlSec">
+            <div class="savehd">Save to</div>
+            <div class="savebtns">
+              <button class="chip tog" id="svBuy" aria-pressed="${inBuy > 0}">Buy List${inBuy ? ` · ${inBuy}` : ""}</button>
+              <button class="chip tog" id="svWant" aria-pressed="${S.want.includes(c.i)}">Wish List</button>
+              <button class="chip tog" id="tBox" aria-pressed="${S.treasure.includes(c.i)}">☆Treasure Box☆</button>
+            </div>
+            ${S.wish.length > 1 ? `<label class="buypick"><span class="muted">Buy List adds to</span><select class="btn sm" id="wSel" aria-label="Which Buy List">${lists}</select></label>` : ""}
             ${isLeader ? leaderCtl(d) : targetHTML()}
             <div class="msg" id="cMsg" role="alert"></div>
             ${isLeader ? (poolCards(c.i).size ? `<button class="btn sm" id="openPool">Open ★ ${esc(c.n)} Pool (${poolCards(c.i).size} cards)</button>` : "") : addToHTML()}
             ${d.cards[c.i] && art !== (d.cards[c.i].art||"") ? `<div><button class="btn sm" id="useArt">Use this art in this build</button></div>`:""}
-            <div class="saveto">
-              <div class="savehd">Save to</div>
-              <div class="row">
-                ${S.wish.length?`<span class="row" style="gap:4px"><button class="btn sm" id="wAdd">Buy List</button><select class="btn sm" id="wSel" aria-label="Which Buy List">${lists}</select></span>`:`<button class="btn sm" id="wNew">Buy List</button>`}
-                <button class="btn sm${S.treasure.includes(c.i)?" dark":""}" id="tBox" aria-pressed="${S.treasure.includes(c.i)}">☆Treasure Box☆${S.treasure.includes(c.i)?" ✓":""}</button>
-              </div>
-              <div class="ctlrow"><span class="lab">My Collection<small>Copies I own · all printings count toward your builds</small></span>
-                <span class="stepper sm"><button id="oMinus" aria-label="Own one fewer">−</button><output aria-live="polite">${own}</output><button id="oPlus" aria-label="Own one more">+</button></span></div>
-            </div>
+            <div class="ctlrow" style="border-top:1px solid var(--line);padding-top:10px"><span class="lab">My Collection<small>Copies I own · all printings count toward your builds</small></span>
+              <span class="stepper sm"><button id="oMinus" aria-label="Own one fewer">−</button><output aria-live="polite">${own}</output><button id="oPlus" aria-label="Own one more">+</button></span></div>
             <div class="ctlrow" style="border-top:1px solid var(--line);padding-top:10px">
               <span class="lab">Market price<small>TCGplayer prices arrive with the nightly price sync</small></span>
               <a class="btn sm" href="https://www.tcgplayer.com/search/one-piece-card-game/product?q=${encodeURIComponent(c.i)}" target="_blank" rel="noopener">Find on TCGplayer ↗</a>
@@ -1252,8 +1260,11 @@ function openCard(id, suf, after){
       renderQuick(); renderResults(); renderDeckViews(); return;
     }
     else if (t.id === "tBox"){ const i = S.treasure.indexOf(c.i); if (i>=0) S.treasure.splice(i,1); else S.treasure.unshift(c.i); save(); toast(i>=0?"Removed from ☆Treasure Box☆":"Saved to ☆Treasure Box☆"); }
-    else if (t.id === "wAdd"){ const w = S.wish.find(x=>x.id===$("#wSel").value); w.items[c.i] = (w.items[c.i]||0)+1; save(); toast(`Added to ${w.name} (need ${w.items[c.i]})`); }
-    else if (t.id === "wNew"){ const w = {id:uid(), name:"My Buy List", items:{[c.i]:1}, decks:[], mode:"all"}; S.wish.push(w); save(); toast("Started “My Buy List”"); }
+    else if (t.id === "svBuy"){
+      let w = S.wish.find(x => x.id === buyTarget);
+      if (!w){ w = {id:uid(), name:"My Buy List", items:{}, decks:[], mode:"all"}; S.wish.push(w); buyTarget = w.id; }
+      w.items[c.i] = (w.items[c.i]||0) + 1; save(); toast(`Added to ${w.name} (${w.items[c.i]} to buy). Change the amount on the Lists tab.`); }
+    else if (t.id === "svWant"){ const i = S.want.indexOf(c.i); if (i >= 0) S.want.splice(i,1); else S.want.unshift(c.i); save(); toast(i >= 0 ? "Removed from Wish List" : "Added to Wish List"); }
     else if (t.id === "useArt"){ d.cards[c.i].art = art; touch(d); toast("This build uses this art now"); }
     else if (t.dataset.addn){ addN = Math.max(1, Math.min(limitFor(c) > 4 ? 10 : 4, addN + +t.dataset.addn)); }
     else if (t.dataset.unpool){ delete S.pools[t.dataset.unpool].cards[c.i]; save(); toast(`Removed from ★ ${BY.get(t.dataset.unpool).n} Pool`); }
@@ -1281,6 +1292,7 @@ function openCard(id, suf, after){
     draw();
   };
   const onSel = e => {
+    if (e.target.id === "wSel"){ buyTarget = e.target.value; return; }
     const k = e.target.dataset && e.target.dataset.sel; if (!k) return;
     e.target.checked ? sel.add(k) : sel.delete(k);
     const b = $("#addGo"); b.disabled = !sel.size; b.textContent = sel.size ? `Add to ${sel.size} selected` : "Pick builds or a pool";
@@ -1807,7 +1819,8 @@ function buyRows(w){
   const runs = new Map();
   const addRun = (id, d, q) => { if (!runs.has(id)) runs.set(id, []); runs.get(id).push([d, q]); };
   for (const d of decks){ if (d.leader) addRun(d.leader, d, 1); for (const [id,v] of Object.entries(d.cards)) addRun(id, d, v.q); }
-  const ids = new Set([...runs.keys(), ...Object.keys(w.items).filter(k=>w.items[k]>0)]);
+  const wants = w.incWant ? new Set((S.want||[]).filter(id => !(S.owned[id] > 0))) : new Set();
+  const ids = new Set([...runs.keys(), ...Object.keys(w.items).filter(k=>w.items[k]>0), ...wants]);
   const rows = []; let covered = 0;
   const perDeck = new Map(decks.map(d=>[d.id, 0]));
   for (const id of ids){
@@ -1822,12 +1835,17 @@ function buyRows(w){
       for (const [d,q] of rs){ const use = Math.min(left, q); left -= use; const need = q - use; if (need){ parts.push([`${need} for ${esc(d.name)}`, d.id, need]); fromDecks += need; } }
     }
     for (const p of parts) perDeck.set(p[1], perDeck.get(p[1]) + p[2]);
-    const total = fromDecks + extra;
+    const wantOne = wants.has(id) && !fromDecks && !extra ? 1 : 0;      // a Wish List card nothing else already covers
+    if (wantOne) parts.push(["1 from Wish List"]);
+    const total = fromDecks + extra + wantOne;
     if (rs.length && !total) covered++;
     if (total) rows.push({c, total, parts: parts.map(p=>p[0]), extra});
   }
   rows.sort((a,b)=>"LCES".indexOf(a.c.c)-"LCES".indexOf(b.c.c) || (a.c.k??0)-(b.c.k??0) || a.c._order-b.c._order);
   return {rows, decks, covered, perDeck, total: rows.reduce((n,r)=>n+r.total,0)};
+}
+function wantText(){
+  return "Wish List\n" + (S.want||[]).map(id => BY.get(id)).filter(Boolean).map(c => `${c.i} ${c.n}`).join("\n");
 }
 function wishText(w){
   const b = buyRows(w);
@@ -1856,6 +1874,7 @@ function buyListHTML(w){
   return `<div class="leaderbox" style="display:block">
     <div class="row" style="justify-content:space-between">${renameId===w.id?`<input class="field" id="wName" value="${esc(w.name)}" style="max-width:260px" autofocus>`:`<b style="font-family:var(--f-display);font-size:19px">${esc(w.name)}</b>`}<span class="count ${b.total?"":"full"}">${b.total ? b.total+" to buy" : "All set"}</span></div>
     <div style="margin-top:8px">${picker}</div>${shared}${deckTotals}
+    ${(S.want||[]).length ? `<div class="row" style="margin-top:8px"><button class="chip tog" data-wwant="${w.id}" aria-pressed="${!!w.incWant}">Include my Wish List (${S.want.length})</button></div>` : ""}
     <div class="list" style="margin-top:6px">${rows || `<p class="muted">${b.decks.length ? "My Collection already covers these builds." : "Pick builds above, or add cards from their popup."}</p>`}</div>
     ${b.covered ? `<p class="muted" style="font-size:12.5px;margin:6px 0 0">${b.covered} card${b.covered===1?" is":"s are"} already covered by My Collection.</p>` : ""}
     <div class="out" id="wt-${w.id}" style="margin-top:8px;max-height:120px">${esc(wishText(w))}</div>
@@ -1869,6 +1888,10 @@ function renderLists(){
     body = `<div class="row" style="justify-content:space-between;margin:12px 0"><span class="muted" style="font-size:13px">Shared lists show what you need, never what you own.</span><button class="btn sm primary" data-act="newWish">New Buy List</button></div>
       <div class="stack">${S.wish.length ? S.wish.map(buyListHTML).join("") : `<p class="muted">No Buy Lists yet. Start one here and pick the builds you're buying for, or open a build and tap “Buy List for this build”.</p>`}</div>
       <p class="foot-note">Prices, purchase links and share links that open the list on a friend's phone come with hosting and the price sync.</p>`;
+  } else if (listTab === "want"){
+    body = `<p class="muted" style="font-size:13px;margin:12px 0">Cards you have your eye on, not tied to a build. Add them from any card's popup (Save to → Wish List). Any Buy List can include them too.</p>
+      ${S.want.length ? `<div class="out" id="wantTxt" style="max-height:120px">${esc(wantText())}</div><div class="row" style="margin:8px 0 12px"><button class="btn sm dark" data-wantcopy="1">Copy for friends</button></div>` : ""}
+      <div class="miniGrid grid" data-size="l">${S.want.map(id=>{ const c = BY.get(id); return c?`<button class="tile" data-open="${id}">${faceHTML(c,"")}</button>`:""; }).join("") || `<p class="muted" style="grid-column:1/-1">Empty. Open any card and tap Wish List.</p>`}</div>`;
   } else if (listTab === "coll"){
     const q = collQ.toLowerCase();
     const ent = Object.entries(S.owned).map(([id,n])=>({c:BY.get(id), n})).filter(r=>r.c && (!q || r.c._name.includes(q) || r.c._id.includes(q))).sort((a,b)=>a.c._order-b.c._order);
@@ -1882,7 +1905,7 @@ function renderLists(){
       <div class="miniGrid grid" data-size="l">${S.treasure.map(id=>{ const c = BY.get(id); return c?`<button class="tile" data-open="${id}">${faceHTML(c,"")}</button>`:""; }).join("") || `<p class="muted" style="grid-column:1/-1">Empty. Tap “Save to ☆Treasure Box☆” in a card's popup to save it here.</p>`}</div>`;
   }
   v.innerHTML = `<h2 class="h2">Lists</h2>
-    <div class="seg full" role="group" aria-label="List type" style="margin-top:10px"><button data-lt="wish" aria-pressed="${listTab==="wish"}">Buy Lists</button><button data-lt="box" aria-pressed="${listTab==="box"}">☆Treasure Box☆</button><button data-lt="coll" aria-pressed="${listTab==="coll"}">My Collection</button></div>${body}`;
+    <div class="seg full lt4" role="group" aria-label="List type" style="margin-top:10px"><button data-lt="wish" aria-pressed="${listTab==="wish"}">Buy Lists</button><button data-lt="want" aria-pressed="${listTab==="want"}">Wish List</button><button data-lt="box" aria-pressed="${listTab==="box"}">☆Treasure Box☆</button><button data-lt="coll" aria-pressed="${listTab==="coll"}">My Collection</button></div>${body}`;
 }
 $("#v-lists").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
@@ -1891,6 +1914,8 @@ $("#v-lists").addEventListener("click", e => {
   if (t.dataset.act === "newWish"){ const w = {id:uid(), name:"New Buy List", items:{}, decks:[], mode:"all"}; S.wish.unshift(w); renameId = w.id; pickOpen.add(w.id); save(); renderLists(); return; }
   if (t.dataset.wmode){ const [wid,m] = t.dataset.wmode.split("|"); S.wish.find(x=>x.id===wid).mode = m; save(); renderLists(); return; }
   if (t.dataset.wq){ const [wid,id,dlt] = t.dataset.wq.split("|"); const w = S.wish.find(x=>x.id===wid); w.items[id] = Math.max(0,(w.items[id]||0)+ +dlt); if (!w.items[id]) delete w.items[id]; save(); renderLists(); return; }
+  if (t.dataset.wantcopy){ copyText(wantText(), $("#wantTxt")); return; }
+  if (t.dataset.wwant){ const w = S.wish.find(x=>x.id===t.dataset.wwant); w.incWant = !w.incWant; save(); renderLists(); return; }
   if (t.dataset.wcopy){ const w = S.wish.find(x=>x.id===t.dataset.wcopy); copyText(wishText(w), $("#wt-"+w.id)); return; }
   if (t.dataset.wren){ if (renameId === t.dataset.wren){ const w = S.wish.find(x=>x.id===renameId); const v = $("#wName").value.trim(); if (v) w.name = v; renameId = null; save(); } else renameId = t.dataset.wren; renderLists(); return; }
   if (t.dataset.wdel){ S.wish = S.wish.filter(x=>x.id!==t.dataset.wdel); save(); renderLists(); toast("Buy List deleted"); return; }
@@ -2045,7 +2070,7 @@ const saveMeta = () => { try { localStorage.setItem(SYNC_KEY, JSON.stringify(syn
 function setSync(st){ sbState = st; const dot = $("#acctBtn .acdot"); if (dot){ dot.hidden = !sbUser; dot.classList.toggle("warn", st === "error"); } }
 function stHash(o){ const t = JSON.stringify(o); let h = 2166136261; for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 16777619); return (h >>> 0).toString(36); }
 function cloudDirty(){ if (!sbUser || busy) return; if (!syncMeta.dirty && stHash(S) === syncMeta.hash) return; syncMeta.dirty = true; saveMeta(); clearTimeout(pushT); pushT = setTimeout(push, 1500); }
-const isBlank = st => !st || !st.decks || st.decks.every(d => d.sample) && !Object.keys(st.owned||{}).length && !(st.wish||[]).length && !(st.treasure||[]).length;
+const isBlank = st => !st || !st.decks || st.decks.every(d => d.sample) && !Object.keys(st.owned||{}).length && !(st.wish||[]).length && !(st.treasure||[]).length && !(st.want||[]).length;
 function adopt(data, msg){ busy = true; syncMeta.hash = stHash(data); saveMeta(); try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){} if (msg) sessionStorage.setItem("bb.toast", msg); location.reload(); }
 async function push(){
   if (!sbUser || !sb) return; clearTimeout(pushT);
@@ -2088,6 +2113,7 @@ function combine(a, b){
   const decks = [...byId.values()];
   return Object.assign({}, b, a, {decks: decks.length ? decks : (a.decks||[]), owned, gone, pools,
     junk: union(a.junk, b.junk, "id").filter(j => !byId.has(j.id)),
+    want: [...new Set([...(a.want||[]), ...(b.want||[])])],
     wish: union(a.wish, b.wish, "id"), treasure: union(a.treasure, b.treasure), favLeaders: [...new Set([...(a.favLeaders||[]), ...(b.favLeaders||[])])]});
 }
 function askCombine(row){
