@@ -2093,7 +2093,7 @@ function askCombine(row){
 function authErr(e){
   const m = (e && (e.message || e.error_description)) || "";
   if (/invalid login/i.test(m)) return "That email and password don't match. Check them, or tap “Forgot password”.";
-  if (/not confirmed/i.test(m)) return "Confirm your email first: open the link we sent you, then sign in.";
+  if (/not confirmed/i.test(m)) return "Confirm your email first: open the link we sent you, then sign in. Link expired? Tap “Resend confirmation email”.";
   if (/already registered/i.test(m)) return "There's already an account with that email. Sign in instead.";
   if (/password.*(6|characters|weak)/i.test(m)) return "Use a password with at least 8 characters.";
   if (/rate|too many/i.test(m)) return "Too many tries. Wait a minute and try again.";
@@ -2114,7 +2114,7 @@ function openAccount(msg, bad){
       <label class="fld"><span>Email</span><input type="email" id="acEmail" autocomplete="email" inputmode="email" autofocus></label>
       <label class="fld"><span>Password</span><input type="password" id="acPw" autocomplete="current-password"></label>
       <div class="row" style="gap:8px"><button class="btn primary" data-ac="in" style="flex:1;justify-content:center;height:46px">Sign in</button><button class="btn" data-ac="up" style="flex:1;justify-content:center;height:46px">Create account</button></div>
-      <button class="linkbtn" data-ac="forgot" style="margin-top:14px">Forgot password?</button>`;
+      <div class="row" style="gap:16px;margin-top:14px"><button class="linkbtn" data-ac="forgot">Forgot password?</button><button class="linkbtn" data-ac="resend">Resend confirmation email</button></div>`;
   const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">BOUNTY BOARD</span><b>${recovering ? "New password" : sbUser ? "Account" : "Sign in"}</b></span><button class="btn" data-ac="done">Close</button></div>
     ${msg ? `<p class="authmsg${bad ? " bad" : ""}" role="status">${esc(msg)}</p>` : ""}${body}`, "Account");
   const val = id => ($("#"+id, sc) || {}).value || "";
@@ -2130,6 +2130,8 @@ function openAccount(msg, bad){
         openAccount(data.session ? "Account created. Your decks are syncing." : `Almost done: we sent a link to ${email}. Open it on this device, then sign in.`); }
       else if (a === "forgot"){ if (!email) return openAccount("Type your email above first, then tap “Forgot password?”.", true);
         const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname}); if (error) throw error; openAccount(`We sent a reset link to ${email}.`); }
+      else if (a === "resend"){ if (!email) return openAccount("Type your email above first, then tap “Resend confirmation email”.", true);
+        const {error} = await sb.auth.resend({type: "signup", email, options: {emailRedirectTo: location.origin + location.pathname}}); if (error) throw error; openAccount(`We sent a new confirmation link to ${email}. It works for about an hour.`); }
       else if (a === "setpw"){ if (pw.length < 8) return openAccount("Use at least 8 characters.", true);
         const {error} = await sb.auth.updateUser({password: pw}); if (error) throw error; recovering = false; openAccount("Password changed. You're signed in."); }
       else if (a === "sync"){ await pull(); openAccount(sbState === "error" ? "" : "Up to date."); }
