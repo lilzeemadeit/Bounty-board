@@ -843,21 +843,21 @@ function renderQuick(){
     if (DL){
       h += `<button class="chip tog" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip" id="qLock" aria-pressed="${FB.lock}" title="Only show cards that share a color with ${esc(DL.n)}">${FB.lock?"🔒 ":""}${esc(DL.co.join("/"))} only</button>`;
       h += `<button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
-    } else h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
+    } else h += `<button class="chip tog" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
   } else {
     h += `<button class="chip tog" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
   }
   for (const col of COLORS) h += `<button class="chip color" data-col="${col}" aria-pressed="${F.colors.has(col)}" aria-label="${col}"><span class="dot" style="background:${colorVar(col)}"></span>${F.colors.has(col)?col:""}</button>`;
   h += `<span class="sep"></span>`;
-  for (const [cat,lab] of [["C","Characters"],["E","Events"],["S","Stages"]]) h += `<button class="chip" data-cat="${cat}" aria-pressed="${F.cats.has(cat)}">${lab}</button>`;
-  $("#quick").innerHTML = h;  $("#quick").innerHTML = h;
+  for (const [cat,lab] of [["L","Leaders"],["C","Characters"],["E","Events"],["S","Stages"]]) h += `<button class="chip" data-cat="${cat}" aria-pressed="${F.cats.has(cat)}">${lab}</button>`;
+  $("#quick").innerHTML = h;
   $("#sort").value = S.prefs.sort;
   const gb = $("#gridBtn");
   gb.innerHTML = S.prefs.grid === "l"
     ? `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`
     : `<svg viewBox="0 0 24 24" fill="currentColor">${[3,8,13,18].map(x=>[3,8,13,18].map(y=>`<rect x="${x}" y="${y}" width="3.4" height="3.4" rx=".6"/>`).join("")).join("")}</svg>`;
   gb.setAttribute("aria-label", S.prefs.grid === "l" ? "Showing 2 per row. Switch to 4 per row" : "Showing 4 per row. Switch to 2 per row");
-  const n = (F.cats.has("L") && ctx !== "build" ? 1 : 0) + F.costs.size + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + !!F.type + !!F.set + (S.prefs.pool!=="all");
+  const n = F.costs.size + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + !!F.type + !!F.set + (S.prefs.pool!=="all");
   const fc = $("#fcount"); fc.hidden = !n; fc.textContent = n;
   const lb = $("#leaderBanner");
   const wide = innerWidth >= 1024;
