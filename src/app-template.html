@@ -381,6 +381,7 @@ textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13p
 .lsec{margin-top:24px;display:grid;gap:12px}
 .lrow{display:flex;align-items:center;gap:12px}
 .lrow .jolly{flex:none;width:42px;height:42px;display:block}
+.bhead .jolly{flex:none;width:34px;height:34px;display:block}
 .lrow .lt{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;background:none;border:0;padding:0;text-align:left;color:inherit}
 .lrow .lt b{font-family:var(--f-display);font-size:28px;line-height:1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ctags{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13.5px;line-height:1.2}
@@ -1511,7 +1512,7 @@ function buildBodyHTML(tab){
 function buildHeadHTML(){
   const d = deck(), L = d.leader && BY.get(d.leader), n = deckCount(d);
   return `<button class="crumb" data-act="toDecks">‹ My Decks</button>
-    <div class="bhead"><span class="sw" style="background:${L?bandBg(L):"var(--line)"}"></span>
+    <div class="bhead">${jollyHTML(L && L.co.length ? L.co : [])}
     <span class="bhn"><b>${L ? esc(L.n) + " Deck" : "New deck"}</b><small><span class="bl">Build</span> ${esc(d.name)}${d.star?' <span style="color:var(--accent)">★</span>':""}</small></span>
     <span class="count ${n===50?"full":""}">${n}/50</span><button class="btn sm" data-act="switch">Switch build</button></div>`;
 }
