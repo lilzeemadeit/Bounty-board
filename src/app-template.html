@@ -67,6 +67,7 @@ html[data-photo] #v-lists,html[data-photo] #bHead,html[data-photo] #bBody,html[d
 .authmsg{font-size:13.5px;margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--sunk)}
 .authmsg.bad{color:var(--bad)}
 .choice{display:grid;gap:8px;margin-top:6px}
+.twoplaces{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.twoplaces>div{padding:10px 12px;border-radius:12px;background:var(--sunk)}.twoplaces small{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}.twoplaces b{font-size:14px}
 .choice button{text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink)}
 .choice button b{display:block;font-size:15px}
 .choice button span{font-size:13px;color:var(--muted)}
@@ -2082,12 +2083,13 @@ function combine(a, b){
     wish: union(a.wish, b.wish, "id"), treasure: union(a.treasure, b.treasure), favLeaders: [...new Set([...(a.favLeaders||[]), ...(b.favLeaders||[])])]});
 }
 function askCombine(row){
-  const nA = S.decks.filter(d=>!d.sample).length, nB = (row.data.decks||[]).filter(d=>!d.sample).length;
-  const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">ACCOUNT</span><b>Two sets of decks</b></span></div>
-    <p style="margin:0 0 6px">This device has ${nA} build${nA===1?"":"s"} that aren't in your account yet, and your account has ${nB}. What should happen?</p>
-    <div class="choice"><button data-cb="both"><b>Keep both (recommended)</b><span>Everything from this device and your account, together.</span></button>
-      <button data-cb="acct"><b>Use my account's</b><span>Replace what's on this device with your account.</span></button>
-      <button data-cb="here"><b>Use this device's</b><span>Replace your account with what's on this device.</span></button></div>`, "Two sets of decks");
+  const names = ds => { const n = (ds||[]).filter(d=>!d.sample).map(d => esc(d.name)); return n.length ? n.join(", ") : "nothing yet"; };
+  const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">ACCOUNT</span><b>Which decks should we keep?</b></span></div>
+    <p style="margin:0 0 10px">You have decks saved in two places:</p>
+    <div class="twoplaces"><div><small>On this device</small><b>${names(S.decks)}</b></div><div><small>In your account</small><b>${names(row.data.decks)}</b></div></div>
+    <div class="choice"><button data-cb="both"><b>Keep everything</b><span>Put them all together. If any show up twice, you can delete the extra.</span></button>
+      <button data-cb="acct"><b>Use my account</b><span>This device will match your account.</span></button>
+      <button data-cb="here"><b>Use this device</b><span>Your account will match this device.</span></button></div>`, "Which decks should we keep?");
   sc.addEventListener("click", e => { const t = e.target.closest("[data-cb]"); if (!t) return;
     syncMeta = {uid: sbUser.id, at: row.updated_at, dirty: t.dataset.cb !== "acct"}; saveMeta();
     if (t.dataset.cb === "acct") return adopt(row.data, "Loaded your decks from your account");
