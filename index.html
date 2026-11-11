@@ -55,9 +55,9 @@ html{background:var(--bg)}
 html[data-photo] #bgimg{display:block}
 html[data-photo] body{background:transparent}
 html[data-photo]{--frost:color-mix(in srgb, var(--bg) 46%, transparent);--glow:0 0 2px var(--bg),0 0 8px var(--bg)}
-html[data-photo] .dtitle,html[data-photo] .lrow b,html[data-photo] .ctags,html[data-photo] .poollink,html[data-photo] .resbar,html[data-photo] .hsl,html[data-photo] .recentbtn,html[data-photo] .junklink,html[data-photo] .brand h1{text-shadow:var(--glow)}
+html[data-photo] .dtitle,html[data-photo] .lrow b,html[data-photo] .ctags,html[data-photo] .poollink,html[data-photo] .resbar,html[data-photo] .hsl,html[data-photo] .recentbtn,html[data-photo] .sect,html[data-photo] .note,html[data-photo] .junklink,html[data-photo] .brand h1{text-shadow:var(--glow)}
 html[data-photo] .brandbar,html[data-photo] .top,html[data-photo] .nav,html[data-photo] .aside{background:var(--frost)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-html[data-photo] .dtitle,html[data-photo] .lrow,html[data-photo] .resbar,html[data-photo] .dempty,html[data-photo] #homeStrip:not(:empty),html[data-photo] #leaderBanner:not(:empty){background:var(--frost);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:14px;padding:6px 10px;margin-inline:-10px}
+html[data-photo] .dtitle,html[data-photo] .lrow,html[data-photo] .dempty,html[data-photo] #homeStrip:not(:empty),html[data-photo] #leaderBanner:not(:empty){background:var(--frost);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:14px;padding:6px 10px;margin-inline:-10px}
 html[data-photo] .dtitle{display:inline-block;padding:4px 12px 6px}
 html[data-photo] .fpill:not([aria-pressed="true"]),html[data-photo] .roundbtn,html[data-photo] .newtile{background:var(--frost);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 html[data-photo] #v-lists,html[data-photo] #bHead,html[data-photo] #bBody,html[data-photo] #v-decks[data-mode="pool"]{background:color-mix(in srgb, var(--bg) 62%, transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -140,7 +140,8 @@ button{cursor:pointer}
 .sep{flex:none;width:1px;background:var(--line);margin:4px 2px}
 
 /* ---------- results ---------- */
-.resbar{display:flex;align-items:center;gap:8px;padding-block:10px 4px;flex-wrap:wrap}
+.resbar{display:flex;align-items:center;gap:10px;padding-block:2px 8px;flex-wrap:wrap;font-size:14px}
+.resbar select{height:32px;font-size:13.5px}
 .resbar .n{font-weight:700}
 @media (max-width:420px){.resbar label[for=sort]{display:none}.resbar select{max-width:138px}}
 .resbar select{height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:0 8px;font-size:13px;margin-left:auto}
@@ -331,7 +332,7 @@ button{cursor:pointer}
 .rb .rbn b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rb .rbn small{display:block;color:var(--muted);font-size:12px}
 .hs{display:grid;gap:4px;padding-block:6px 2px}
-.recentbtn{display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:none;border:0;padding:6px 0;color:var(--muted);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.recentbtn{display:inline-flex;align-items:center;gap:3px;background:none;border:0;border-left:1px solid var(--line);padding:4px 0 4px 10px;color:var(--muted);font-weight:700;font-size:13px}
 .recentbtn svg{transition:transform .15s}.recentbtn[aria-expanded="true"] svg{transform:rotate(180deg)}
 .hsl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .hsr{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
@@ -359,6 +360,8 @@ details[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
 .bucket[open] .bcount,.effects .bcount{color:var(--accent)}
 .fgroup .lab{font-weight:700;font-size:13px;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .wrapchips{display:flex;gap:6px;flex-wrap:wrap}
+.chip.tog[aria-pressed="true"]::before{content:"";width:10px;height:6px;border:solid currentColor;border-width:0 0 2px 2px;transform:translateY(-2px) rotate(-45deg);margin-right:2px}
+.chip.tog[aria-pressed="false"]{background:transparent}
 .costgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .costgrid .chip{justify-content:center;padding-inline:0;width:100%}
 @media (min-width:560px){.costgrid:not(.blocks){grid-template-columns:repeat(10,minmax(0,1fr))}.costgrid.blocks{max-width:50%}}
@@ -827,18 +830,19 @@ V.innerHTML = `
       <button class="iconbtn" id="gridBtn" type="button" aria-label="Change card size"></button>
     </div>
     <div class="chips gut" id="quick"></div>
-  </div>
-  <div class="gut">
-    <div id="leaderBanner"></div>
-    <div id="homeStrip"></div>
-    <div class="resbar">
+    <div class="resbar gut">
       <span><span class="n" id="rcount">0</span> <span class="muted">cards</span></span>
+      <span id="recentSlot"></span>
       <label class="muted" for="sort" style="margin-left:auto;font-size:13px">Sort</label>
       <select id="sort" style="margin-left:0">
         <option value="rel">Relevance</option><option value="costA">Cost: low to high</option><option value="costD">Cost: high to low</option>
         <option value="pow">Power: high to low</option><option value="color">Color</option><option value="num">Set & number</option><option value="name">Name</option>
       </select>
     </div>
+  </div>
+  <div class="gut">
+    <div id="leaderBanner"></div>
+    <div id="homeStrip"></div>
     <div class="note" id="synNote" hidden></div>
     <div class="grid" id="grid"></div>
     <div id="sentinel" style="height:1px"></div>
@@ -851,11 +855,11 @@ function renderQuick(){
   let h = "";
   if (ctx === "build"){
     if (DL){
-      h += `<button class="chip" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip" id="qLock" aria-pressed="${FB.lock}" title="Only show cards that share a color with ${esc(DL.n)}">${FB.lock?"🔒 ":""}${esc(DL.co.join("/"))} only</button>`;
-      h += `<button class="chip" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">✓ Legal only</button><span class="sep"></span>`;
-    } else h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><button class="chip" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">✓ Legal only</button><span class="sep"></span>`;
+      h += `<button class="chip tog" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip" id="qLock" aria-pressed="${FB.lock}" title="Only show cards that share a color with ${esc(DL.n)}">${FB.lock?"🔒 ":""}${esc(DL.co.join("/"))} only</button>`;
+      h += `<button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
+    } else h += `<button class="chip" data-cat="L" aria-pressed="${F.cats.has("L")}">Leaders</button><button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
   } else {
-    h += `<button class="chip" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">✓ Legal only</button><span class="sep"></span>`;
+    h += `<button class="chip tog" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
   }
   for (const col of COLORS) h += `<button class="chip color" data-col="${col}" aria-pressed="${F.colors.has(col)}" aria-label="${col}"><span class="dot" style="background:${colorVar(col)}"></span>${F.colors.has(col)?col:""}</button>`;
   h += `<span class="sep"></span>`;
@@ -929,10 +933,11 @@ qIn.addEventListener("input", () => setTimeout(renderHome, 150));
 function renderHome(){
   const el = $("#homeStrip"); if (!el) return;
   const busy = F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.type || F.set;
-  if (ctx !== "cards" || busy){ el.innerHTML = ""; return; }
+  if (ctx !== "cards" || busy){ el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,3), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
   const open = !!S.prefs.recentOpen, any = rb.length || rv.length;
-  el.innerHTML = `${!S.decks.length ? firstDeckHTML() : ""}${any ? `<button class="recentbtn" id="recentBtn" aria-expanded="${open}">Recent<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>` : ""}
+  $("#recentSlot").innerHTML = any ? `<button class="recentbtn" id="recentBtn" aria-expanded="${open}">Recent<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>` : "";
+  el.innerHTML = `${!S.decks.length ? firstDeckHTML() : ""}
     ${open && rb.length ? `<div class="hs"><span class="hsl">Recent builds</span><div class="hsr">${rb.map(d=>{ const L = d.leader && BY.get(d.leader); return `<button class="chip" data-rb="${d.id}"><span class="dot" style="background:${L?bandBg(L):"var(--line)"}"></span>${esc(d.name)} <span class="muted">${deckCount(d)}/50</span></button>`; }).join("")}</div></div>` : ""}
     ${open && rv.length ? `<div class="hs"><span class="hsl">Recently viewed</span><div class="hsr">${rv.map(c=>`<button class="chip" data-open="${c.i}"><span class="dot" style="background:${bandBg(c)}"></span>${esc(c.n)} <span class="mono muted">${c.i}</span></button>`).join("")}</div></div>` : ""}`;
 }
@@ -1045,7 +1050,7 @@ function openFilters(){
   const blockChips = [1,2,3,4,5].map(k=>`<button class="chip" data-fblock="${k}" aria-pressed="${F.blocks.has(k)}">${k}</button>`).join("");
   const sc = sheet(`
     <div class="shead"><h2 class="h2">Filters</h2><button class="btn sm" id="fReset">Reset</button><button class="btn sm dark x" id="fDone">Show cards</button></div>
-    <div class="fgroup"><div class="lab">Legal cards</div><div class="wrapchips">${[["all","All cards"],["noban","Hide banned"],["std","✓ Legal only"]].map(([v,l])=>`<button class="chip" data-fpool="${v}" aria-pressed="${S.prefs.pool===v}">${l}</button>`).join("")}</div>
+    <div class="fgroup"><div class="lab">Legal cards</div><div class="wrapchips">${[["all","All cards"],["noban","Hide banned"],["std","Legal only"]].map(([v,l])=>`<button class="chip" data-fpool="${v}" aria-pressed="${S.prefs.pool===v}">${l}</button>`).join("")}</div>
       <p class="foot-note" style="margin-top:6px">Banned and rotated are separate. “Hide banned” removes only the ${META.banned.length} cards on the October 12, 2026 ban list. “Legal only” also removes rotated Block 1 cards, except the ${STD_PERMIT.size + STD_B4.size} that Bandai keeps legal.</p></div>
     <div class="fgroup"><div class="lab">Card type</div><div class="wrapchips">${[["L","Leaders"],["C","Characters"],["E","Events"],["S","Stages"]].map(([k,l])=>`<button class="chip" data-fcat="${k}" aria-pressed="${F.cats.has(k)}">${l}</button>`).join("")}</div></div>
     <div class="fgroup"><div class="lab">Cost</div><div class="costgrid">${costChips}</div></div>
