@@ -411,6 +411,32 @@ textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13p
 .btile .edit:hover{background:rgba(242,242,239,.3)}
 .newtile{flex:none;width:132px;height:184px;scroll-snap-align:start;border-radius:12px;border:1.5px dashed var(--line);background:transparent;color:var(--muted);font-weight:700;font-size:14px}
 .dempty{margin:28px 0 0;color:var(--muted);font-size:14px}
+/* build page: OPLAY-style stats strip + deck as card pictures */
+.sstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
+.sstrip .ss{background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
+.sstrip .ss.wide{grid-column:1/-1}
+.sstrip .sh{font-family:var(--f-display);font-weight:700;font-size:14px;letter-spacing:.03em;margin-bottom:4px;display:flex;justify-content:space-between;align-items:baseline}
+.sstrip .sh small{font-family:var(--f-body,inherit);font-weight:600;font-size:12px;color:var(--muted)}
+.ss-curve{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:3px;height:70px;align-items:end}
+.ss-curve .c{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative}
+.ss-curve .c i{display:block;width:70%;background:var(--ink);border-radius:3px 3px 0 0;min-height:0}
+.ss-curve .c em{font-style:normal;font-size:10.5px;font-weight:700;line-height:1;margin-bottom:2px;order:-1}
+.ss-curve .c u{text-decoration:none;font-size:10px;color:var(--muted);margin-top:2px;font-family:var(--f-mono)}
+.ss-cols{display:flex;gap:8px;height:62px;align-items:flex-end}
+.ss-cols .c{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;width:18px}
+.ss-cols .c i{display:block;width:100%;border-radius:3px}.ss-cols .c em{font-style:normal;font-size:11px;font-weight:700}
+.sstrip .sl{display:grid;gap:2px;font-size:13px}.sstrip .sl span{display:flex;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sstrip .sl b{min-width:1.6em;text-align:right}
+.legal{margin-top:10px;border-radius:12px;border:1px solid var(--line);background:var(--sunk)}
+.legal summary{cursor:pointer;padding:8px 12px;font-weight:700;font-size:14px;list-style-position:inside}
+.legal.ok summary{color:var(--ok)}.legal.bad summary{color:var(--bad)}
+.legal .issues{margin:0;padding:0 10px 10px}
+.dg{margin-top:14px}.dgh{font-family:var(--f-display);font-weight:700;font-size:15px;margin-bottom:6px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
+.dtile{position:relative}
+.dtile .nm{font-size:12px}.dtile .ty,.dtile .fx,.dtile .cat{display:none}
+.dtile .band{padding:3px 5px}.dtile .cost{width:20px;height:20px;font-size:13px}.dtile .pow{font-size:11px}
+.dtile .xq{position:absolute;right:4px;bottom:4px;background:#fff;color:#1F2A44;border:2px solid #3B5FC4;border-radius:8px;font-weight:800;font-size:13px;padding:0 6px;line-height:1.5}
+
 .loosebtn{grid-column:1/-1;margin:14px 0 4px;min-height:46px;border-radius:12px;border:1.5px dashed var(--line);background:transparent;color:var(--ink);font-weight:700;font-size:14px;padding:8px 14px}
 .sect.loose{margin-top:14px}
 .junklink{margin:28px 0 4px;display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:8px 0;color:var(--muted);font-size:14px;font-weight:600}
@@ -1485,6 +1511,34 @@ function openImportExport(start){
 
 /* ================= build view ================= */
 let deckTab = "list", confirmDel = false;     // desktop panel: Build list / Stats
+// Compact stats strip at the top of a build (cost curve, colors, card kinds, counter, top types).
+function statStripHTML(d){
+  const s = statsFor(d), cur = s.curve.slice(); while (cur.length < 11) cur.push(0);
+  const top = Math.max(1, ...cur);
+  const curve = `<div class="ss-curve" role="img" aria-label="Cost curve: ${cur.map((v,i)=>`${v} at ${i}${i===10?"+":""}`).join(", ")}">${cur.map((v,i)=>`<span class="c"><i style="height:${Math.round(v/top*100)}%"></i><em>${v||""}</em><u>${i===10?"10+":i}</u></span>`).join("")}</div>`;
+  const colTop = Math.max(1, ...Object.values(s.colors));
+  const colors = Object.keys(s.colors).length ? `<div class="ss-cols">${Object.entries(s.colors).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="c" title="${k}"><em>${v}</em><i style="height:${Math.round(v/colTop*100)}%;background:${colorVar(k)}"></i></span>`).join("")}</div>` : `<span class="muted">–</span>`;
+  const rowsOf = list => list.map(([v,l])=>`<span><b>${v}</b>${l}</span>`).join("");
+  const types = Object.entries(s.types).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  return `<div class="sstrip">
+    <div class="ss wide"><div class="sh">Cost curve <small>Avg ${s.avg.toFixed(1)}</small></div>${curve}</div>
+    <div class="ss"><div class="sh">Colors</div>${colors}</div>
+    <div class="ss"><div class="sh">Kinds</div><div class="sl">${rowsOf([[s.cats.C,"Characters"],[s.cats.E,"Events"],[s.cats.S,"Stages"]])}</div></div>
+    <div class="ss"><div class="sh">Counter</div><div class="sl">${rowsOf([[s.ctr[1000]||0,"+1000"],[s.ctr[2000]||0,"+2000"],[s.ctr[0]||0,"None"]])}</div></div>
+    <div class="ss"><div class="sh">Types</div><div class="sl">${types.length ? rowsOf(types.map(([k,v])=>[v,esc(k)])) : `<span class="muted">–</span>`}</div></div>
+  </div>`;
+}
+// The deck as card pictures, grouped like a play mat: Leader, then Characters, Events, Stages.
+function deckGridHTML(d){
+  const L = d.leader && BY.get(d.leader), rows = deckRows(d);
+  const tile = (c, art, q) => `<button class="tile dtile" data-open="${c.i}" data-suf="${art||""}" aria-label="${esc(c.n)}${q?`, ${q} copies`:""}">${faceHTML(c, art||"")}${q ? `<span class="xq">×${q}</span>` : ""}</button>`;
+  let h = L ? `<div class="dg"><div class="dgh">Leader</div><div class="dgrid">${tile(L, d.leaderArt||"", 0)}</div></div>` : "";
+  for (const cat of ["C","E","S"]){
+    const rs = rows.filter(r => r.c.c === cat); if (!rs.length) continue;
+    h += `<div class="dg"><div class="dgh">${CATNAME[cat]}s · ${rs.reduce((a,r)=>a+r.q,0)}</div><div class="dgrid">${rs.map(r => tile(r.c, r.art, r.q)).join("")}</div></div>`;
+  }
+  return h;
+}
 function buildBodyHTML(tab){
   const d = deck(); const L = d.leader && BY.get(d.leader);
   const rows = deckRows(d), n = deckCount(d);
@@ -1505,8 +1559,8 @@ function buildBodyHTML(tab){
   return `
     <input class="namein" id="deckName" value="${esc(d.name)}" aria-label="Build name">
     <div class="row muted" style="font-size:13px;margin:2px 0 10px"><span class="count ${n===50?"full":""}">${n}/50</span><span>Saved on this device · ${new Date(d.updated).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"})}</span></div>
-    ${L ? `<button class="leaderbox" data-open="${L.i}" style="width:100%;text-align:left"><span class="sw" style="background:${bandBg(L)}"></span><span class="info"><span class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Leader · ${L.co.join("/")} · Life ${L.k}</span><b style="display:block;font-family:var(--f-display);font-size:20px">${esc(L.n)}</b><span class="mono muted">${L.i}</span></span></button>`
-        : `<div class="banner"><span>No leader yet.</span><button class="btn sm primary" data-act="pickLeader">Choose a leader</button></div>`}
+    ${L && (tab === "stats" || S.prefs.dview === "list" || !rows.length) ? `<button class="leaderbox" data-open="${L.i}" style="width:100%;text-align:left"><span class="sw" style="background:${bandBg(L)}"></span><span class="info"><span class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Leader · ${L.co.join("/")} · Life ${L.k}</span><b style="display:block;font-family:var(--f-display);font-size:20px">${esc(L.n)}</b><span class="mono muted">${L.i}</span></span></button>`
+        : L ? "" : `<div class="banner"><span>No leader yet.</span><button class="btn sm primary" data-act="pickLeader">Choose a leader</button></div>`}
     <div class="row" style="margin-top:10px">
       <button class="btn sm dark" data-act="ie">Import / Export</button>
       ${L ? `<button class="btn sm" data-act="pool">★ Pool</button>` : ""}
@@ -1515,10 +1569,15 @@ function buildBodyHTML(tab){
       <button class="btn sm danger" data-act="del">Delete</button>
     </div>
     ${confirmDel?`<div class="confirm" style="margin-top:8px">Move “${esc(d.name)}” to the Junkyard? You can bring it back for ${JUNK_DAYS} days. <button class="btn sm danger" data-act="delYes">Move to Junkyard</button><button class="btn sm" data-act="delNo">Keep</button></div>`:""}
-    <div class="issues">${iss.map(([k,m])=>`<div class="issue ${k}"><i></i><span>${esc(m)}</span></div>`).join("")}</div>
+    ${(() => { const bad = iss.filter(i => i[0]==="bad" || i[0]==="warn"); const ok = !bad.length;
+      return `<details class="legal ${ok ? "ok" : "bad"}"><summary>${ok ? "✓ Legal deck" : `✕ Not legal yet · ${bad.length} to fix`}<span class="muted"> · ${n}/50</span></summary>
+        <div class="issues">${iss.map(([k,m])=>`<div class="issue ${k}"><i></i><span>${esc(m)}</span></div>`).join("")}</div></details>`; })()}
     ${tab === "stats" ? `<div style="margin-top:14px">${statsHTML(d)}</div>`
-      : `${rows.length?`<div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn sm" data-act="wishMissing" ${missing===0?"disabled":""}>${missing?`Buy List for this build (${missing} to buy)`:"Nothing to buy ✓"}</button></div>`:""}
-         ${list || `<p class="muted" style="margin-top:16px">No cards yet. Use Add cards, then + in a card's popup.</p>`}`}
+      : `${rows.length || L ? statStripHTML(d) : ""}
+         ${rows.length ? `<div class="row" style="margin-top:12px;justify-content:space-between"><div class="seg" role="group" aria-label="Show the deck as"><button data-dview="cards" aria-pressed="${S.prefs.dview!=="list"}">Cards</button><button data-dview="list" aria-pressed="${S.prefs.dview==="list"}">List · have/need</button></div>` : ""}
+         ${rows.length?`<div class="row" style="margin:0;justify-content:flex-end"><button class="btn sm" data-act="wishMissing" ${missing===0?"disabled":""}>${missing?`Buy List for this build (${missing} to buy)`:"Nothing to buy ✓"}</button></div>`:""}
+         ${rows.length ? `</div>` : ""}
+         ${!rows.length ? `${L ? deckGridHTML(d) : ""}<p class="muted" style="margin-top:16px">No cards yet. Use Add cards, then + in a card's popup.</p>` : S.prefs.dview === "list" ? list : deckGridHTML(d)}`}
     ${d.sample?`<p class="foot-note">This sample build was made automatically from ST-01 cards so you can try the app. It isn't a tuned list.</p>`:""}`;
 }
 function buildHeadHTML(){
@@ -1548,6 +1607,7 @@ function deckClick(e){
   const d = deck();
   if (t.dataset.open){ openCard(t.dataset.open, t.dataset.suf); return; }
   if (t.dataset.dtab){ deckTab = t.dataset.dtab; renderDeckViews(); return; }
+  if (t.dataset.dview){ S.prefs.dview = t.dataset.dview; save(); renderDeckViews(); return; }
   if (t.dataset.bsub){ bSub = t.dataset.bsub; if (bSub === "add") setCtx("build"); renderDeckViews(); window.scrollTo({top:0}); return; }
   const a = t.dataset.act;
   if (a === "ie") openImportExport();
