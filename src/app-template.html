@@ -340,6 +340,7 @@ button{cursor:pointer}
 .bhead .bname{display:block;background:none;border:0;padding:0;color:var(--muted);font-size:12px;text-align:left;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .bhead .bname .pen{opacity:.7}
 #asideDeck .narrowonly{display:none}
+.doneR{display:none}#asideDeck .doneR{display:inline-flex;margin-left:auto}
 @media (min-width:1024px){
   #asideDeck .bhead .jolly{width:52px;height:52px}
   .bhead .bhn b{font-size:32px;line-height:1.05;white-space:normal}
@@ -1782,6 +1783,7 @@ function buildBodyHTML(tab){
       <button class="btn sm" data-act="dup">Copy as new build</button>
       <button class="btn sm" data-act="newdeck">${L ? `New ${esc(L.n)} build` : "New build"}</button>
       <button class="btn sm danger" data-act="del">Delete</button>
+      <button class="btn sm dark doneR" data-act="toDecks">Done</button>
     </div>
     ${confirmDel?`<div class="confirm" style="margin-top:8px">Move “${esc(d.name)}” to the Junkyard? You can bring it back for ${JUNK_DAYS} days. <button class="btn sm danger" data-act="delYes">Move to Junkyard</button><button class="btn sm" data-act="delNo">Keep</button></div>`:""}
     ${(() => { const bad = iss.filter(i => i[0]==="bad" || i[0]==="warn"); const ok = !bad.length;
@@ -1800,7 +1802,7 @@ function buildHeadHTML(wide){
   return `<button class="crumb" data-act="toDecks">‹ My Decks</button>
     <div class="bhead">${jollyHTML(L && L.co.length ? L.co : [])}
     <span class="bhn"><b>${L ? esc(L.n) + " Deck" : "New deck"}</b><button class="bname" data-act="rename" title="Rename, cover, favorite"><span class="bl">Build</span> ${esc(d.name)}${d.star?' <span style="color:var(--accent)">★</span>':""} <span class="pen" aria-hidden="true">✎</span></button></span>
-    <span class="count ${n===50?"full":""}">${n}/50</span><button class="btn sm" data-act="switch">Switch build</button>${wide ? `<button class="btn sm dark" data-act="toDecks">Done</button>` : ""}</div>`;
+    <span class="count ${n===50?"full":""}">${n}/50</span><button class="btn sm" data-act="switch">Switch build</button></div>`;
 }
 function renderDeckViews(){
   const a = $("#asideDeck"), st = a.scrollTop;
