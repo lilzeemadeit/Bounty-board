@@ -2324,7 +2324,7 @@ const curPhoto = () => {
 };
 const photoURL = p => p.wall ? p.url : bgURLs.get(p.id);
 // Backing behind text when a photo is on: Auto picks light or dark from the photo; the colors tint it.
-const TINTS = {pink:["Pink","light","#F5D3DD"], red:["Red","dark","#5C141B"], blue:["Blue","dark","#1D45A6"], sky:["Sky","light","#D3E4F5"], green:["Green","dark","#143A27"], purple:["Purple","dark","#2F1A49"]};
+const TINTS = {pink:["Pink","light","#F6CCDA"], red:["Red","dark","#C2303A"], blue:["Blue","dark","#3366CC"], sky:["Sky","light","#BFDCF7"], green:["Green","dark","#2C8C55"], purple:["Purple","dark","#7448C2"]};
 const backingFor = p => TINTS[S.prefs.backing] ? TINTS[S.prefs.backing][1] : S.prefs.backing === "light" || S.prefs.backing === "dark" ? S.prefs.backing : (p.lum > 0.4 ? "light" : "dark");
 function applyLook(){
   const root = document.documentElement, layer = $("#bgimg"), p = curPhoto();
@@ -2353,7 +2353,7 @@ function openLook(){
       </div>${memOnly ? `<p class="muted" style="font-size:12.5px;margin:6px 0 0">This preview can't keep photos after you close it. The installed app will.</p>` : ""}</div>
       ${p ? `<div class="fld"><span>Text backing</span><div><div class="bkrow" role="group" aria-label="Text backing color">${[["auto","Auto","linear-gradient(135deg,#E4D8C0 0 50%,#12110F 50% 100%)"],["light","Light","#E4D8C0"],["dark","Dark","#12110F"], ...Object.entries(TINTS).map(([k,[l,,c]]) => [k,l,c])].map(([k,l,c]) => `<button data-bk="${k}" aria-pressed="${(S.prefs.backing||"auto")===k}"><span class="sw" style="background:${c}"></span>${l}</button>`).join("")}</div>
           <p class="muted" style="font-size:12.5px;margin:6px 0 0">${(S.prefs.backing||"auto")==="auto" ? `Auto picked ${backingFor(p)} for this photo.` : "Behind text, so it stays readable."}</p></div></div>
-        <div class="fld"><span>See-through</span><div><input type="range" id="lkFrost" min="10" max="95" step="1" value="${S.prefs.frostp ?? 46}" aria-label="How solid the backing is">
+        <div class="fld"><span>See-through</span><div><input type="range" id="lkFrost" min="0" max="95" step="1" value="${S.prefs.frostp ?? 46}" aria-label="How solid the backing is">
           <div class="rangelab muted"><span>More photo</span><span id="lkFrostV">${S.prefs.frostp ?? 46}%</span><span>More solid</span></div></div></div>
         <div class="fld"><span>Framing · drag the photo</span><div class="frame" id="lkFrame" style="background-image:url('${photoURL(p)}');background-position:${p.x}% ${p.y}%"><span>Drag to move</span></div></div>
         <div class="row" style="gap:16px"><button class="linkbtn" data-lk="none">Stop using a photo</button>${p.wall ? "" : `<button class="linkbtn" data-lk="del" style="color:var(--bad)">Remove this photo</button>`}</div>` : ""}`, "Background");
