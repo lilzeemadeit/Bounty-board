@@ -787,8 +787,36 @@ const SYN_DESC = {rest:"rest an opponent's card",ko:"K.O. a card",bounce:"return
 /* ================= storage ================= */
 const KEY = "bountyboard.v1";
 function load(){ try{ const s = localStorage.getItem(KEY) || localStorage.getItem("logpose.v1"); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
-let saveT;
-function save(){ clearTimeout(saveT); saveT = setTimeout(()=>{ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} if (typeof cloudDirty === "function") cloudDirty(); }, 250); }
+let saveT, lastRaw = (() => { try { return localStorage.getItem(KEY); } catch(e){ return null; } })();
+// Several tabs can be open at once. Before writing, fold in anything another tab saved since we last looked,
+// so an older tab can never overwrite newer decks.
+// Safety net: keep up to 12 earlier saves on this device (one every 10 minutes, plus one right before the
+// account replaces this device's decks), so lost builds can be brought back from the Account sheet.
+const SNAP_KEY = "bountyboard.snaps";
+function snapshot(force, of){
+  try {
+    const st = of || S; if (!st || !(st.decks||[]).length) return;
+    const list = JSON.parse(localStorage.getItem(SNAP_KEY) || "[]"), now = Date.now();
+    if (!force && list[0] && now - list[0].at < 6e5) return;
+    const lite = JSON.parse(JSON.stringify(st));
+    for (const d of [...(lite.decks||[]), ...(lite.junk||[])]) if (d.cover && d.cover.photo) delete d.cover;
+    list.unshift({at: now, names: lite.decks.map(d => d.name), data: lite});
+    while (list.length){ try { localStorage.setItem(SNAP_KEY, JSON.stringify(list.slice(0, 12))); break; } catch(e){ list.pop(); if (list.length < 2) break; } }
+  } catch(e){}
+}
+function writeState(){
+  try {
+    const cur = localStorage.getItem(KEY);
+    if (cur && cur !== lastRaw){ try { S = combine(S, JSON.parse(cur)); } catch(e){} }
+    const raw = JSON.stringify(S); localStorage.setItem(KEY, raw); lastRaw = raw; snapshot(false); return true;
+  } catch(e){ return false; }
+}
+function save(){ clearTimeout(saveT); saveT = setTimeout(()=>{ writeState(); if (typeof cloudDirty === "function") cloudDirty(); }, 250); }
+// Another tab saved: take its changes right away.
+addEventListener("storage", e => {
+  if (e.key !== KEY || !e.newValue || e.newValue === lastRaw) return;
+  try { S = combine(JSON.parse(e.newValue), S); lastRaw = e.newValue; if (typeof renderAll === "function") renderAll(); if (curTab === "home") renderHomePage(); } catch(err){}
+});
 const uid = () => Math.random().toString(36).slice(2,9);
 
 function sampleDeck(){
@@ -2279,7 +2307,7 @@ function shrinkPhoto(file){
     im.src = url;
   });
 }
-function saveNow(){ try { localStorage.setItem(KEY, JSON.stringify(S)); return true; } catch(e){ return false; } }
+function saveNow(){ return writeState(); }
 function editBuild(id){
   const d = S.decks.find(x => x.id === id); if (!d) return;
   const L = d.leader && BY.get(d.leader);
@@ -2757,7 +2785,7 @@ function setSync(st){ sbState = st; const dot = $("#acctBtn .acdot"); if (dot){ 
 function stHash(o){ const t = JSON.stringify(o); let h = 2166136261; for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 16777619); return (h >>> 0).toString(36); }
 function cloudDirty(){ if (!sbUser || busy) return; if (!syncMeta.dirty && stHash(S) === syncMeta.hash) return; syncMeta.dirty = true; saveMeta(); clearTimeout(pushT); pushT = setTimeout(push, 1500); }
 const isBlank = st => !st || !st.decks || st.decks.every(d => d.sample) && !Object.keys(st.owned||{}).length && !(st.wish||[]).length && !(st.treasure||[]).length && !(st.want||[]).length;
-function adopt(data, msg){ busy = true; syncMeta.hash = stHash(data); saveMeta(); try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){} if (msg) sessionStorage.setItem("bb.toast", msg); location.reload(); }
+function adopt(data, msg){ snapshot(true); busy = true; syncMeta.hash = stHash(data); saveMeta(); try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){} if (msg) sessionStorage.setItem("bb.toast", msg); location.reload(); }
 async function push(){
   if (!sbUser || !sb) return; clearTimeout(pushT);
   try {
@@ -2817,6 +2845,25 @@ function askCombine(row){
     const merged = combine(S, row.data); S = merged; push().then(() => adopt(merged, "Combined this device with your account"));
   });
 }
+// Earlier saves: bring back any builds an earlier save had (nothing you have now is removed).
+function openSnaps(){
+  let list = []; try { list = JSON.parse(localStorage.getItem(SNAP_KEY) || "[]"); } catch(e){}
+  const have = new Set(S.decks.map(d => d.id));
+  const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">ACCOUNT</span><b>Earlier saves</b></span><button class="btn" data-sn="close">Close</button></div>
+    <p class="muted" style="margin:0 0 12px;font-size:14px">This device keeps a copy of your builds every few minutes. Bringing one back adds any builds it has that you don't; nothing you have now is removed.</p>
+    <div class="stack">${list.length ? list.map((x, i) => { const miss = (x.data.decks||[]).filter(d => !have.has(d.id));
+      return `<div class="leaderbox" style="display:block"><div class="row" style="justify-content:space-between"><b>${new Date(x.at).toLocaleString([], {weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit"})}</b><span class="muted" style="font-size:13px">${(x.data.decks||[]).length} build${(x.data.decks||[]).length===1?"":"s"}</span></div>
+        <p class="muted" style="font-size:13px;margin:4px 0 8px">${esc(x.names.join(", "))}</p>
+        ${miss.length ? `<button class="btn sm primary" data-sn="${i}">Bring back ${miss.length}: ${esc(miss.map(d => d.name).join(", "))}</button>` : `<span class="muted" style="font-size:12.5px">You already have all of these.</span>`}</div>`; }).join("")
+      : `<p class="muted">No earlier saves yet. They start building up as you use the app.</p>`}</div>`, "Earlier saves");
+  sc.addEventListener("click", e => { const t = e.target.closest("[data-sn]"); if (!t) return;
+    if (t.dataset.sn === "close"){ closeSheet(); return; }
+    const x = list[+t.dataset.sn]; if (!x) return;
+    const back = (x.data.decks||[]).filter(d => !have.has(d.id)).map(d => Object.assign({}, d, {updated: Date.now()}));
+    for (const d of back){ S.decks.push(d); if (S.gone) delete S.gone[d.id]; S.junk = (S.junk||[]).filter(j => j.id !== d.id); }
+    save(); closeSheet(); renderAll(); toast(`Brought back ${back.map(d => d.name).join(", ")}`);
+  });
+}
 function authErr(e){
   const m = (e && (e.message || e.error_description)) || "";
   if (/invalid login/i.test(m)) return "That email and password don't match. Check them, or tap “Forgot password”.";
@@ -2829,25 +2876,29 @@ function authErr(e){
 }
 function openAccount(msg, bad){
   if (!sb){ sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">ACCOUNT</span><b>Sign in</b></span><button class="btn primary" data-ac="done">Done</button></div>
-      <p class="authmsg">Sign-in works in the installed app. This preview can't reach the server, so your decks are saved on this device only.</p>`, "Account").addEventListener("click", e => { if (e.target.closest("[data-ac=done]")) closeSheet(); }); return; }
+      <p class="authmsg">Sign-in works in the installed app. This preview can't reach the server, so your decks are saved on this device only.</p>
+      <button class="linkbtn" data-ac="snaps">Earlier saves on this device</button>`, "Account").addEventListener("click", e => { if (e.target.closest("[data-ac=done]")) closeSheet(); if (e.target.closest("[data-ac=snaps]")) openSnaps(); }); return; }
   const when = syncMeta.at ? new Date(syncMeta.at).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}) : "";
   const status = sbState === "error" ? `<span style="color:var(--warn)">Couldn't reach the server. Your changes are safe on this device and will sync when you're back online.</span>` : syncMeta.dirty ? "Saving…" : when ? `Synced · ${when}` : "Syncing…";
   const body = recovering ? `<label class="fld"><span>New password</span><input type="password" id="acPw" autocomplete="new-password" minlength="8" autofocus></label>
       <button class="btn primary" data-ac="setpw" style="width:100%;justify-content:center;height:46px">Save new password</button>`
     : sbUser ? `<p style="margin:0 0 4px">Signed in as <b>${esc(sbUser.email)}</b></p><p class="muted" style="margin:0 0 16px;font-size:13.5px">${status}</p>
       <div class="row" style="gap:8px"><button class="btn" data-ac="sync">Sync now</button><button class="btn" data-ac="out">Sign out</button></div>
-      <p class="muted" style="font-size:12.5px;margin:16px 0 0">Builds, collection, Buy Lists, Treasure Box, pools and settings sync to your account. Your own background photos stay on each device.</p>`
+      <p class="muted" style="font-size:12.5px;margin:16px 0 0">Builds, collection, Buy Lists, Treasure Box, pools and settings sync to your account. Your own background photos stay on each device.</p>
+      <button class="linkbtn" data-ac="snaps" style="margin-top:12px">Earlier saves on this device</button>`
     : `<p class="muted" style="margin:0 0 14px;font-size:14px">Sign in to keep your decks safe and the same on all your devices.</p>
       <label class="fld"><span>Email</span><input type="email" id="acEmail" autocomplete="email" inputmode="email" autofocus></label>
       <label class="fld"><span>Password</span><input type="password" id="acPw" autocomplete="current-password"></label>
       <div class="row" style="gap:8px"><button class="btn primary" data-ac="in" style="flex:1;justify-content:center;height:46px">Sign in</button><button class="btn" data-ac="up" style="flex:1;justify-content:center;height:46px">Create account</button></div>
-      <div class="row" style="gap:16px;margin-top:14px"><button class="linkbtn" data-ac="forgot">Forgot password?</button><button class="linkbtn" data-ac="resend">Resend confirmation email</button></div>`;
+      <div class="row" style="gap:16px;margin-top:14px"><button class="linkbtn" data-ac="forgot">Forgot password?</button><button class="linkbtn" data-ac="resend">Resend confirmation email</button></div>
+      <button class="linkbtn" data-ac="snaps" style="margin-top:14px">Earlier saves on this device</button>`;
   const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">BOUNTY BOARD</span><b>${recovering ? "New password" : sbUser ? "Account" : "Sign in"}</b></span><button class="btn" data-ac="done">Close</button></div>
     ${msg ? `<p class="authmsg${bad ? " bad" : ""}" role="status">${esc(msg)}</p>` : ""}${body}`, "Account");
   const val = id => ($("#"+id, sc) || {}).value || "";
   sc.addEventListener("click", async e => {
     const t = e.target.closest("[data-ac]"); if (!t) return; const a = t.dataset.ac;
     if (a === "done"){ closeSheet(); return; }
+    if (a === "snaps"){ openSnaps(); return; }
     const email = val("acEmail").trim(), pw = val("acPw");
     try {
       if (a === "in"){ if (!email || !pw) return openAccount("Enter your email and password.", true);
