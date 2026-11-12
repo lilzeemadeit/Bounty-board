@@ -54,7 +54,7 @@ html{background:var(--bg)}
 #bgimg{position:fixed;inset:0;z-index:-1;background-size:cover;background-repeat:no-repeat;display:none}
 html[data-photo] #bgimg{display:block}
 html[data-photo] body{background:transparent}
-html[data-photo]{--frost:color-mix(in srgb, var(--bg) 46%, transparent);--glow:0 0 2px var(--bg),0 0 8px var(--bg)}
+html[data-photo]{--frost:color-mix(in srgb, var(--tint, var(--bg)) var(--frostp, 46%), transparent);--glow:0 0 2px var(--tint, var(--bg)),0 0 8px var(--tint, var(--bg))}
 html[data-photo] .dtitle,html[data-photo] .lrow b,html[data-photo] .ctags,html[data-photo] .poollink,html[data-photo] .resbar,html[data-photo] .hsl,html[data-photo] .recentbtn,html[data-photo] .sect,html[data-photo] .note,html[data-photo] .junklink,html[data-photo] .brand h1{text-shadow:var(--glow)}
 html[data-photo] .brandbar,html[data-photo] .top,html[data-photo] .nav,html[data-photo] .aside{background:var(--frost)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 html[data-photo] .dtitle,html[data-photo] .lrow,html[data-photo] .dempty,html[data-photo] #homeStrip:not(:empty),html[data-photo] #leaderBanner:not(:empty){background:var(--frost);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:14px;padding:6px 10px;margin-inline:-10px}
@@ -63,6 +63,12 @@ html[data-photo] .fpill:not([aria-pressed="true"]),html[data-photo] .roundbtn,ht
 html[data-photo] #v-lists,html[data-photo] #bHead,html[data-photo] #bBody,html[data-photo] #v-decks[data-mode="pool"]{background:color-mix(in srgb, var(--bg) 62%, transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 /* Look sheet */
 .looks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.bkrow{display:flex;flex-wrap:wrap;gap:6px}
+.bkrow button{height:32px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:0 10px 0 5px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.bkrow .sw{width:22px;height:22px;border-radius:11px;border:1px solid var(--line);flex:none}
+.bkrow button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+#lkFrost{width:100%;accent-color:var(--accent-fill)}
+.rangelab{display:flex;justify-content:space-between;font-size:12px}
 .looks button{display:grid;gap:6px;justify-items:center;background:none;border:0;padding:0;font-size:12.5px;font-weight:700;color:var(--ink)}
 .looks .sw{width:100%;aspect-ratio:3/4;border-radius:12px;border:1px solid var(--line)}
 .looks button[aria-pressed="true"] .sw,.bgthumbs button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--ink)}
@@ -515,6 +521,7 @@ html[data-photo] .bldbar{background:var(--frost)}
 #bTabs:empty{display:none}
 #bAddSlot .top{top:52px !important}
 #asideDeck .btabs{position:sticky;top:-1px;z-index:6;background:var(--surface);padding-block:6px;margin-inline:-2px}
+html[data-photo] #asideDeck .btabs{background:var(--frost);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 html[data-photo] #bTabs{background:var(--frost);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 /* build page: OPLAY-style stats strip + deck as card pictures */
 .sstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
@@ -2316,14 +2323,18 @@ const curPhoto = () => {
   return bgPhotos.find(p => p.id === id) || null;
 };
 const photoURL = p => p.wall ? p.url : bgURLs.get(p.id);
-const backingFor = p => S.prefs.backing === "light" || S.prefs.backing === "dark" ? S.prefs.backing : (p.lum > 0.4 ? "light" : "dark");
+// Backing behind text when a photo is on: Auto picks light or dark from the photo; the colors tint it.
+const TINTS = {pink:["Pink","light","#F5D3DD"], red:["Red","dark","#5C141B"], blue:["Blue","dark","#13284D"], sky:["Sky","light","#D3E4F5"], green:["Green","dark","#143A27"], purple:["Purple","dark","#2F1A49"]};
+const backingFor = p => TINTS[S.prefs.backing] ? TINTS[S.prefs.backing][1] : S.prefs.backing === "light" || S.prefs.backing === "dark" ? S.prefs.backing : (p.lum > 0.4 ? "light" : "dark");
 function applyLook(){
   const root = document.documentElement, layer = $("#bgimg"), p = curPhoto();
   if (p){
     root.dataset.photo = ""; root.dataset.theme = backingFor(p);
+    const tn = TINTS[S.prefs.backing]; if (tn) root.style.setProperty("--tint", tn[2]); else root.style.removeProperty("--tint");
+    root.style.setProperty("--frostp", (S.prefs.frostp ?? 46) + "%");
     layer.style.backgroundImage = `url("${photoURL(p)}")`; layer.style.backgroundPosition = `${p.x}% ${p.y}%`;
   } else {
-    delete root.dataset.photo; layer.style.backgroundImage = "";
+    delete root.dataset.photo; layer.style.backgroundImage = ""; root.style.removeProperty("--tint");
     const look = S.prefs.look || "phone";
     if (look === "phone") delete root.dataset.theme; else root.dataset.theme = look;
   }
@@ -2340,8 +2351,10 @@ function openLook(){
         <label>+ Add<br>photo<input type="file" accept="image/*" id="lkFile" style="position:absolute;width:1px;height:1px;opacity:0"></label>
         ${[...bgPhotos].sort((a,b)=>b.added-a.added).map(ph => `<button data-ph="${ph.id}" aria-pressed="${p && p.id===ph.id}" aria-label="Use this photo" style="background-image:url('${bgURLs.get(ph.id)}');background-position:${ph.x}% ${ph.y}%"></button>`).join("")}
       </div>${memOnly ? `<p class="muted" style="font-size:12.5px;margin:6px 0 0">This preview can't keep photos after you close it. The installed app will.</p>` : ""}</div>
-      ${p ? `<div class="fld"><span>Text backing</span><div><div class="seg3" role="group" aria-label="Text backing">${[["auto","Auto"],["light","Light"],["dark","Dark"]].map(([k,l]) => `<button data-bk="${k}" aria-pressed="${(S.prefs.backing||"auto")===k}">${l}</button>`).join("")}</div>
+      ${p ? `<div class="fld"><span>Text backing</span><div><div class="bkrow" role="group" aria-label="Text backing color">${[["auto","Auto","linear-gradient(135deg,#E4D8C0 0 50%,#12110F 50% 100%)"],["light","Light","#E4D8C0"],["dark","Dark","#12110F"], ...Object.entries(TINTS).map(([k,[l,,c]]) => [k,l,c])].map(([k,l,c]) => `<button data-bk="${k}" aria-pressed="${(S.prefs.backing||"auto")===k}"><span class="sw" style="background:${c}"></span>${l}</button>`).join("")}</div>
           <p class="muted" style="font-size:12.5px;margin:6px 0 0">${(S.prefs.backing||"auto")==="auto" ? `Auto picked ${backingFor(p)} for this photo.` : "Behind text, so it stays readable."}</p></div></div>
+        <div class="fld"><span>See-through</span><div><input type="range" id="lkFrost" min="10" max="95" step="1" value="${S.prefs.frostp ?? 46}" aria-label="How solid the backing is">
+          <div class="rangelab muted"><span>More photo</span><span id="lkFrostV">${S.prefs.frostp ?? 46}%</span><span>More solid</span></div></div></div>
         <div class="fld"><span>Framing · drag the photo</span><div class="frame" id="lkFrame" style="background-image:url('${photoURL(p)}');background-position:${p.x}% ${p.y}%"><span>Drag to move</span></div></div>
         <div class="row" style="gap:16px"><button class="linkbtn" data-lk="none">Stop using a photo</button>${p.wall ? "" : `<button class="linkbtn" data-lk="del" style="color:var(--bad)">Remove this photo</button>`}</div>` : ""}`, "Background");
     sc.classList.add("clear"); sc.querySelector(".sheet").classList.add("seethru");
@@ -2350,6 +2363,9 @@ function openLook(){
       try { const ph = await photoFromFile(file); bgPhotos.push(ph); bgURLs.set(ph.id, URL.createObjectURL(ph.blob)); await storePhoto(ph); S.prefs.bgPhoto = ph.id; save(); applyLook(); draw(); }
       catch(err){ toast("That file couldn't be opened as a photo."); }
     });
+    const fs = $("#lkFrost", sc);
+    if (fs){ fs.addEventListener("input", () => { S.prefs.frostp = +fs.value; $("#lkFrostV", sc).textContent = fs.value + "%"; applyLook(); });
+      fs.addEventListener("change", () => save()); }
     const fr = $("#lkFrame", sc);
     if (fr && p){
       let start = null;
