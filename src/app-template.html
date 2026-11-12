@@ -395,7 +395,9 @@ textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13p
 .addbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
 .lgroup{display:grid;gap:8px;margin-top:18px}
 /* My Decks (Atelier): leader rows with a split skull, colored color-words, swipeable build tiles with covers */
-.dhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:8px}
+.dhead{display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap}
+.newdeckbtn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px;border-radius:20px;border:0;background:var(--accent-fill);color:var(--on-accent);font-weight:800;font-size:15px;margin-top:6px}
+.newdeckbtn:hover{filter:brightness(1.05)}
 .dtitle{margin:0;font-family:var(--f-display);font-size:52px;line-height:.9;font-weight:700;letter-spacing:-.01em}
 .roundbtn{flex:none;width:40px;height:40px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--ink);display:grid;place-items:center}
 .dfilt{display:flex;gap:8px;margin:14px 0 4px;flex-wrap:wrap}
@@ -1818,7 +1820,7 @@ function renderDecks(){
   if (!body) body = df === "recent" ? firstDeckHTML() : `<p class="dempty">${df === "fav" ? "No favorite builds yet. Tap the pencil on a build and choose ★ Favorite." : "No completed builds yet. A build counts as completed at 50/50."}</p>`;
   const nj = (S.junk||[]).length;
   if (nj && df === "recent") body += `<button class="junklink" data-junk="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Junkyard · ${nj} deleted build${nj===1?"":"s"}</button>`;
-  v.innerHTML = `<div class="dhead"><h2 class="dtitle">Decks</h2><button class="roundbtn" data-act="new" aria-label="New deck"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg></button></div>
+  v.innerHTML = `<div class="dhead"><h2 class="dtitle">Decks</h2><button class="newdeckbtn" data-act="new"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg>New deck</button></div>
     <div class="dfilt" role="group" aria-label="Show builds">${DF.map(([k,l,ic]) => `<button class="fpill" data-df="${k}" aria-pressed="${df===k}">${ic}${l}</button>`).join("")}</div>
     ${body}`;
 }
