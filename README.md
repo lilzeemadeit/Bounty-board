@@ -2,7 +2,7 @@
 
 A One Piece Card Game deck builder: search every card (by name, number, type or what it does), build decks by leader with several builds each, track your collection, make Buy Lists, and save cards to your ☆Treasure Box☆. Sign in to sync across devices.
 
-**Open the app:** https://zeethenerdybee.github.io/Bounty-board/ (on a phone, use “Add to Home Screen”).
+**Open the app:** https://lilzeemadeit.github.io/Bounty-board/ (on a phone, use “Add to Home Screen”).
 
 ## How it's put together
 - `src/app-template.html`: the whole app (one page, no build tools).
