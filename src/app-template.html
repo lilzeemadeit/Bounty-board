@@ -287,12 +287,15 @@ button{cursor:pointer}
 .pop .art{max-width:260px;width:100%;margin:0 auto}
 .popl{position:relative;max-width:260px;margin:0 auto}
 .popl .art{margin:0 auto}
-.qadd{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;flex-direction:row-reverse;align-items:center;gap:4px;padding:4px;border-radius:30px;background:rgba(20,18,15,.84);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 4px 14px rgba(0,0,0,.25);white-space:nowrap}
-.qbtn{width:40px;height:40px;border-radius:20px;border:0;background:var(--accent-fill);color:#231800;font-size:22px;font-weight:700;line-height:1;display:grid;place-items:center}
-.qbtn.minus{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff}
-.qbtn:disabled{opacity:.35}
-.qadd .qn{font-family:var(--f-display);font-size:22px;font-weight:700;line-height:1;min-width:1.6em;text-align:center;color:#fff}
-.qadd .qcap{color:#fff;padding:0 10px 0 6px;font-size:13px;font-weight:700}
+.tapadd{position:absolute;inset:0;border:0;background:transparent;border-radius:inherit;cursor:pointer;display:grid;place-items:center;padding:0}
+.tapadd .bigplus{width:84px;height:84px;border-radius:42px;display:grid;place-items:center;font-size:52px;font-weight:300;line-height:1;color:#fff;background:rgba(20,18,15,.42);border:2px solid rgba(255,255,255,.75);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);transition:transform .12s,background .12s;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.tapadd:hover .bigplus{background:rgba(20,18,15,.6)}
+.tapadd:active .bigplus{transform:scale(.92)}
+.tapadd.full .bigplus{font-size:20px;font-weight:800;opacity:.75}
+.tapadd .tapcap{position:absolute;top:calc(50% + 50px);font-weight:800;font-size:14px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+.tapadd .xq.big{position:absolute;right:10px;top:10px;bottom:auto;font-size:18px;padding:2px 10px;background:#fff;color:#1F2A44;border:2px solid #3B5FC4;border-radius:10px;font-weight:800;animation:bump .25s ease-out}
+.tapadd.done{pointer-events:none}
+@keyframes bump{from{transform:scale(1.35)}to{transform:scale(1)}}
 .pop .art .face .nm{font-size:22px}.pop .art .fx{-webkit-line-clamp:9;font-size:12px}
 .prints{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;justify-content:center}
 .prints button{height:28px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:12px;padding:0 10px;font-weight:700}
@@ -1200,17 +1203,18 @@ function openCard(id, suf, after){
       <div class="msg" id="addMsg" role="alert"></div>
     </div></details>`;
   };
-  // Quick add beside the card, only while you're inside a build: just + / count / −. For a leader: a single +.
+  // Tap the big card to add it: a large + sits in the middle of the art and a ×N count shows how many are in
+  // the build. Leaders: one tap makes it this build's leader (or starts a new build). The +/− rows below still work.
   const quickHTML = d => {
     if (c.c === "L"){
       const asLeader = ctx === "build" && !d.ghost && !d.leader;
-      return `<div class="qadd"><button class="qbtn" id="${asLeader ? "setLeader" : "newL"}" aria-label="${asLeader ? `Use ${esc(c.n)} as the leader of ${esc(d.name)}` : `Start a new ${esc(c.n)} build`}">+</button><span class="qcap">${asLeader ? "Leader" : "New build"}</span></div>`;
+      const isCur = ctx === "build" && d.leader === c.i;
+      if (isCur) return `<span class="tapadd done" aria-hidden="true"><span class="xq big">Leader ✓</span></span>`;
+      return `<button class="tapadd" data-q="${asLeader ? "setLeader" : "newL"}" aria-label="${asLeader ? `Use ${esc(c.n)} as the leader of ${esc(d.name)}` : `Start a new ${esc(c.n)} build`}"><span class="bigplus">+</span><span class="tapcap">${asLeader ? "Use as leader" : "New build"}</span></button>`;
     }
     if (ctx !== "build" || d.ghost) return "";
-    const q = d.cards[c.i]?.q || 0;
-    return `<div class="qadd"><button class="qbtn" data-bstep="${d.id}|1" aria-label="Add one to ${esc(d.name)}" ${q >= limitFor(c) ? "disabled" : ""}>+</button>
-      <output class="qn" aria-live="polite" aria-label="${q} in ${esc(d.name)}">${q}</output>
-      <button class="qbtn minus" data-bstep="${d.id}|-1" aria-label="Remove one from ${esc(d.name)}" ${q ? "" : "disabled"}>−</button></div>`;
+    const q = d.cards[c.i]?.q || 0, full = q >= limitFor(c);
+    return `<button class="tapadd${full ? " full" : ""}" data-bstep="${d.id}|1" ${full ? "disabled" : ""} aria-label="Add one to ${esc(d.name)} (${q} in it now)"><span class="bigplus">${full ? "Max" : "+"}</span>${q ? `<span class="xq big">×${q}</span>` : ""}</button>`;
   };
   const draw = () => {
     const d = deck(); const L = d.leader && BY.get(d.leader);
