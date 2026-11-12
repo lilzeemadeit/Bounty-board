@@ -287,6 +287,9 @@ button{cursor:pointer}
 .pop .art{max-width:260px;width:100%;margin:0 auto}
 .popl{position:relative;max-width:260px;margin:0 auto}
 .popl .art{margin:0 auto}
+.under{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px auto 2px;max-width:260px}
+.under .undernm{font-size:13px;font-weight:700;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.under .stepper button:disabled{opacity:.35}
 .tapadd{position:absolute;inset:0;border:0;background:transparent;border-radius:inherit;cursor:pointer;display:grid;place-items:center;padding:0}
 .tapadd .bigplus{width:84px;height:84px;border-radius:42px;display:grid;place-items:center;font-size:52px;font-weight:300;line-height:1;color:#fff;background:rgba(20,18,15,.42);border:2px solid rgba(255,255,255,.75);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);transition:transform .12s,background .12s;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .tapadd:hover .bigplus{background:rgba(20,18,15,.6)}
@@ -478,10 +481,8 @@ html[data-photo] .junklink{background:var(--frost);padding:8px 12px;border-radiu
 .junkrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
 .junkrow b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.junkrow small{font-size:12.5px}
 .ebdel{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
-.firstdeck{margin:22px 0 6px;padding:20px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:grid;gap:8px;justify-items:start}
-.firstdeck b{font-family:var(--f-display);font-size:26px;line-height:1}
-.firstdeck p{margin:0 0 6px;color:var(--muted);font-size:14px}
-html[data-photo] .firstdeck{background:var(--frost);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.firstdeck{margin:18px 0 6px;display:flex}
+.chip.newchip{background:var(--accent-fill);color:var(--on-accent);border-color:transparent;font-weight:800}
 /* edit-build sheet */
 .ebhead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:4px 0 16px}
 .ebhead b{display:block;font-family:var(--f-display);font-size:26px;line-height:1}
@@ -996,11 +997,10 @@ function renderHome(){
   const el = $("#homeStrip"); if (!el) return;
   const busy = F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.type || F.set;
   if (ctx !== "cards" || busy){ el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return; }
-  const rb = recentBuilds().slice(0,3), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
-  const open = !!S.prefs.recentOpen, any = rb.length || rv.length;
-  $("#recentSlot").innerHTML = any ? `<button class="recentbtn" id="recentBtn" aria-expanded="${open}">Recent<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>` : "";
-  el.innerHTML = `${!S.decks.length ? firstDeckHTML() : ""}
-    ${open && rb.length ? `<div class="hs"><span class="hsl">Recent builds</span><div class="hsr">${rb.map(d=>{ const L = d.leader && BY.get(d.leader); return `<button class="chip" data-rb="${d.id}"><span class="dot" style="background:${L?bandBg(L):"var(--line)"}"></span>${esc(d.name)} <span class="muted">${deckCount(d)}/50</span></button>`; }).join("")}</div></div>` : ""}
+  const rb = recentBuilds().slice(0,12), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
+  const open = S.prefs.recentOpen ?? true;
+  $("#recentSlot").innerHTML = `<button class="recentbtn" id="recentBtn" aria-expanded="${open}">Recent<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>`;
+  el.innerHTML = `${open ? `<div class="hs"><span class="hsl">${rb.length ? "Recent builds" : "Builds"}</span><div class="hsr"><button class="chip newchip" data-first="1">+ New deck</button>${rb.map(d=>{ const L = d.leader && BY.get(d.leader); return `<button class="chip" data-rb="${d.id}"><span class="dot" style="background:${L?bandBg(L):"var(--line)"}"></span>${esc(d.name)} <span class="muted">${deckCount(d)}/50</span></button>`; }).join("")}</div></div>` : ""}
     ${open && rv.length ? `<div class="hs"><span class="hsl">Recently viewed</span><div class="hsr">${rv.map(c=>`<button class="chip" data-open="${c.i}"><span class="dot" style="background:${bandBg(c)}"></span>${esc(c.n)} <span class="mono muted">${c.i}</span></button>`).join("")}</div></div>` : ""}`;
 }
 $("#sort").onchange = e => { S.prefs.sort = e.target.value; save(); renderResults(); };
@@ -1011,7 +1011,7 @@ V.addEventListener("click", e => {
   if (t.dataset.col){ F.colors.has(t.dataset.col) ? F.colors.delete(t.dataset.col) : F.colors.add(t.dataset.col); }
   else if (t.dataset.cat){ const k = t.dataset.cat; F.cats.has(k) ? F.cats.delete(k) : F.cats.add(k); }
   else if (t.dataset.rb){ workOn(t.dataset.rb); openBuild("add"); return; }
-  else if (t.id === "recentBtn"){ S.prefs.recentOpen = !S.prefs.recentOpen; save(); renderHome(); return; }
+  else if (t.id === "recentBtn"){ S.prefs.recentOpen = !(S.prefs.recentOpen ?? true); save(); renderHome(); return; }
   else if (t.dataset.act3 === "switchBuild"){ openWorkOn(); return; }
   else if (t.dataset.act3 === "doneAdding"){ go("decks"); return; }
   else if (t.id === "qLock"){ FB.lock = !FB.lock; }
@@ -1216,6 +1216,12 @@ function openCard(id, suf, after){
     const q = d.cards[c.i]?.q || 0, full = q >= limitFor(c);
     return `<button class="tapadd${full ? " full" : ""}" data-bstep="${d.id}|1" ${full ? "disabled" : ""} aria-label="Add one to ${esc(d.name)} (${q} in it now)"><span class="bigplus">${full ? "Max" : "+"}</span>${q ? `<span class="xq big">×${q}</span>` : ""}</button>`;
   };
+  const underHTML = d => {
+    if (ctx !== "build" || d.ghost) return "";
+    if (c.c === "L") return !d.leader ? `<div class="under"><button class="btn sm primary" data-q="setLeader">Use as leader</button></div>` : "";
+    const q = d.cards[c.i]?.q || 0, full = q >= limitFor(c);
+    return `<div class="under"><span class="stepper"><button data-bstep="${d.id}|-1" ${q ? "" : "disabled"} aria-label="Remove one from ${esc(d.name)}">−</button><output aria-live="polite">${q}</output><button data-bstep="${d.id}|1" ${full ? "disabled" : ""} aria-label="Add one to ${esc(d.name)}">+</button></span><span class="undernm">in ${esc(d.name)}</span></div>`;
+  };
   const draw = () => {
     const d = deck(); const L = d.leader && BY.get(d.leader);
     const q = d.cards[c.i]?.q || 0;
@@ -1239,7 +1245,7 @@ function openCard(id, suf, after){
     $("#layer").innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.n)}"><div class="grab"></div><div class="gut">
       <div class="shead"><span class="mono muted">${c.i}${art}</span><button class="btn sm x" id="cClose">Close</button></div>
       <div class="pop">
-        <div>${(() => { const qh = quickHTML(d); return `<div class="popl${qh ? " has-q" : ""}"><div class="art grid" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>${qh}</div>`; })()}
+        <div>${(() => { const qh = quickHTML(d); return `<div class="popl${qh ? " has-q" : ""}"><div class="art grid" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>${qh}</div>${underHTML(d)}`; })()}
           ${c.v.length>1?`<div class="prints" role="group" aria-label="Printings">${c.v.map(v=>`<button data-art="${v[0]}" aria-pressed="${v[0]===art}">${esc(vlabel(v))}</button>`).join("")}</div>`:""}
         </div>
         <div style="min-width:0">
@@ -1792,7 +1798,7 @@ function openJunkyard(){
 }
 document.addEventListener("click", e => { if (e.target.closest("[data-junk]")) openJunkyard(); });
 function firstDeckHTML(){
-  return `<div class="firstdeck"><b>Build your first deck</b><p>Pick a leader to start. Each leader can have as many builds as you like.</p><button class="btn primary" data-first="1">Choose a leader</button></div>`;
+  return `<div class="firstdeck"><button class="btn primary" data-first="1">+ New deck</button></div>`;
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("[data-first]")) return;
