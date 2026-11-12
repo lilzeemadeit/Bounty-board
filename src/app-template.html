@@ -192,6 +192,7 @@ button{cursor:pointer}
 .namein:hover,.namein:focus{border-color:var(--line);background:var(--bg)}
 .leaderbox{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface)}
 .leaderbox .sw{width:44px;height:60px;border-radius:6px;flex:none}
+.leaderbox .jolly{width:48px;height:48px;flex:none;display:block}
 .leaderbox .info{min-width:0;flex:1}
 .issues{display:grid;gap:6px;margin-top:10px}
 .issue{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;border-radius:10px;padding:8px 10px;background:var(--sunk)}
@@ -1570,7 +1571,7 @@ function buildBodyHTML(tab){
   return `
     <input class="namein" id="deckName" value="${esc(d.name)}" aria-label="Build name">
     <div class="row muted" style="font-size:13px;margin:2px 0 10px"><span class="count ${n===50?"full":""}">${n}/50</span><span>Saved on this device · ${new Date(d.updated).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"})}</span></div>
-    ${L && (tab === "stats" || S.prefs.dview === "list" || !rows.length) ? `<button class="leaderbox" data-open="${L.i}" style="width:100%;text-align:left"><span class="sw" style="background:${bandBg(L)}"></span><span class="info"><span class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Leader · ${L.co.join("/")} · Life ${L.k}</span><b style="display:block;font-family:var(--f-display);font-size:20px">${esc(L.n)}</b><span class="mono muted">${L.i}</span></span></button>`
+    ${L && (tab === "stats" || S.prefs.dview === "list" || !rows.length) ? `<button class="leaderbox" data-open="${L.i}" style="width:100%;text-align:left">${jollyHTML(L.co.length ? L.co : [])}<span class="info"><span class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Leader · ${L.co.join("/")} · Life ${L.k}</span><b style="display:block;font-family:var(--f-display);font-size:20px">${esc(L.n)}</b><span class="mono muted">${L.i}</span></span></button>`
         : L ? "" : `<div class="banner"><span>No leader yet.</span><button class="btn sm primary" data-act="pickLeader">Choose a leader</button></div>`}
     <div class="row" style="margin-top:10px">
       <button class="btn sm dark" data-act="ie">Import / Export</button>
@@ -1851,7 +1852,7 @@ function renderPool(v, lid){
         <span class="q" style="font-size:14px">${r.decks.length ? r.decks.length+" build"+(r.decks.length>1?"s":"") : "Idea"}</span></button>`; }).join("")}</div>`;
   }
   v.innerHTML = `<button class="btn sm" data-act="back">‹ My Decks</button>
-    <div class="leaderbox" style="margin-top:10px"><span class="sw" style="background:${bandBg(L)}"></span><span class="info"><span class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Leader Pool · ${L.i}</span><b style="display:block;font-family:var(--f-display);font-size:22px">★ ${esc(L.n)} Pool</b>
+    <div class="leaderbox" style="margin-top:10px">${jollyHTML(L.co.length ? L.co : [])}<span class="info"><span class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Leader Pool · ${L.i}</span><b style="display:block;font-family:var(--f-display);font-size:22px">★ ${esc(L.n)} Pool</b>
       <span class="muted" style="font-size:13px">${map.size} cards: ${map.size-ideasOnly} from ${decks.length} build${decks.length===1?"":"s"}, ${ideasOnly} idea${ideasOnly===1?"":"s"} only here</span></span></div>
     <p class="muted" style="font-size:13px;margin:8px 0">Every card in your ${esc(L.n)} builds plus ideas you add. To add a card, open it and use “More builds &amp; ★ Leader Pools”.</p>
     <div class="row" style="justify-content:space-between"><div class="seg" role="group" aria-label="Show"><button data-pf="all" aria-pressed="${poolFilter==="all"}">All</button><button data-pf="decks" aria-pressed="${poolFilter==="decks"}">In builds</button><button data-pf="ideas" aria-pressed="${poolFilter==="ideas"}">Ideas only</button></div>
