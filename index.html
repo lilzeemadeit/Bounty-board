@@ -206,7 +206,8 @@ button{cursor:pointer}
 .flag.ban{color:var(--bad);border-color:var(--bad)}
 .flag.part{color:var(--warn);border-color:var(--warn)}
 .flag.unk{color:var(--muted)}
-.tile.dim .face{filter:grayscale(1);opacity:.42}
+.tile.dim .face{filter:grayscale(1);opacity:.32}
+.tile.half .face{opacity:.72}
 .tile.dim .flag{opacity:1}
 .grid[data-size="s"] .flag{font-size:8px;padding:1px 4px}
 
@@ -394,6 +395,43 @@ details[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
 .chip.tog[aria-pressed="false"]{background:transparent}
 .costgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .costgrid .chip{justify-content:center;padding-inline:0;width:100%}
+/* version thumbnails under the card */
+.vthumbs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:10px auto 0;max-width:340px;padding:2px 2px 4px;justify-content:safe center}
+.vthumbs::-webkit-scrollbar{display:none}
+.vth{flex:none;width:66px;background:none;border:0;padding:0;display:grid;gap:4px;justify-items:center;color:var(--ink);cursor:pointer}
+.vth .vimg{width:66px;aspect-ratio:5/7;border-radius:6px;overflow:hidden;position:relative;display:block;border:2px solid transparent;opacity:.8}
+.vth .vimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vth[aria-pressed="true"] .vimg{border-color:var(--ink);opacity:1}
+.vth small{font-size:11px;font-weight:700;line-height:1.15;text-align:center}
+.vth small i{display:block;font-style:normal;font-weight:500;color:var(--muted);font-size:10.5px}
+/* tappable types and card names */
+.tylink{background:none;border:0;padding:0;font:inherit;color:var(--accent);font-weight:800;cursor:pointer;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.tylink.nm{color:inherit}
+.tyline{margin-bottom:8px}
+.tyline .tylink.plain{color:var(--muted);font-weight:600}
+.looks4{display:block;margin-top:6px;font-size:13px;color:var(--muted)}
+.tvh{margin:4px 0 10px}
+.tvc{display:flex;flex-wrap:wrap;gap:6px}
+/* one-tap rows in More builds & Leader Pools */
+.addlist .nbl{margin:8px 0 2px;font-weight:700}
+/* leader search banner */
+.lensbar{align-items:center}
+.lensbar .jolly{width:34px;height:34px;flex:none}
+.lenst{background:none;border:0;padding:0;text-align:left;color:inherit;display:flex;flex-direction:column;cursor:pointer;min-width:0}
+.lenst small{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.lenst b{font-family:var(--f-display);font-size:20px;line-height:1.1}
+/* Add cards tab on the build page */
+.seg .addtab{color:var(--on-accent);background:var(--accent-fill)}
+.seg .addtab[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+/* name a new deck */
+.askwrap{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);display:grid;place-items:center;padding:16px}
+.askbox{width:min(360px,100%);background:var(--surface);color:var(--ink);border-radius:16px;padding:18px;display:grid;gap:10px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.askbox b{font-family:var(--f-display);font-size:22px;line-height:1.1}
+.askbox input{height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:0 12px;font:inherit;font-size:16px}
+
+.chip.sm{height:28px;padding:0 10px;font-size:12.5px}
+input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
+#nameSlot:empty{display:none}
 @media (min-width:560px){.costgrid:not(.blocks){grid-template-columns:repeat(10,minmax(0,1fr))}.costgrid.blocks{max-width:50%}}
 @media (max-width:380px){.brand h1{font-size:15px}.brand .lookbtn{width:30px;height:30px}.brand{gap:6px}}
 .field{height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:0 10px;width:100%;font-size:16px}
@@ -408,7 +446,7 @@ textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13p
 .agh .sw,.lgh .sw{width:8px;height:20px;border-radius:3px;flex:none}
 .arw{display:flex;align-items:center;gap:8px}
 .arw .ar{flex:1}
-.ar{display:flex;align-items:center;gap:10px;padding:8px 0 8px 18px;border-top:1px solid var(--line);min-height:44px;cursor:pointer}
+.ar{display:flex;align-items:center;gap:10px;padding:8px 0 8px 18px;border-top:1px solid var(--line);min-height:44px}
 .ar input{width:20px;height:20px;accent-color:var(--accent);flex:none}
 .ar .nm2{flex:1;min-width:0}
 .ar .st{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap}
@@ -427,6 +465,7 @@ textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13p
 .lsec{margin-top:24px;display:grid;gap:12px}
 .lrow{display:flex;align-items:center;gap:12px}
 .lrow .jolly{flex:none;width:42px;height:42px;display:block}
+.lrow .ljolly{background:none;border:0;padding:0;flex:none;cursor:pointer}
 .bhead .jolly{flex:none;width:34px;height:34px;display:block}
 .lrow .lt{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;background:none;border:0;padding:0;text-align:left;color:inherit}
 .lrow .lt b{font-family:var(--f-display);font-size:28px;line-height:1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -588,12 +627,14 @@ const COLORS = ["Red","Green","Blue","Purple","Black","Yellow"];
 // Pictures go through Bounty Board's own relay (a Supabase function), because Bandai's site won't show them inside other sites.
 const IMG_BASE = "https://ebsgqefxokkgihfjrvvh.supabase.co/functions/v1/card-img?id=";
 let IMG_OK = null;               // null = untested, false = this host blocks card images
+// Search ignores punctuation and the phone's curly quotes: "owners" = "owner's" = "owner’s", "gum gum" = "Gum-Gum".
+const nrm = s => String(s).toLowerCase().replace(/[’‘`´']/g, "").replace(/[^a-z0-9+\s]/g, " ").replace(/\s+/g, " ").trim();
 for (const c of CARDS){
-  c._name = c.n.toLowerCase();
+  c._name = nrm(c.n);
   c._id = c.i.toLowerCase(); c._idc = c._id.replace("-","");
-  c._types = (c.t.join(" / ") + (c.a && c.a !== "Unknown" ? " / " + c.a : "")).toLowerCase();
+  c._types = nrm(c.t.join(" / ") + (c.a && c.a !== "Unknown" ? " / " + c.a : ""));
   if (c.sg.some(s => s.c)) c.g.push("leadercond");
-  c._text = (c.e + " " + c.tr).toLowerCase();
+  c._text = nrm(c.e + " " + c.tr);
   c._tags = new Set(c.g);
   c._order = CARDS.indexOf(c);
 }
@@ -673,11 +714,19 @@ function poolCards(lid){
   return map;
 }
 function sharesColor(c, L){ return !L || c.co.some(x => L.co.includes(x)); }
+const KWRE = /^(On |When |Activate|Main|Counter|Blocker|Rush|Banish|Double Attack|Once Per Turn|DON!!|Your Turn|Opponent's Turn|Opponent’s Turn|End of Your Turn|Unblockable|On Your Opponent|Trigger)/;
+// The {types} and [card names] a card's effect looks for (not keywords like [Blocker]).
+function refsOf(c){
+  const txt = (c.e || "") + " " + (c.tr || ""), types = new Set(), names = new Set();
+  for (const m of txt.matchAll(/\{([^}]{1,40})\}/g)) types.add(m[1]);
+  for (const m of txt.matchAll(/\[([^\]]{1,40})\]/g)) if (!KWRE.test(m[1])) names.add(m[1]);
+  return {types: [...types], names: [...names]};
+}
 function fmtText(t){
   return esc(t)
     .replace(/\[(Trigger)\]/g,'<span class="kw trg">$1</span>')
-    .replace(/\[([^\]]{1,40})\]/g,(m,k)=> /^(On |When |Activate|Main|Counter|Blocker|Rush|Banish|Double Attack|Once Per Turn|DON!!|Your Turn|Opponent's Turn|End of Your Turn|Unblockable|On Your Opponent)/.test(k) ? `<span class="kw">${k}</span>` : `<b>[${k}]</b>`)
-    .replace(/\{([^}]{1,40})\}/g,'<span class="tyref">{$1}</span>');
+    .replace(/\[([^\]]{1,40})\]/g,(m,k)=> KWRE.test(k) ? `<span class="kw">${k}</span>` : `<button class="tylink nm" data-tq="n:${k}">[${k}]</button>`)
+    .replace(/\{([^}]{1,40})\}/g,'<button class="tylink" data-tq="t:$1">{$1}</button>');
 }
 const STD_PERMIT = new Set(META.stdPermitted), STD_B4 = new Set(META.stdBlock4);
 function stdStatus(c){
@@ -701,8 +750,14 @@ function altOK(a, L){
   return true;
 }
 const compatCache = new Map();
+// The leader the search is working for: the open build's leader, or (Cards tab) the leader you're searching for.
+let lens = null;
+function ctxLeader(){
+  if (ctx === "build"){ const d = deck(); return d && d.leader ? BY.get(d.leader) : null; }
+  return lens ? BY.get(lens) || null : null;
+}
 function compat(c){
-  const d = deck(); const L = d && d.leader && BY.get(d.leader);
+  const L = ctxLeader();
   if (!L || c.c === "L") return null;
   const key = L.i + "|" + c.i;
   if (compatCache.has(key)) return compatCache.get(key);
@@ -735,7 +790,7 @@ function compat(c){
 /* ================= search ================= */
 // Two searches share one engine: the Cards tab searches everything; the Build tab's "Add cards"
 // searches for the open build, locked to its leader's colors until "Leader colors" is switched off.
-const mkF = () => ({ q:"", colors:new Set(), cats:new Set(), costs:new Set(), counter:"any", tags:new Set(), blocks:new Set(), type:"", set:"", exact:false, lock:true });
+const mkF = () => ({ q:"", nameOnly:false, colors:new Set(), cats:new Set(), costs:new Set(), counter:"any", tags:new Set(), blocks:new Set(), type:"", set:"", exact:false, lock:true });
 const FC = mkF(); let FB = mkF();
 let ctx = "cards", F = FC;
 const isFav = id => S.favLeaders.includes(id);
@@ -746,12 +801,12 @@ function workOn(deckId){
   if (S.cur !== deckId){ FB = mkF(); if (ctx === "build"){ F = FB; qIn.value = ""; } }
   S.cur = deckId; const d = deck(); d.used = Date.now(); compatCache.clear(); save();
 }
-function tokens(q){ return q.toLowerCase().replace(/["“”„]/g, " ").trim().split(/\s+/).filter(Boolean); }
+function tokens(q){ return parseQ(q).toks; }
 // "quoted words" must appear together; several unquoted words → cards with them together are shown first.
 function parseQ(q){
-  const quoted = [], low = q.toLowerCase().replace(/[“”„]/g, '"');
-  const rest = low.replace(/"([^"]*)"?/g, (_, p) => { p = p.trim().replace(/\s+/g, " "); if (p) quoted.push(p); return " "; });
-  const toks = rest.trim().split(/\s+/).filter(Boolean);
+  const quoted = [], low = q.toLowerCase().replace(/[“”„″]/g, '"');
+  const rest = low.replace(/"([^"]*)"?/g, (_, p) => { p = nrm(p); if (p) quoted.push(p); return " "; });
+  const toks = rest.trim().split(/\s+/).filter(Boolean).flatMap(t => idQuery(t) || SYN[t] ? [t] : nrm(t).split(" ").filter(Boolean));
   return {toks, quoted, soft: !quoted.length && toks.length > 1 ? toks.join(" ") : null};
 }
 // Word-start match: "turn" finds "turn" and "turns" but not "return".
@@ -771,7 +826,7 @@ function scoreCard(c, toks){
     if (idq && (c._id === idq || c._id.endsWith(idq))) s = 200;
     else if (c._id.includes(t) || c._idc.includes(t)) s = 120;
     if (c._name === t) s = Math.max(s, 90);
-    else if (c._name.startsWith(t) || c._name.includes(" "+t) || c._name.includes("."+t)) s = Math.max(s, 60);
+    else if (wordAt(c._name, t) >= 0) s = Math.max(s, 60);
     else if (c._name.includes(t)) s = Math.max(s, 40);
     if (c._types.includes(t)) s = Math.max(s, 30);
     const syn = !F.exact && SYN[t];
@@ -795,7 +850,7 @@ function passFilters(c, L, hideLeaders){
   if (F.counter === "has" && !c.ct) return false;
   if ((F.counter === "1000" || F.counter === "2000") && String(c.ct) !== F.counter) return false;
   for (const g of F.tags) if (!c._tags.has(g)) return false;
-  if (F.type){ const t = F.type.toLowerCase(); if (!c._types.includes(t)) return false; }
+  if (F.type){ const t = nrm(F.type); if (!c._types.includes(t)) return false; }
   if (F.set && !c.v.some(v=>v[1]===F.set)) return false;
   if (S.prefs.pool === "std" && (!standardOK(c) || c.ban)) return false;
   if (S.prefs.pool === "noban" && c.ban) return false;
@@ -804,19 +859,22 @@ function passFilters(c, L, hideLeaders){
 const CMP_RANK = {A:0, U:1, B:2, C:3};
 let leaderSections = false;
 function results(){
-  const d = deck(); const DL = ctx === "build" && d.leader ? BY.get(d.leader) : null;
-  const L = DL && FB.lock ? DL : null;
+  const DL = ctxLeader();
+  const L = DL && F.lock ? DL : null;
   const myLeaders = new Set(leaderGroups().groups.map(g=>g.L.i));
   const PQ = parseQ(F.q), toks = PQ.toks;
   lastSynTags = F.exact ? [] : [...new Set(toks.flatMap(t => SYN[t] || []))];
   softPhrase = PQ.soft;
+  const hasQ = !!(toks.length || PQ.quoted.length);
   const out = [];
   for (const c of CARDS){
-    if (!passFilters(c, L, ctx === "build")) continue;
+    if (!passFilters(c, L, ctx === "build" || !!lens)) continue;
     if (PQ.quoted.length && !PQ.quoted.every(p => phraseIn(c, p))) continue;
     const sc = toks.length ? scoreCard(c, toks) : (PQ.quoted.length ? 50 : 0);
     if (sc < 0) continue;
-    out.push({c, sc, ph: softPhrase ? phraseIn(c, softPhrase) : true, cm: (S.prefs.compat && DL) ? compat(c) : null, lg: c.c === "L" ? (isFav(c.i) ? 0 : myLeaders.has(c.i) ? 1 : 2) : 3});
+    const nm = hasQ && nameHit(c, PQ);
+    if (F.nameOnly && hasQ && !nm) continue;
+    out.push({c, sc, nm, ph: softPhrase ? phraseIn(c, softPhrase) : true, cm: (S.prefs.compat && DL) ? compat(c) : null, lg: c.c === "L" ? (isFav(c.i) ? 0 : myLeaders.has(c.i) ? 1 : 2) : 3});
   }
   leaderSections = out.length > 0 && out.every(r => r.c.c === "L") && S.prefs.sort === "rel";
   const sort = S.prefs.sort;
@@ -834,12 +892,18 @@ function results(){
   else if (sort === "color") f = (a,b)=>(COLORS.indexOf(a.c.co[0])-COLORS.indexOf(b.c.co[0])) || byCost(a,b);
   else if (sort === "num") f = (a,b)=>a.c._order-b.c._order;
   else if (sort === "name") f = (a,b)=>a.c.n.localeCompare(b.c.n) || byCost(a,b);
-  out.sort(softPhrase ? (a,b) => (b.ph - a.ph) || f(a,b) : f);
-  looseAt = softPhrase ? out.findIndex(r => !r.ph) : -1;
+  out.sort((a,b) => (b.nm - a.nm) || (softPhrase ? (b.ph - a.ph) : 0) || f(a,b));   // cards named like the search come first
+  nameSplit = out.length && out[0].nm ? out.findIndex(r => !r.nm) : -1;
+  looseAt = softPhrase ? out.findIndex(r => !r.ph && !r.nm) : -1;
   if (looseAt === 0) looseAt = -1;                 // nothing has the words together: just show everything
   return out;
 }
-let softPhrase = null, looseAt = -1, looseOpen = false;
+let softPhrase = null, looseAt = -1, looseOpen = false, nameSplit = -1;
+// Every search word (and "quoted" phrase) is in the card's name; card numbers don't count.
+function nameHit(c, PQ){
+  if (PQ.toks.some(t => idQuery(t))) return false;
+  return PQ.toks.every(t => wordAt(c._name, t) >= 0) && PQ.quoted.every(p => wordAt(c._name, p) >= 0);
+}
 const resLimit = () => (looseAt > 0 && !looseOpen) ? looseAt : RES.length;
 
 /* ================= tiles ================= */
@@ -881,16 +945,16 @@ function faceHTML(c, suf){
 function tileHTML(r, suf){
   const c = r.c, d = deck();
   const q = ctx !== "build" ? 0 : (d.cards[c.i]?.q || (d.leader === c.i ? 1 : 0));
-  let flag = "", dim = false;
+  let flag = "", dim = false, half = false;
   if (c.ban) flag = `<span class="flag ban">Banned</span>`;
   else if (c.c === "L" && isFav(c.i)) flag = `<span class="flag favf">★ Favorite</span>`;
   else if (r.cm){
     if (r.cm.st === "C"){ dim = true; flag = `<span class="flag">Leader mismatch</span>`; }
-    else if (r.cm.st === "B") flag = `<span class="flag part">Partial</span>`;
+    else if (r.cm.st === "B"){ half = true; flag = `<span class="flag part">Partial</span>`; }
     else if (r.cm.st === "U") flag = `<span class="flag unk">Check text</span>`;
   }
   const label = `${c.n}, ${c.i}, ${CATNAME[c.c]}${c.k!=null? ", cost "+c.k:""}${q? ", "+q+" in this build":""}${dim?", effect needs a different leader":""}`;
-  return `<button class="tile${dim?" dim":""}" type="button" data-open="${c.i}" data-suf="${suf||""}" aria-label="${esc(label)}">${faceHTML(c, suf)}${q?`<span class="qty">${d.leader===c.i?"L":"×"+q}</span>`:""}${flag}</button>`;
+  return `<button class="tile${dim?" dim":half?" half":""}" type="button" data-open="${c.i}" data-suf="${suf||""}" aria-label="${esc(label)}">${faceHTML(c, suf)}${q?`<span class="qty">${d.leader===c.i?"L":"×"+q}</span>`:""}${flag}</button>`;
 }
 
 /* ================= cards view ================= */
@@ -910,7 +974,7 @@ V.innerHTML = `
     <div class="chips gut" id="quick"></div>
     <div class="resbar gut">
       <span><span class="n" id="rcount">0</span> <span class="muted">cards</span></span>
-      <span id="recentSlot"></span>
+      <span id="recentSlot"></span><span id="nameSlot"></span>
       <label class="muted" for="sort" style="margin-left:auto;font-size:13px">Sort</label>
       <select id="sort" style="margin-left:0">
         <option value="rel">Relevance</option><option value="costA">Cost: low to high</option><option value="costD">Cost: high to low</option>
@@ -937,7 +1001,8 @@ function renderQuick(){
       h += `<button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
     } else h += `<button class="chip tog" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
   } else {
-    h += `<button class="chip tog" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button><button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
+    const LL = lens && BY.get(lens);
+    h += `<button class="chip tog" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button>${LL ? `<button class="chip" id="qLock" aria-pressed="${FC.lock}" title="Only show cards that share a color with ${esc(LL.n)}">${FC.lock?"🔒 ":""}${esc(LL.co.join("/"))} only</button>` : ""}<button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
   }
   for (const col of COLORS) h += `<button class="chip color" data-col="${col}" aria-pressed="${F.colors.has(col)}" aria-label="${col}"><span class="dot" style="background:${colorVar(col)}"></span>${F.colors.has(col)?col:""}</button>`;
   h += `<span class="sep"></span>`;
@@ -953,7 +1018,8 @@ function renderQuick(){
   const fc = $("#fcount"); fc.hidden = !n; fc.textContent = n;
   const lb = $("#leaderBanner");
   const wide = innerWidth >= 1024;
-  lb.innerHTML = ctx !== "build" ? "" :
+  const LZ = ctx === "cards" && lens && BY.get(lens);
+  lb.innerHTML = ctx !== "build" ? (LZ ? `<div class="banner lensbar">${jollyHTML(LZ.co.length ? LZ.co : [])}<button class="lenst" id="lensCard"><small>Searching for</small><b>${esc(LZ.n)}</b></button><button class="btn sm" id="lensOff">✕ Done</button></div>` : "") :
     (wide ? `<div class="bldbar">${jollyHTML(DL && DL.co.length ? DL.co : [])}<span class="t"><small>${DL ? "Leader" : "No leader yet"}</small><b>${DL ? esc(DL.n) : esc(d.name)}</b></span><span class="muted" style="font-size:13px">Adding to <b>${esc(d.name)}</b></span><button class="btn sm" data-act3="switchBuild">Switch build</button><button class="btn sm dark" data-act3="doneAdding">Done</button></div>` : "")
     + (!DL ? `<div class="banner"><span>“${esc(d.name)}” has no leader yet. Its colors and compatibility checks come from the leader.</span><button class="btn sm primary" id="pickLeader">Show leaders</button></div>` : "");
   renderHome();
@@ -963,6 +1029,7 @@ function renderResults(keepScroll){
   shown = 0; grid.innerHTML = "";
   grid.dataset.size = S.prefs.grid;
   $("#rcount").textContent = resLimit().toLocaleString();
+  $("#nameSlot").innerHTML = F.q.trim() ? `<button class="chip tog sm" id="nameOnly" aria-pressed="${!!F.nameOnly}" title="Only cards whose name matches">Name only</button>` : "";
   const sn = $("#synNote");
   const PQ = parseQ(F.q);
   if (softPhrase && looseAt > 0){
@@ -984,12 +1051,14 @@ function more(){
   const end = Math.min(lim, shown + PAGE);
   for (let i = shown; i < end; i++){
     const r = RES[i];
+    if (nameSplit > 0 && i === 0) h += `<div class="sect">Name matches</div>`;
+    if (nameSplit > 0 && i === nameSplit) h += `<div class="sect">Mentioned in card text</div>`;
     if (i === looseAt && looseOpen) h += `<div class="sect loose">Also has these words, not together</div>`;
     if (leaderSections && (i === 0 || RES[i-1].lg !== r.lg)) h += `<div class="sect">${LGNAME[r.lg]}</div>`;
-    if (showSections){
-      const prev = i ? RES[i-1].cm?.st : null, cur = r.cm?.st;
+    if (showSections && !(nameSplit > 0 && r.nm)){
+      const prev = i && !(nameSplit > 0 && RES[i-1].nm) ? RES[i-1].cm?.st : null, cur = r.cm?.st;
       const grp = s => s==="A"||s==="U" ? "Works with your leader" : s==="B" ? "Partly works with your leader" : s==="C" ? "Effect needs a different leader" : "Leaders";
-      if (i===0 || grp(prev)!==grp(cur)) h += `<div class="sect">${grp(cur)}</div>`;
+      if (i===0 || i===nameSplit || grp(prev)!==grp(cur)) h += `<div class="sect">${grp(cur)}</div>`;
     }
     if (S.prefs.arts && r.c.v.length > 1) for (const v of r.c.v) h += tileHTML(r, v[0]);
     else h += tileHTML(r, "");
@@ -1010,7 +1079,7 @@ qIn.addEventListener("input", () => setTimeout(renderHome, 150));
 // Cards tab "home": recent builds and recently viewed cards, shown until you search or filter
 function renderHome(){
   const el = $("#homeStrip"); if (!el) return;
-  const busy = F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.type || F.set;
+  const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.type || F.set;
   if (ctx !== "cards" || busy){ el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,12), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
   const open = S.prefs.recentOpen ?? true;
@@ -1029,11 +1098,14 @@ V.addEventListener("click", e => {
   else if (t.id === "recentBtn"){ S.prefs.recentOpen = !(S.prefs.recentOpen ?? true); save(); renderHome(); return; }
   else if (t.dataset.act3 === "switchBuild"){ openWorkOn(); return; }
   else if (t.dataset.act3 === "doneAdding"){ go("decks"); return; }
-  else if (t.id === "qLock"){ FB.lock = !FB.lock; }
+  else if (t.id === "qLock"){ F.lock = !F.lock; }
+  else if (t.id === "lensOff"){ lens = null; FC.lock = true; }
+  else if (t.id === "lensCard"){ openCard(lens, ""); return; }
   else if (t.id === "artsBtn"){ S.prefs.arts = !S.prefs.arts; save(); }
   else if (t.id === "qLegal"){ S.prefs.pool = S.prefs.pool === "std" ? "all" : "std"; save(); }
   else if (t.id === "pickLeader"){ F.cats = new Set(["L"]); F.lock = false; }
   else if (t.id === "exactBtn"){ F.exact = !F.exact; }
+  else if (t.id === "nameOnly"){ F.nameOnly = !F.nameOnly; }
   else if (t.id === "openFilters"){ openFilters(); return; }
   else return;
   renderQuick(); renderResults();
@@ -1047,12 +1119,65 @@ function setCtx(c){
   if (V.parentElement !== slot) slot.appendChild(V);
   renderQuick(); renderResults();
 }
-let bSub = "add";
+let bSub = "list";
 // Open a build for editing: on a phone, the Build tab; on a wide screen, the left side switches to adding cards.
 function openBuild(sub){
   if (deck().ghost){ setCtx("cards"); go("decks"); return; }
   if (sub) bSub = sub;
   go("build");
+}
+
+// Tap a leader on My Decks: the Cards tab searches for that leader (its colors, dimmed by leader match)
+// without picking a build. Each card's popup offers that leader's ★ Pool and builds.
+function startLens(lid){
+  if (!BY.get(lid)) return;
+  lens = lid; FC.lock = true; compatCache.clear();
+  if (ctx !== "cards") setCtx("cards");
+  go("cards"); renderQuick(); renderResults(); window.scrollTo({top:0});
+}
+/* ================= quick view: every card of a type or name ================= */
+function typeView(kind, val, back){
+  const ok = x => S.prefs.pool !== "std" || (standardOK(x) && !x.ban);
+  const list = CARDS.filter(x => (kind === "t" ? x.t.includes(val) : x.n === val) && ok(x))
+    .sort((a,b) => ("LCES".indexOf(a.c) - "LCES".indexOf(b.c)) || (COLORS.indexOf(a.co[0]) - COLORS.indexOf(b.co[0])) || ((a.k??0)-(b.k??0)) || (a._order-b._order));
+  const cols = COLORS.map(col => [col, list.filter(x => x.co.includes(col)).length]).filter(([,n]) => n);
+  const cats = [["L","Leader"],["C","Character"],["E","Event"],["S","Stage"]].map(([k,l]) => { const n = list.filter(x => x.c === k).length; return n ? `${n} ${l}${n===1?"":"s"}` : ""; }).filter(Boolean);
+  const sc = sheet(`<div class="shead"><button class="btn sm" data-tv="back">‹ Back</button><button class="btn sm x" data-tv="close" style="margin-left:auto">Close</button></div>
+    <div class="tvh"><span class="mono muted" style="font-size:11px;letter-spacing:.08em">${kind === "t" ? "TYPE" : "CARD NAME"}${S.prefs.pool === "std" ? " · LEGAL ONLY" : ""}</span><h2 class="h2" style="margin:2px 0 4px">${esc(val)}</h2>
+      <div class="tvc">${cols.map(([col,n]) => `<span class="tag" style="background:${colorVar(col)};color:#fff">${col} ${n}</span>`).join("")}</div>
+      <div class="muted" style="font-size:13px;margin-top:6px">${list.length} card${list.length===1?"":"s"}${cats.length ? " · " + cats.join(" · ") : ""}</div></div>
+    ${list.length ? `<div class="grid" data-size="s">${list.map(x => `<button class="tile" data-tvo="${x.i}" aria-label="${esc(x.n)} ${x.i}">${faceHTML(x, "")}</button>`).join("")}</div>` : `<p class="muted">No cards found.</p>`}`, val);
+  sc.addEventListener("click", e => {
+    const t = e.target.closest("button"); if (!t) return;
+    if (t.dataset.tv === "close"){ closeSheet(); return; }
+    if (t.dataset.tv === "back"){ closeSheet(); back(); return; }
+    if (t.dataset.tvo){ closeSheet(); openCard(t.dataset.tvo, "", null, () => typeView(kind, val, back)); }
+  });
+}
+
+/* ================= naming a new deck or build ================= */
+function askName(title, suggestion){
+  return new Promise(res => {
+    const w = document.createElement("div"); w.className = "askwrap";
+    w.innerHTML = `<form class="askbox" role="dialog" aria-modal="true" aria-label="${esc(title)}"><b>${esc(title)}</b><span class="muted" style="font-size:13px">Give it a name you'll recognize later.</span>
+      <input type="text" id="askIn" maxlength="40" placeholder="${esc(suggestion)}" autocomplete="off" aria-label="Name">
+      <div class="row" style="gap:8px;justify-content:flex-end"><button type="button" class="btn" data-ask="no">Cancel</button><button type="submit" class="btn primary">Create</button></div></form>`;
+    document.body.appendChild(w);
+    const inp = w.querySelector("input"); setTimeout(() => inp.focus(), 30);
+    const done = v => { w.remove(); res(v); };
+    w.querySelector("form").onsubmit = e => { e.preventDefault(); done(inp.value.trim() || suggestion); };
+    w.addEventListener("click", e => { if (e.target === w || e.target.dataset.ask === "no") done(null); });
+    w.addEventListener("keydown", e => { if (e.key === "Escape"){ e.stopPropagation(); done(null); } });
+  });
+}
+function sugName(leaderId){
+  const L = leaderId && BY.get(leaderId);
+  return L ? `${L.n} build ${S.decks.filter(d => d.leader === leaderId).length + 1}` : "New deck";
+}
+async function makeBuild(leaderId){
+  const L = leaderId && BY.get(leaderId);
+  const name = await askName(L ? `New ${L.n} build` : "New deck", sugName(leaderId));
+  return name == null ? null : newBuild(leaderId, name);
 }
 
 /* ================= filters sheet ================= */
@@ -1070,10 +1195,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#scrim"
 
 // after picking a leader from the Cards tab's Leaders list, put that search back to "everything"
 function leaveLeaderBrowse(){ if (FC.cats.has("L")){ FC.cats.delete("L"); FC.q = ""; if (ctx === "cards"){ qIn.value = ""; $("#qclr").hidden = true; } } }
-function newBuild(leaderId){
-  const L = leaderId && BY.get(leaderId);
-  const n = L ? S.decks.filter(d=>d.leader===leaderId).length + 1 : 0;
-  const nd = {id:uid(), name: L ? `${L.n} build ${n}` : "New build", leader: leaderId || null, cards:{}, updated:Date.now(), used:Date.now()};
+function newBuild(leaderId, name){
+  const nd = {id:uid(), name: name || sugName(leaderId), leader: leaderId || null, cards:{}, updated:Date.now(), used:Date.now()};
   S.decks.unshift(nd); save(); return nd;
 }
 function openWorkOn(after){
@@ -1099,7 +1222,7 @@ function openWorkOn(after){
     if (t.id === "woClose"){ closeSheet(); return; }
     if (t.dataset.fav){ toggleFav(t.dataset.fav); openWorkOn(after); renderResults(); return; }
     if (t.dataset.wo){ workOn(t.dataset.wo); closeSheet(); renderAll(); toast(`Building ${deck().name}`); if (after) after(); else openBuild(); return; }
-    if (t.dataset.wonew){ const L = BY.get(t.dataset.wonew); const nd = newBuild(L.i); workOn(nd.id); closeSheet(); renderAll(); toast(`New ${L.n} build. Rename it in Decklist.`); if (after) after(); else openBuild("add"); return; }
+    if (t.dataset.wonew){ const L = BY.get(t.dataset.wonew); makeBuild(L.i).then(nd => { if (!nd) return; workOn(nd.id); closeSheet(); renderAll(); toast(`Made ${nd.name}`); if (after) after(); else openBuild("add"); }); return; }
     if (t.id === "woBrowse"){ closeSheet(); setCtx("cards"); FC.cats = new Set(["L"]); FC.q = ""; qIn.value = ""; renderQuick(); renderResults(); go("cards"); window.scrollTo({top:0}); return; }
   });
 }
@@ -1131,7 +1254,7 @@ function openFilters(){
     <div class="fgroup"><div class="lab">Card type</div><div class="wrapchips">${[["L","Leaders"],["C","Characters"],["E","Events"],["S","Stages"]].map(([k,l])=>`<button class="chip" data-fcat="${k}" aria-pressed="${F.cats.has(k)}">${l}</button>`).join("")}</div></div>
     <div class="fgroup"><div class="lab">Cost</div><div class="costgrid">${costChips}</div></div>
     <div class="fgroup"><div class="lab">Block icon</div><div class="costgrid blocks">${blockChips}</div></div>
-    ${ctx === "build" ? `<div class="fgroup"><div class="lab">Leader compatibility</div><div class="wrapchips"><button class="chip" id="fCompat" aria-pressed="${S.prefs.compat}">Gray out cards that need a different leader</button></div></div>` : ""}
+    ${ctx === "build" || lens ? `<div class="fgroup"><div class="lab">Leader match</div><div class="wrapchips"><button class="chip tog" id="fCompat" aria-pressed="${S.prefs.compat}">Dim cards that don't work with my leader</button></div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Cards that only partly work are dimmed less.</p></div>` : ""}
     <div class="fgroup"><div class="lab">Counter</div><div class="wrapchips">${[["any","Any"],["has","Has counter"],["1000","+1000"],["2000","+2000"],["none","No counter"]].map(([v,l])=>`<button class="chip" data-fctr="${v}" aria-pressed="${F.counter===v}">${l}</button>`).join("")}</div></div>
     <details class="fgroup effects"${effOn?" open":""}><summary class="lab">What the card does <span class="bcount" id="effCount">${effOn?effOn+" selected":""}</span></summary>
       <div class="buckets">${bucketHTML}</div></details>
@@ -1165,15 +1288,21 @@ function openFilters(){
 
 /* ================= card popup ================= */
 let buyTarget = null;
-function openCard(id, suf, after){
+function openCard(id, suf, after, back){
   const c = BY.get(id); if (!c) return;
-  let art = suf || "";
-  let addOpen = false, addN = 1; const sel = new Set();
+  const d0 = deck();
+  let art = suf || (ctx === "build" && !d0.ghost && d0.cards[c.i] ? d0.cards[c.i].art || "" : "");
+  let artPicked = !!suf, addOpen = false;
+  const artFor = dk => artPicked ? art : (dk.cards[c.i]?.art ?? art);
+  const vk = () => c.i + art;
+  const me = () => openCard(id, art, after, back);
   S.recent = [id, ...(S.recent||[]).filter(x=>x!==id)].slice(0,12); save();
   // the builds offered in this popup: the open build first when you're in the Build tab, then your most recent builds this card fits
   const fitsBuild = d => !d.leader || sharesColor(c, BY.get(d.leader));
   const primary = ctx === "build" ? deck() : null;
-  const offer = (primary ? [primary, ...recentBuilds().filter(d=>d.id!==primary.id && fitsBuild(d))] : recentBuilds().filter(fitsBuild)).slice(0,3).map(d=>d.id);
+  const lensL = ctx === "cards" && lens ? lens : null;
+  const offer = (primary ? [primary, ...recentBuilds().filter(d=>d.id!==primary.id && fitsBuild(d))]
+    : lensL ? recentBuilds().filter(d => d.leader === lensL) : recentBuilds().filter(fitsBuild)).slice(0, lensL ? 6 : 3).map(d=>d.id);
   const colorWord = cs => cs.join("/");
   const leaderCtl = d => {
     const mine = recentBuilds().filter(x=>x.leader===c.i), fav = isFav(c.i);
@@ -1190,7 +1319,12 @@ function openCard(id, suf, after){
         <span class="rbn"><b>${esc(d.name)}</b><small>${L ? esc(L.n) : "No leader yet"}${primary && d.id===primary.id ? " · open now" : ""}${fit ? "" : ` · <span style="color:var(--warn)">off-color</span>`}</small></span>
         <span class="stepper sm"><button data-bstep="${d.id}|-1" aria-label="Remove one from ${esc(d.name)}">−</button><output aria-live="polite">${q}</output><button data-bstep="${d.id}|1" aria-label="Add one to ${esc(d.name)}">+</button></span></div>`; };
     let out = `<div class="target"><div class="savesub">Builds</div>`;
-    if (rows.length) out += `<div class="rbs">${rows.map(rowHTML).join("")}</div><div class="muted" style="font-size:12px">${primary ? "The build you're working on, then your most recent builds this card fits." : "Your 3 most recent builds this card fits."} Max ${c.any?"any number":"4"} per build.</div>`;
+    if (lensL){
+      const LL = BY.get(lensL), ip = inPool(lensL, c.i);
+      out += `<div class="rbs"><div class="rb"><span class="sw" style="background:${bandBg(LL)}"></span><span class="rbn"><b>★ ${esc(LL.n)} Pool</b><small>Ideas for this leader</small></span>${ip ? `<button class="btn sm" data-unpool="${lensL}">In pool ✓ · Remove</button>` : `<button class="btn sm primary" data-topool="${lensL}">+ Add</button>`}</div>${rows.map(rowHTML).join("")}</div>
+        <div class="row"><button class="btn sm" data-nbl="${lensL}">+ New ${esc(LL.n)} build</button></div>`;
+    }
+    else if (rows.length) out += `<div class="rbs">${rows.map(rowHTML).join("")}</div><div class="muted" style="font-size:12px">${primary ? "The build you're working on, then your most recent builds this card fits." : "Your 3 most recent builds this card fits."} Max ${c.any?"any number":"4"} per build.</div>`;
     else {
       const myLeaders = new Set(leaderGroups().groups.map(g=>g.L.i));
       const leaders = CARDS.filter(x => x.c === "L" && sharesColor(c, x)).sort((a,b)=>a.n.localeCompare(b.n));
@@ -1201,20 +1335,19 @@ function openCard(id, suf, after){
         <div class="row" style="gap:6px"><select class="btn sm" id="poolLeader" aria-label="Leader pool" style="max-width:100%;min-width:0;flex:1 1 200px">${mine.length?`<optgroup label="Your leaders">${mine.map(opt).join("")}</optgroup>`:""}<optgroup label="All ${colorWord(c.co)} leaders">${others.map(opt).join("")}</optgroup></select><button class="btn sm" data-act2="toPool">Add to ★ Pool</button></div></div>`;
     }
     return out + `</div>`;
-  };  const addToHTML = () => {
+  };  // Every leader you have builds or a pool for: tap + on a row to add right there.
+  const addToHTML = () => {
     const {groups, none} = leaderGroups();
-    const deckRow = d => { const q = d.cards[c.i]?.q || 0; const key = "d:"+d.id;
-      return `<label class="ar"><input type="checkbox" data-sel="${key}" ${sel.has(key)?"checked":""}><span class="nm2">${esc(d.name)}${d.leader && !sharesColor(c, BY.get(d.leader)) ? ' <small style="color:var(--warn)">· off-color</small>' : ""}</span><span class="st">${q?"×"+q+" in build":""}</span></label>`; };
-    const nSel = sel.size;
+    const deckRow = d => { const q = d.cards[c.i]?.q || 0;
+      return `<div class="ar"><span class="nm2">${esc(d.name)}${d.leader && !sharesColor(c, BY.get(d.leader)) ? ' <small style="color:var(--warn)">· off-color</small>' : ""}</span>
+        <span class="stepper sm"><button data-bstep="${d.id}|-1" ${q ? "" : "disabled"} aria-label="Remove one from ${esc(d.name)}">−</button><output>${q}</output><button data-bstep="${d.id}|1" aria-label="Add one to ${esc(d.name)}">+</button></span></div>`; };
     return `<details class="addto" id="addTo" ${addOpen?"open":""}><summary>More builds &amp; ★ Leader Pools</summary><div class="addlist">
-      ${groups.map(g => { const key = "p:"+g.L.i, ip = inPool(g.L.i, c.i);
+      ${groups.map(g => { const ip = inPool(g.L.i, c.i);
         return `<div class="ag"><div class="agh"><span class="sw" style="background:${bandBg(g.L)}"></span>${esc(g.L.n)} <span class="mono muted">${g.L.i}</span></div>
-          <div class="arw"><label class="ar pool"><input type="checkbox" data-sel="${key}" ${sel.has(key)?"checked":""} ${ip?"disabled":""}><span class="nm2">★ ${esc(g.L.n)} Pool</span><span class="st">${ip?"In pool ✓":""}</span></label>${ip?`<button class="btn sm" data-unpool="${g.L.i}">Remove</button>`:""}</div>
-          ${g.decks.map(deckRow).join("")}</div>`; }).join("")}
+          <div class="ar pool"><span class="nm2">★ ${esc(g.L.n)} Pool</span>${ip ? `<button class="btn sm" data-unpool="${g.L.i}">In pool ✓ · Remove</button>` : `<button class="btn sm" data-topool="${g.L.i}">+ Add</button>`}</div>
+          ${g.decks.map(deckRow).join("")}
+          <button class="linkbtn nbl" data-nbl="${g.L.i}">+ New ${esc(g.L.n)} build</button></div>`; }).join("")}
       ${none.length ? `<div class="ag"><div class="agh"><span class="sw" style="background:var(--line)"></span>No leader yet</div>${none.map(deckRow).join("")}</div>` : ""}
-      <div class="addbar"><span class="lab" style="font-weight:700">Copies<small style="display:block;font-weight:400;color:var(--muted);font-size:12px">for each build picked</small></span>
-        <span class="stepper sm"><button data-addn="-1" aria-label="Fewer copies">−</button><output>${addN}</output><button data-addn="1" aria-label="More copies">+</button></span>
-        <button class="btn primary sm" id="addGo" ${nSel?"":"disabled"}>${nSel ? `Add to ${nSel} selected` : "Pick builds or a pool"}</button></div>
       <div class="msg" id="addMsg" role="alert"></div>
     </div></details>`;
   };
@@ -1237,11 +1370,21 @@ function openCard(id, suf, after){
     const q = d.cards[c.i]?.q || 0, full = q >= limitFor(c);
     return `<div class="under"><span class="stepper"><button data-bstep="${d.id}|-1" ${q ? "" : "disabled"} aria-label="Remove one from ${esc(d.name)}">−</button><output aria-live="polite">${q}</output><button data-bstep="${d.id}|1" ${full ? "disabled" : ""} aria-label="Add one to ${esc(d.name)}">+</button></span><span class="undernm">in ${esc(d.name)}</span></div>`;
   };
+  // "Looks for Alabasta or Straw Hat Crew · you have 0 in this build" (only inside a build)
+  const looksHTML = () => {
+    const d = deck(); if (ctx !== "build" || d.ghost) return "";
+    const {types, names} = refsOf(c); if (!types.length && !names.length) return "";
+    const ids = [d.leader, ...Object.keys(d.cards)].filter(x => x && x !== c.i);
+    let n = 0; for (const x of ids){ const y = BY.get(x); if (!y) continue; const q = x === d.leader ? 1 : d.cards[x].q;
+      if (y.t.some(t => types.includes(t)) || names.includes(y.n)) n += q; }
+    const what = [...types, ...names.map(x => `[${x}]`)];
+    return `<span class="looks4">Looks for ${esc(what.join(" or "))} · <b style="display:inline">${n}</b> in this build</span>`;
+  };
   const draw = () => {
     const d = deck(); const L = d.leader && BY.get(d.leader);
     const q = d.cards[c.i]?.q || 0;
     const own = S.owned[c.i] || 0;
-    const cm = ctx === "build" ? compat(c) : null;
+    const cm = ctxLeader() ? compat(c) : null;
     const vlabel = v => (v[0] ? v[0].replace("_p","Parallel ").replace("_r","Reprint ") : "Standard") + " · " + v[1];
     const issues = [];
     if (c.ban) issues.push(`<div class="issue bad"><i></i>Banned on the October 12, 2026 list. Can't be used in any deck for official events.</div>`);
@@ -1251,17 +1394,17 @@ function openCard(id, suf, after){
     let compatBox = "";
     if (cm){
       const head = cm.st==="A" ? "Works with your leader" : cm.st==="U" ? "Compatibility uncertain" : cm.head;
-      compatBox = `<div class="compat ${cm.st==="U"?"":cm.st}"><b>${head}</b>${cm.why ? `<span>${esc(cm.why)}</span>` : `<span class="muted">No leader conditions on this card${c.sg.some(s=>s.c)?" that your leader misses":""}.</span>`}</div>`;
+      compatBox = `<div class="compat ${cm.st==="U"?"":cm.st}"><b>${head}</b>${cm.why ? `<span>${esc(cm.why)}</span>` : `<span class="muted">No leader conditions on this card${c.sg.some(s=>s.c)?" that your leader misses":""}.</span>`}${looksHTML()}</div>`;
     }
     if (!S.wish.find(w => w.id === buyTarget)) buyTarget = S.wish[0] ? S.wish[0].id : null;
     const lists = S.wish.map(w=>`<option value="${w.id}" ${w.id===buyTarget?"selected":""}>${esc(w.name)}</option>`).join("");
     const inBuy = S.wish.reduce((n, w) => n + (w.items[c.i] || 0), 0);
     const isLeader = c.c === "L";
     $("#layer").innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.n)}"><div class="grab"></div><div class="gut">
-      <div class="shead"><span class="mono muted">${c.i}${art}</span><button class="btn sm x" id="cClose">Close</button></div>
+      <div class="shead">${back ? `<button class="btn sm" id="cBack">‹ Back</button>` : ""}<span class="mono muted">${c.i}${art}</span><button class="btn sm x" id="cClose" style="margin-left:auto">Close</button></div>
       <div class="pop">
         <div>${(() => { const qh = quickHTML(d); return `<div class="popl${qh ? " has-q" : ""}"><div class="art grid" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>${qh}</div>${underHTML(d)}`; })()}
-          ${c.v.length>1?`<div class="prints" role="group" aria-label="Printings">${c.v.map(v=>`<button data-art="${v[0]}" aria-pressed="${v[0]===art}">${esc(vlabel(v))}</button>`).join("")}</div>`:""}
+          ${c.v.length>1?`<div class="vthumbs" role="group" aria-label="Versions of this card">${c.v.map(v=>`<button class="vth" data-art="${v[0]}" aria-pressed="${v[0]===art}" aria-label="${esc(vlabel(v))}"><span class="vimg" style="background:${bandBg(c)}">${imgTag(c.i, v[0])}</span><small>${esc(v[0] ? vname(c, v[0]) : "Standard")}<i>${esc(v[1])}</i></small></button>`).join("")}</div>`:""}
         </div>
         <div style="min-width:0">
           <h2 class="h2">${esc(c.n)}</h2>
@@ -1274,7 +1417,7 @@ function openCard(id, suf, after){
             ${c.a?`<span class="tag">${esc(c.a)}</span>`:""}
             <span class="tag">${esc(c.sn || c.s)}</span>
           </div>
-          <div class="muted" style="margin-bottom:8px">${esc(c.t.join(" / "))}</div>
+          <div class="tyline">${c.t.map(t => `<button class="tylink plain" data-tq="t:${esc(t)}">${esc(t)}</button>`).join(`<span class="muted"> / </span>`)}</div>
           <div class="txt">${c.e?`<p>${fmtText(c.e)}</p>`:`<p class="muted">No effect.</p>`}${c.tr?`<p>${fmtText(c.tr)}</p>`:""}</div>
           ${compatBox}
           ${issues.length?`<div class="issues">${issues.join("")}</div>`:""}
@@ -1282,8 +1425,8 @@ function openCard(id, suf, after){
             <div class="savehd">Save to</div>
             <div class="savebtns">
               <button class="chip tog" id="svBuy" aria-pressed="${inBuy > 0}">Buy List${inBuy ? ` · ${inBuy}` : ""}</button>
-              <button class="chip tog" id="svWant" aria-pressed="${S.want.includes(c.i)}">Wish List</button>
-              <button class="chip tog" id="tBox" aria-pressed="${S.treasure.includes(c.i)}">☆Treasure Box☆</button>
+              <button class="chip tog" id="svWant" aria-pressed="${S.want.includes(vk())}">Wish List</button>
+              <button class="chip tog" id="tBox" aria-pressed="${S.treasure.includes(vk())}">☆Treasure Box☆</button>
             </div>
             ${S.wish.length > 1 ? `<label class="buypick"><span class="muted">Buy List adds to</span><select class="btn sm" id="wSel" aria-label="Which Buy List">${lists}</select></label>` : ""}
             ${isLeader ? leaderCtl(d) : targetHTML()}
@@ -1310,12 +1453,18 @@ function openCard(id, suf, after){
     const t = e.target.closest("button"); if (!t) return;
     const d = deck(); const msg = () => $("#cMsg");
     if (t.id === "cClose"){ closeSheet(); return; }
+    if (t.id === "cBack"){ closeSheet(); back(); return; }
+    if (t.dataset.tq){ const k = t.dataset.tq.slice(0,1), v = t.dataset.tq.slice(2); closeSheet(); typeView(k, v, me); return; }
+    if (t.dataset.topool){ (S.pools[t.dataset.topool] = S.pools[t.dataset.topool] || {cards:{}}).cards[c.i] = Date.now(); save(); toast(`Added to ★ ${BY.get(t.dataset.topool).n} Pool`); draw(); return; }
+    if (t.dataset.nbl){ const lid = t.dataset.nbl;
+      makeBuild(lid).then(nd => { if (!nd) return; nd.cards[c.i] = {q:1, art}; save(); renderDeckViews(); updateChip(); toast(`Made “${nd.name}” with ${c.n} in it`); if ($("#scrim")) draw(); });
+      return; }
     if (t.dataset.jump){ const el = $("#ctlSec"); el && el.scrollIntoView({behavior:"smooth", block:"start"}); return; }
-    if (t.dataset.art !== undefined){ art = t.dataset.art; draw(); return; }
+    if (t.dataset.art !== undefined){ art = t.dataset.art; artPicked = true; draw(); return; }
     if (t.id === "dPlus"){
       const cur = d.cards[c.i]?.q || 0;
       if (cur >= limitFor(c)){ msg().textContent = `You already have ${cur}. A build can hold up to 4 copies of a card.`; return; }
-      d.cards[c.i] = {q: cur+1, art: d.cards[c.i]?.art ?? art}; touch(d);
+      d.cards[c.i] = {q: cur+1, art: artFor(d)}; touch(d);
       toast(`Added ${c.n} (${cur+1}/${c.any?"∞":4}) · ${deckCount(d)}/50`);
     } else if (t.id === "dMinus"){
       const cur = d.cards[c.i]?.q || 0; if (!cur) return;
@@ -1328,22 +1477,22 @@ function openCard(id, suf, after){
       const cur = dk.cards[c.i]?.q || 0;
       if (+dl > 0){
         if (cur >= limitFor(c)){ msg().textContent = `${dk.name} already has ${cur}. A build can hold up to 4 copies of a card.`; return; }
-        dk.cards[c.i] = {q:cur+1, art: dk.cards[c.i]?.art ?? art}; toast(`Added ${c.n} to ${dk.name} (${cur+1}) · ${deckCount(dk)}/50`);
+        dk.cards[c.i] = {q:cur+1, art: artFor(dk)}; toast(`Added ${c.n} to ${dk.name} (${cur+1}) · ${deckCount(dk)}/50`);
       } else { if (!cur) return; if (cur === 1) delete dk.cards[c.i]; else dk.cards[c.i].q = cur-1; toast(`Removed ${c.n} from ${dk.name} · ${deckCount(dk)}/50`); }
       dk.updated = dk.used = Date.now(); save(); renderDeckViews(); updateChip();
     }
     else if (t.id === "favL"){ toggleFav(c.i); renderResults(); }
     else if (t.dataset.wo){ workOn(t.dataset.wo); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild(); toast(`Building ${deck().name}`); return; }
-    else if (t.id === "newL" || t.dataset.q === "newL"){ const nd = newBuild(c.i); workOn(nd.id); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild("add"); toast(`New ${c.n} build. Rename it in Decklist.`); return; }
+    else if (t.id === "newL" || t.dataset.q === "newL"){ makeBuild(c.i).then(nd => { if (!nd) return; workOn(nd.id); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild("add"); toast(`Made ${nd.name}`); }); return; }
     else if (t.dataset.quick){ const dk = S.decks.find(x=>x.id===t.dataset.quick); const cur = dk.cards[c.i]?.q || 0;
       if (cur >= limitFor(c)){ toast(`${dk.name} already has 4`); return; }
-      dk.cards[c.i] = {q:cur+1, art:dk.cards[c.i]?.art ?? art}; dk.updated = Date.now(); save(); renderDeckViews(); toast(`Added ${c.n} to ${dk.name} (${cur+1})`); }
+      dk.cards[c.i] = {q:cur+1, art: artFor(dk)}; dk.updated = Date.now(); save(); renderDeckViews(); toast(`Added ${c.n} to ${dk.name} (${cur+1})`); }
     else if (t.dataset.act2 === "toPool"){ const lid = $("#poolLeader").value; (S.pools[lid] = S.pools[lid] || {cards:{}}).cards[c.i] = Date.now(); save(); toast(`Added to ★ ${BY.get(lid).n} Pool`); }
     else if (t.dataset.act2 === "startDeck"){
-      const nd = newBuild(null); nd.cards[c.i] = {q:1, art}; workOn(nd.id); closeSheet();
-      FB.cats = new Set(["L"]); FB.colors = new Set(c.co); FB.lock = false;
-      renderAll(); openBuild("add"); window.scrollTo({top:0});
-      toast(`New build started with ${c.n}. Pick a ${colorWord(c.co)} leader.`); return;
+      makeBuild(null).then(nd => { if (!nd) return; nd.cards[c.i] = {q:1, art}; workOn(nd.id); closeSheet();
+        FB.cats = new Set(["L"]); FB.colors = new Set(c.co); FB.lock = false;
+        renderAll(); openBuild("add"); window.scrollTo({top:0});
+        toast(`${nd.name} started with ${c.n}. Pick a ${colorWord(c.co)} leader.`); }); return;
     }
     else if (t.id === "setLeader" || t.dataset.q === "setLeader"){
       d.leader = c.i; touch(d); compatCache.clear(); FB.lock = true;
@@ -1351,49 +1500,26 @@ function openCard(id, suf, after){
       toast(`${c.n} is your leader. Showing cards in its colors.`);
       renderQuick(); renderResults(); renderDeckViews(); return;
     }
-    else if (t.id === "tBox"){ const i = S.treasure.indexOf(c.i); if (i>=0) S.treasure.splice(i,1); else S.treasure.unshift(c.i); save(); toast(i>=0?"Removed from ☆Treasure Box☆":"Saved to ☆Treasure Box☆"); }
+    else if (t.id === "tBox"){ const i = S.treasure.indexOf(vk()); if (i>=0) S.treasure.splice(i,1); else S.treasure.unshift(vk()); save(); toast(i>=0?"Removed from ☆Treasure Box☆":"Saved to ☆Treasure Box☆"); }
     else if (t.id === "svBuy"){
       let w = S.wish.find(x => x.id === buyTarget);
       if (!w){ w = {id:uid(), name:"My Buy List", items:{}, decks:[], mode:"all"}; S.wish.push(w); buyTarget = w.id; }
       w.items[c.i] = (w.items[c.i]||0) + 1; save(); toast(`Added to ${w.name} (${w.items[c.i]} to buy). Change the amount on the Lists tab.`); }
-    else if (t.id === "svWant"){ const i = S.want.indexOf(c.i); if (i >= 0) S.want.splice(i,1); else S.want.unshift(c.i); save(); toast(i >= 0 ? "Removed from Wish List" : "Added to Wish List"); }
+    else if (t.id === "svWant"){ const i = S.want.indexOf(vk()); if (i >= 0) S.want.splice(i,1); else S.want.unshift(vk()); save(); toast(i >= 0 ? "Removed from Wish List" : "Added to Wish List"); }
     else if (t.id === "useArt"){ d.cards[c.i].art = art; touch(d); toast("This build uses this art now"); }
-    else if (t.dataset.addn){ addN = Math.max(1, Math.min(limitFor(c) > 4 ? 10 : 4, addN + +t.dataset.addn)); }
     else if (t.dataset.unpool){ delete S.pools[t.dataset.unpool].cards[c.i]; save(); toast(`Removed from ★ ${BY.get(t.dataset.unpool).n} Pool`); }
     else if (t.id === "openPool"){ closeSheet(); poolView = c.i; renderDecks(); go("decks"); return; }
-    else if (t.id === "addGo"){
-      const done = [], full = [];
-      for (const key of sel){
-        const [kind, id] = key.split(":");
-        if (kind === "d"){
-          const dk = S.decks.find(x=>x.id===id); if (!dk) continue;
-          const cur = dk.cards[c.i]?.q || 0, nq = Math.min(limitFor(c), cur + addN);
-          if (nq === cur){ full.push(dk.name); continue; }
-          dk.cards[c.i] = {q:nq, art: dk.cards[c.i]?.art ?? art}; dk.updated = Date.now(); done.push(`${dk.name} (×${nq})`);
-        } else {
-          (S.pools[id] = S.pools[id] || {cards:{}}).cards[c.i] = Date.now(); done.push(`★ ${BY.get(id).n} Pool`);
-        }
-      }
-      sel.clear(); save(); renderDeckViews(); updateChip();
-      if (done.length) toast(done.length === 1 ? `Added to ${done[0]}` : `Added to ${done.length} places`);
-      draw();
-      if (full.length) $("#addMsg").textContent = `Already at the 4-copy limit in: ${full.join(", ")}.`;
-      return;
-    }
     else return;
     draw();
   };
-  const onSel = e => {
-    if (e.target.id === "wSel"){ buyTarget = e.target.value; return; }
-    const k = e.target.dataset && e.target.dataset.sel; if (!k) return;
-    e.target.checked ? sel.add(k) : sel.delete(k);
-    const b = $("#addGo"); b.disabled = !sel.size; b.textContent = sel.size ? `Add to ${sel.size} selected` : "Pick builds or a pool";
-  };
+  const onSel = e => { if (e.target.id === "wSel") buyTarget = e.target.value; };
   sc0.addEventListener("click", handler);
   sc0.addEventListener("change", onSel);
   const prevClose = onClose;
   onClose = () => { sc0.removeEventListener("click", handler); sc0.removeEventListener("change", onSel); prevClose && prevClose(); };
 }
+const vsplit = k => { const m = String(k).match(/^(.*?)(_[pr]\d+)?$/); return {id: m[1], suf: m[2] || ""}; };
+function vname(c, suf){ return suf ? suf.replace("_p", "Parallel ").replace("_r", "Reprint ") : ""; }
 function touch(d){ d.updated = d.used = Date.now(); if (d.sample && deckCount(d)!==50) {} save(); renderDeckViews(); updateChip(); }
 function refreshTileState(){
   // update quantity badges in place so the scroll position stays put
@@ -1676,7 +1802,7 @@ function renderDeckViews(){
       <div class="seg" role="group" aria-label="Build view"><button data-dtab="list" aria-pressed="${deckTab==="list"}">Decklist</button><button data-dtab="stats" aria-pressed="${deckTab==="stats"}">Stats</button></div></div>
     <div style="margin-top:10px">${buildBodyHTML(deckTab)}</div>`;
   a.scrollTop = st;
-  $("#bHead").innerHTML = buildHeadHTML(); $("#bTabs").innerHTML = `<div class="seg full" role="group" aria-label="Build view"><button data-bsub="add" aria-pressed="${bSub==="add"}">Add cards</button><button data-bsub="list" aria-pressed="${bSub==="list"}">Decklist</button><button data-bsub="stats" aria-pressed="${bSub==="stats"}">Stats</button></div>`;
+  $("#bHead").innerHTML = buildHeadHTML(); $("#bTabs").innerHTML = `<div class="seg full" role="group" aria-label="Build view"><button data-bsub="list" aria-pressed="${bSub==="list"}">Decklist</button><button data-bsub="stats" aria-pressed="${bSub==="stats"}">Stats</button><button class="addtab" data-bsub="add" aria-pressed="${bSub==="add"}">+ Add cards</button></div>`;
   $("#bBody").innerHTML = bSub === "add" ? "" : buildBodyHTML(bSub);
   $("#bAddSlot").hidden = bSub !== "add";
   updateChip();
@@ -1699,7 +1825,7 @@ function deckClick(e){
   else if (a === "pool"){ poolView = d.leader; poolFilter = "all"; renderDecks(); go("decks"); }
   else if (a === "pickLeader"){ FB.cats = new Set(["L"]); FB.lock = false; openBuild("add"); if (ctx === "build"){ renderQuick(); renderResults(); } }
   else if (a === "dup"){ const nd = JSON.parse(JSON.stringify(d)); nd.id = uid(); nd.name = d.name.replace(/ \(copy.*\)$/,"") + " (copy)"; nd.updated = nd.used = Date.now(); nd.sample = false; S.decks.unshift(nd); workOn(nd.id); renderAll(); toast("Copied as a new build. Rename it above."); setTimeout(()=>{ const i = document.querySelector(innerWidth>=1024?"#asideDeck #deckName":"#v-deck #deckName"); i && (i.focus(), i.select()); }, 50); }
-  else if (a === "newdeck"){ const nd = newBuild(d.leader); workOn(nd.id); if (!d.leader) FB.cats = new Set(["L"]); renderAll(); openBuild("add"); toast(d.leader ? "New build started. Rename it in Decklist." : "New build. Pick a leader."); }
+  else if (a === "newdeck"){ makeBuild(d.leader).then(nd => { if (!nd) return; workOn(nd.id); if (!d.leader) FB.cats = new Set(["L"]); renderAll(); openBuild("add"); toast(d.leader ? `Made ${nd.name}` : `Made ${nd.name}. Pick a leader.`); }); }
   else if (a === "del"){ confirmDel = true; renderDeckViews(); }
   else if (a === "delNo"){ confirmDel = false; renderDeckViews(); }
   else if (a === "delYes"){ confirmDel = false; trashBuild(d.id); renderAll(); if (!S.decks.length) go("decks"); toast("Moved to the Junkyard"); }
@@ -1817,7 +1943,7 @@ function firstDeckHTML(){
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("[data-first]")) return;
-  const nd = newBuild(null); workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast("New deck. Pick its leader.");
+  makeBuild(null).then(nd => { if (!nd) return; workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast(`Made ${nd.name}. Pick its leader.`); });
 });
 function renderDecks(){
   const v = $("#v-decks");
@@ -1835,8 +1961,8 @@ function renderDecks(){
     const ds = byRecent(g.decks);
     if (df !== "recent" && !ds.length) continue;
     const pc = poolCards(g.L.i).size;
-    body += `<section class="lsec" aria-label="${esc(g.L.n)}"><div class="lrow">${jollyHTML(g.L.co)}
-        <button class="lt" data-open="${g.L.i}"><b>${esc(g.L.n)}</b>${colorWords(g.L.co.length ? g.L.co : ["Black"])}</button>
+    body += `<section class="lsec" aria-label="${esc(g.L.n)}"><div class="lrow"><button class="ljolly" data-lens="${g.L.i}" aria-label="Search cards for ${esc(g.L.n)}">${jollyHTML(g.L.co)}</button>
+        <button class="lt" data-lens="${g.L.i}" title="Search cards for ${esc(g.L.n)}"><b>${esc(g.L.n)}</b>${colorWords(g.L.co.length ? g.L.co : ["Black"])}</button>
         <button class="poollink" data-pool="${g.L.i}">Pool ${pc} →</button></div>
       <div class="trow">${ds.map(tileHTMLb).join("")}${df === "recent" ? `<button class="newtile" data-newb="${g.L.i}" aria-label="New ${esc(g.L.n)} build">+ New build</button>` : ""}</div></section>`;
   }
@@ -1936,18 +2062,17 @@ $("#v-decks").addEventListener("click", e => {
   if (t.dataset.pf){ poolFilter = t.dataset.pf; renderDecks(); return; }
   if (t.dataset.act === "back"){ poolView = null; renderDecks(); return; }
   if (t.dataset.act === "poolSearch"){
-    const d0 = S.decks.find(d=>d.leader===poolView);
-    if (d0){ workOn(d0.id); renderAll(); openBuild("add"); } else { setCtx("cards"); go("cards"); }
-    toast(`Open a card and use “More builds & ★ Leader Pools” to pool it.`); return;
+    startLens(poolView); return;
   }
   if (t.dataset.df){ S.prefs.deckFilter = t.dataset.df; save(); renderDecks(); return; }
   if (t.dataset.bedit){ editBuild(t.dataset.bedit); return; }
   if (t.dataset.bstar){ const d = S.decks.find(x=>x.id===t.dataset.bstar); d.star = !d.star; save(); renderDecks(); toast(d.star ? `★ Bookmarked ${d.name}` : "Bookmark removed"); return; }
   if (t.dataset.lfav){ toggleFav(t.dataset.lfav); renderDecks(); return; }
   if (t.dataset.allb){ const k = t.dataset.allb; openAll.has(k) ? openAll.delete(k) : openAll.add(k); renderDecks(); return; }
-  if (t.dataset.newb){ const L = BY.get(t.dataset.newb); const nd = newBuild(L.i); workOn(nd.id); renderAll(); openBuild("add"); toast(`New ${L.n} build. Rename it in Decklist.`); return; }
-  if (t.dataset.deck){ workOn(t.dataset.deck); renderAll(); openBuild(); }
-  else if (t.dataset.act === "new"){ const nd = newBuild(null); workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast("New deck. Pick its leader."); }
+  if (t.dataset.newb){ const L = BY.get(t.dataset.newb); makeBuild(L.i).then(nd => { if (!nd) return; workOn(nd.id); renderAll(); openBuild("add"); toast(`Made ${nd.name}`); }); return; }
+  if (t.dataset.lens){ startLens(t.dataset.lens); return; }
+  if (t.dataset.deck){ workOn(t.dataset.deck); renderAll(); openBuild("list"); }
+  else if (t.dataset.act === "new"){ makeBuild(null).then(nd => { if (!nd) return; workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast(`Made ${nd.name}. Pick its leader.`); }); }
 });
 
 /* ================= lists: buy lists, collection, treasure box ================= */
@@ -1961,7 +2086,7 @@ function buyRows(w){
   const runs = new Map();
   const addRun = (id, d, q) => { if (!runs.has(id)) runs.set(id, []); runs.get(id).push([d, q]); };
   for (const d of decks){ if (d.leader) addRun(d.leader, d, 1); for (const [id,v] of Object.entries(d.cards)) addRun(id, d, v.q); }
-  const wants = w.incWant ? new Set((S.want||[]).filter(id => !(S.owned[id] > 0))) : new Set();
+  const wants = w.incWant ? new Set((S.want||[]).map(k => vsplit(k).id).filter(id => !(S.owned[id] > 0))) : new Set();
   const ids = new Set([...runs.keys(), ...Object.keys(w.items).filter(k=>w.items[k]>0), ...wants]);
   const rows = []; let covered = 0;
   const perDeck = new Map(decks.map(d=>[d.id, 0]));
@@ -1987,7 +2112,7 @@ function buyRows(w){
   return {rows, decks, covered, perDeck, total: rows.reduce((n,r)=>n+r.total,0)};
 }
 function wantText(){
-  return "Wish List\n" + (S.want||[]).map(id => BY.get(id)).filter(Boolean).map(c => `${c.i} ${c.n}`).join("\n");
+  return "Wish List\n" + (S.want||[]).map(k => { const v = vsplit(k), c = BY.get(v.id); return c ? `${c.i} ${c.n}${v.suf ? ` (${vname(c, v.suf)})` : ""}` : ""; }).filter(Boolean).join("\n");
 }
 function wishText(w){
   const b = buyRows(w);
@@ -2033,7 +2158,7 @@ function renderLists(){
   } else if (listTab === "want"){
     body = `<p class="muted" style="font-size:13px;margin:12px 0">Cards you have your eye on, not tied to a build. Add them from any card's popup (Save to → Wish List). Any Buy List can include them too.</p>
       ${S.want.length ? `<div class="out" id="wantTxt" style="max-height:120px">${esc(wantText())}</div><div class="row" style="margin:8px 0 12px"><button class="btn sm dark" data-wantcopy="1">Copy for friends</button></div>` : ""}
-      <div class="miniGrid grid" data-size="l">${S.want.map(id=>{ const c = BY.get(id); return c?`<button class="tile" data-open="${id}">${faceHTML(c,"")}</button>`:""; }).join("") || `<p class="muted" style="grid-column:1/-1">Empty. Open any card and tap Wish List.</p>`}</div>`;
+      <div class="miniGrid grid" data-size="l">${S.want.map(k=>{ const v = vsplit(k), c = BY.get(v.id); return c?`<button class="tile" data-open="${v.id}" data-suf="${v.suf}">${faceHTML(c,v.suf)}</button>`:""; }).join("") || `<p class="muted" style="grid-column:1/-1">Empty. Open any card and tap Wish List.</p>`}</div>`;
   } else if (listTab === "coll"){
     const q = collQ.toLowerCase();
     const ent = Object.entries(S.owned).map(([id,n])=>({c:BY.get(id), n})).filter(r=>r.c && (!q || r.c._name.includes(q) || r.c._id.includes(q))).sort((a,b)=>a.c._order-b.c._order);
@@ -2044,7 +2169,7 @@ function renderLists(){
         <span class="stepper sm"><button data-own="${r.c.i}|-1" aria-label="Own one fewer">−</button><output>${r.n}</output><button data-own="${r.c.i}|1" aria-label="Own one more">+</button></span></div>`).join("") || `<p class="muted" style="margin-top:12px">Nothing tracked yet.</p>`}</div>`;
   } else {
     body = `<p class="muted" style="font-size:13px;margin:12px 0">Cards you starred, kept on this device for quick reference at the shop. Full offline use with card images comes with the installable app.</p>
-      <div class="miniGrid grid" data-size="l">${S.treasure.map(id=>{ const c = BY.get(id); return c?`<button class="tile" data-open="${id}">${faceHTML(c,"")}</button>`:""; }).join("") || `<p class="muted" style="grid-column:1/-1">Empty. Tap “Save to ☆Treasure Box☆” in a card's popup to save it here.</p>`}</div>`;
+      <div class="miniGrid grid" data-size="l">${S.treasure.map(k=>{ const v = vsplit(k), c = BY.get(v.id); return c?`<button class="tile" data-open="${v.id}" data-suf="${v.suf}">${faceHTML(c,v.suf)}</button>`:""; }).join("") || `<p class="muted" style="grid-column:1/-1">Empty. Tap “Save to ☆Treasure Box☆” in a card's popup to save it here.</p>`}</div>`;
   }
   v.innerHTML = `<h2 class="h2">Lists</h2>
     <div class="seg full lt4" role="group" aria-label="List type" style="margin-top:10px"><button data-lt="wish" aria-pressed="${listTab==="wish"}">Buy Lists</button><button data-lt="want" aria-pressed="${listTab==="want"}">Wish List</button><button data-lt="box" aria-pressed="${listTab==="box"}">☆Treasure Box☆</button><button data-lt="coll" aria-pressed="${listTab==="coll"}">My Collection</button></div>${body}`;
@@ -2052,7 +2177,7 @@ function renderLists(){
 $("#v-lists").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   if (t.dataset.lt){ listTab = t.dataset.lt; renderLists(); return; }
-  if (t.dataset.open){ openCard(t.dataset.open, "", renderLists); return; }
+  if (t.dataset.open){ openCard(t.dataset.open, t.dataset.suf || "", renderLists); return; }
   if (t.dataset.act === "newWish"){ const w = {id:uid(), name:"New Buy List", items:{}, decks:[], mode:"all"}; S.wish.unshift(w); renameId = w.id; pickOpen.add(w.id); save(); renderLists(); return; }
   if (t.dataset.wmode){ const [wid,m] = t.dataset.wmode.split("|"); S.wish.find(x=>x.id===wid).mode = m; save(); renderLists(); return; }
   if (t.dataset.wq){ const [wid,id,dlt] = t.dataset.wq.split("|"); const w = S.wish.find(x=>x.id===wid); w.items[id] = Math.max(0,(w.items[id]||0)+ +dlt); if (!w.items[id]) delete w.items[id]; save(); renderLists(); return; }
