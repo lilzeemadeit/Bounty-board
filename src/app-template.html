@@ -337,6 +337,11 @@ button{cursor:pointer}
 .bhead .bhn{flex:1;min-width:0}
 .bhead .bhn b{display:block;font-family:var(--f-display);font-size:20px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bhead .bhn small{display:block;color:var(--muted);font-size:12px}
+.bhead .bname{display:block;background:none;border:0;padding:0;color:var(--muted);font-size:12px;text-align:left;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.bhead .bname .pen{opacity:.7}
+#asideDeck .narrowonly{display:none}
+@media (max-width:640px){.bhead .bhn b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:17px;overflow-wrap:anywhere}.bhead .bname{white-space:normal}}
+html.building #chipCount{display:none}
 .banner .sw{width:8px;height:28px;border-radius:3px;flex:none}
 .rbs{display:grid;grid-template-columns:minmax(0,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .rb{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface)}
@@ -990,7 +995,9 @@ function renderQuick(){
     const LL = lens && BY.get(lens);
     h += `<button class="chip tog" id="artsBtn" aria-pressed="${!!S.prefs.arts}" title="Show every printing of each card: alt arts, parallels and reprints">All prints</button>${LL ? `<button class="chip" id="qLock" aria-pressed="${FC.lock}" title="Only show cards that share a color with ${esc(LL.n)}">${FC.lock?"🔒 ":""}${esc(LL.co.join("/"))} only</button>` : ""}<button class="chip tog" id="qLegal" aria-pressed="${S.prefs.pool==="std"}" title="Only cards legal in Standard: not banned and not rotated out">Legal only</button><span class="sep"></span>`;
   }
-  for (const col of COLORS) h += `<button class="chip color" data-col="${col}" aria-pressed="${F.colors.has(col)}" aria-label="${col}"><span class="dot" style="background:${colorVar(col)}"></span>${F.colors.has(col)?col:""}</button>`;
+  const lockL = ctx === "build" ? (FB.lock && DL) : (lens && FC.lock && BY.get(lens));
+  const lockCols = new Set(lockL ? lockL.co : []);
+  for (const col of COLORS) h += `<button class="chip color${lockCols.has(col) && !F.colors.size ? " locked" : ""}" data-col="${col}" aria-pressed="${F.colors.has(col) || (lockCols.has(col) && !F.colors.size)}" aria-label="${col}${lockCols.has(col) ? ", leader color" : ""}"><span class="dot" style="background:${colorVar(col)}"></span>${F.colors.has(col)?col:""}</button>`;
   h += `<span class="sep"></span>`;
   for (const [cat,lab] of [["L","Leaders"],["C","Characters"],["E","Events"],["S","Stages"]]) h += `<button class="chip" data-cat="${cat}" aria-pressed="${F.cats.has(cat)}">${lab}</button>`;
   $("#quick").innerHTML = h;
@@ -1759,13 +1766,12 @@ function buildBodyHTML(tab){
     list += `</div>`;
   }
   return `
-    <input class="namein" id="deckName" value="${esc(d.name)}" aria-label="Build name">
-    <div class="row muted" style="font-size:13px;margin:2px 0 10px"><span class="count ${n===50?"full":""}">${n}/50</span><span>Saved on this device · ${new Date(d.updated).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"})}</span></div>
+    <div class="muted" style="font-size:12.5px;margin:2px 0 10px">Saved ${new Date(d.updated).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"})}</div>
     ${L && (tab === "stats" || S.prefs.dview === "list" || !rows.length) ? `<button class="leaderbox" data-open="${L.i}" style="width:100%;text-align:left">${jollyHTML(L.co.length ? L.co : [])}<span class="info"><span class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Leader · ${L.co.join("/")} · Life ${L.k}</span><b style="display:block;font-family:var(--f-display);font-size:20px">${esc(L.n)}</b><span class="mono muted">${L.i}</span></span></button>`
         : L ? "" : `<div class="banner"><span>No leader yet.</span><button class="btn sm primary" data-act="pickLeader">Choose a leader</button></div>`}
     <div class="row" style="margin-top:10px">
       <button class="btn sm dark" data-act="ie">Import / Export</button>
-      ${L ? `<button class="btn sm" data-act="pool">★ Pool</button>` : ""}
+      ${L ? `<button class="btn sm narrowonly" data-act="pool">★ Card Pool</button>` : ""}
       <button class="btn sm" data-act="dup">Copy as new build</button>
       <button class="btn sm" data-act="newdeck">${L ? `New ${esc(L.n)} build` : "New build"}</button>
       <button class="btn sm danger" data-act="del">Delete</button>
@@ -1786,15 +1792,16 @@ function buildHeadHTML(){
   const d = deck(), L = d.leader && BY.get(d.leader), n = deckCount(d);
   return `<button class="crumb" data-act="toDecks">‹ My Decks</button>
     <div class="bhead">${jollyHTML(L && L.co.length ? L.co : [])}
-    <span class="bhn"><b>${L ? esc(L.n) + " Deck" : "New deck"}</b><small><span class="bl">Build</span> ${esc(d.name)}${d.star?' <span style="color:var(--accent)">★</span>':""}</small></span>
+    <span class="bhn"><b>${L ? esc(L.n) + " Deck" : "New deck"}</b><button class="bname" data-act="rename" title="Rename, cover, favorite"><span class="bl">Build</span> ${esc(d.name)}${d.star?' <span style="color:var(--accent)">★</span>':""} <span class="pen" aria-hidden="true">✎</span></button></span>
     <span class="count ${n===50?"full":""}">${n}/50</span><button class="btn sm" data-act="switch">Switch build</button></div>`;
 }
 function renderDeckViews(){
   const a = $("#asideDeck"), st = a.scrollTop;
   if (deck().ghost){ a.innerHTML = firstDeckHTML(); $("#bHead").innerHTML = ""; $("#bTabs").innerHTML = ""; $("#bBody").innerHTML = ""; $("#bAddSlot").hidden = true; updateChip(); return; }
+  const dL = deck().leader;
   a.innerHTML = buildHeadHTML() + `<div class="row btabs" style="margin:10px 0 4px;justify-content:space-between">
-      <span></span>
-      <div class="seg" role="group" aria-label="Build view"><button data-dtab="list" aria-pressed="${deckTab==="list"}">Decklist</button><button data-dtab="stats" aria-pressed="${deckTab==="stats"}">Stats</button></div></div>
+      <div class="seg" role="group" aria-label="Build view"><button data-dtab="list" aria-pressed="${deckTab==="list"}">Decklist</button><button data-dtab="stats" aria-pressed="${deckTab==="stats"}">Stats</button></div>
+      ${dL ? `<button class="btn sm" data-act="pool">★ Card Pool</button>` : ""}</div>
     <div style="margin-top:10px">${buildBodyHTML(deckTab)}</div>`;
   a.scrollTop = st;
   $("#bHead").innerHTML = buildHeadHTML(); $("#bTabs").innerHTML = `<div class="seg full" role="group" aria-label="Build view"><button data-bsub="list" aria-pressed="${bSub==="list"}">Decklist</button><button data-bsub="stats" aria-pressed="${bSub==="stats"}">Stats</button><button class="addtab" data-bsub="add" aria-pressed="${bSub==="add"}">+ Add cards</button></div>`;
@@ -1817,6 +1824,7 @@ function deckClick(e){
   else if (a === "switch") openWorkOn();
   else if (a === "toDecks"){ if (innerWidth >= 1024 && ctx === "build") setCtx("cards"); go("decks"); }
   else if (a === "addCards"){ if (ctx === "build") setCtx("cards"); else openBuild("add"); renderDeckViews(); }
+  else if (a === "rename"){ editBuild(d.id); }
   else if (a === "pool"){ poolView = d.leader; poolFilter = "all"; renderDecks(); go("decks"); }
   else if (a === "pickLeader"){ FB.cats = new Set(["L"]); FB.lock = false; openBuild("add"); if (ctx === "build"){ renderQuick(); renderResults(); } }
   else if (a === "dup"){ const nd = JSON.parse(JSON.stringify(d)); nd.id = uid(); nd.name = d.name.replace(/ \(copy.*\)$/,"") + " (copy)"; nd.updated = nd.used = Date.now(); nd.sample = false; S.decks.unshift(nd); workOn(nd.id); renderAll(); toast("Copied as a new build. Rename it above."); setTimeout(()=>{ const i = document.querySelector(innerWidth>=1024?"#asideDeck #deckName":"#v-deck #deckName"); i && (i.focus(), i.select()); }, 50); }
