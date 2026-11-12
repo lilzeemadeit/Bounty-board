@@ -2324,7 +2324,7 @@ const curPhoto = () => {
 };
 const photoURL = p => p.wall ? p.url : bgURLs.get(p.id);
 // Backing behind text when a photo is on: Auto picks light or dark from the photo; the colors tint it.
-const TINTS = {pink:["Pink","light","#F5D3DD"], red:["Red","dark","#5C141B"], blue:["Blue","dark","#13284D"], sky:["Sky","light","#D3E4F5"], green:["Green","dark","#143A27"], purple:["Purple","dark","#2F1A49"]};
+const TINTS = {pink:["Pink","light","#F5D3DD"], red:["Red","dark","#5C141B"], blue:["Blue","dark","#1D45A6"], sky:["Sky","light","#D3E4F5"], green:["Green","dark","#143A27"], purple:["Purple","dark","#2F1A49"]};
 const backingFor = p => TINTS[S.prefs.backing] ? TINTS[S.prefs.backing][1] : S.prefs.backing === "light" || S.prefs.backing === "dark" ? S.prefs.backing : (p.lum > 0.4 ? "light" : "dark");
 function applyLook(){
   const root = document.documentElement, layer = $("#bgimg"), p = curPhoto();
