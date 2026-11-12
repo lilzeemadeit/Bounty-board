@@ -94,15 +94,27 @@ button{cursor:pointer}
 .main{min-width:0;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .aside{display:none}
 @media (min-width:1024px){
-  .app{grid-template-columns:minmax(0,1fr) 400px}
-  .aside{display:block;position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));overflow:auto;border-left:1px solid var(--line);background:var(--surface)}
+  /* Computer: tabs live in the top bar; pages are full width; the builder is two panels (search | deck) */
+  .app{grid-template-columns:minmax(0,1fr)}
+  html.building .app{grid-template-columns:minmax(0,1fr) clamp(440px,44vw,680px)}
+  html.building .aside{display:block;position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));overflow:auto;border-left:1px solid var(--line);background:var(--surface)}
   .tab-deck{display:none!important}
-  .main{padding-bottom:84px}
+  .main{padding-bottom:32px}
+  .nav{display:none}
+  .topnav{display:flex}
+  html:not(.building) #v-cards, #v-decks, #v-lists{max-width:1240px;margin-inline:auto}
+  html.building #bgimg{right:0}
 }
 
 /* ---------- top bar ---------- */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:10px;padding-block:10px 6px}
+.topnav{display:none;gap:4px;margin-left:18px}
+.topnav a{padding:8px 14px;border-radius:10px;color:var(--muted);font-weight:700;font-size:15px;text-decoration:none;position:relative}
+.topnav a:hover{color:var(--ink);background:var(--sunk)}
+.topnav a[aria-current="page"]{color:var(--ink)}
+.topnav a[aria-current="page"]::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:3px;border-radius:3px;background:var(--accent-fill)}
+@media (min-width:1024px){.topnav{display:flex}}
 .brand h1{white-space:nowrap;font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.02em;margin:0;text-transform:uppercase;line-height:1}
 .brand .pose{width:22px;height:22px;flex:none}
 .deckchip{margin-left:auto;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--sunk);border-radius:999px;padding:4px 6px 4px 10px;min-width:0;max-width:52%}
@@ -249,11 +261,12 @@ button{cursor:pointer}
 
 /* ---------- bottom nav ---------- */
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
-@media (min-width:1024px){.nav{right:400px}}
+
 .nav a{flex:1;max-width:140px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 10px;color:var(--muted);text-decoration:none;font-size:11.5px;font-weight:700;position:relative}
 .nav a svg{width:24px;height:24px}
 .nav a[aria-current="page"]{color:var(--ink)}
 .nav a[aria-current="page"]::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--accent-fill)}
+@media (min-width:1024px){.nav{display:none}}
 .nav .pill{position:absolute;top:4px;left:calc(50% + 8px);background:var(--accent-fill);color:var(--on-accent);font-size:10px;border-radius:999px;padding:0 5px;font-weight:700}
 
 /* ---------- sheet / popup ---------- */
@@ -412,6 +425,10 @@ textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13p
 .btile .edit:hover{background:rgba(242,242,239,.3)}
 .newtile{flex:none;width:132px;height:184px;scroll-snap-align:start;border-radius:12px;border:1.5px dashed var(--line);background:transparent;color:var(--muted);font-weight:700;font-size:14px}
 .dempty{margin:28px 0 0;color:var(--muted);font-size:14px}
+.bldbar{display:flex;align-items:center;gap:12px;margin:10px 0 4px;padding:8px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.bldbar .jolly{width:40px;height:40px;flex:none}
+.bldbar .t{display:flex;flex-direction:column;line-height:1.1;margin-right:auto}.bldbar .t small{font-size:12px;color:var(--muted);font-weight:700}.bldbar .t b{font-family:var(--f-display);font-size:20px}
+html[data-photo] .bldbar{background:var(--frost)}
 /* build tabs stay on screen so switching keeps your place in each tab */
 #bTabs{position:sticky;top:0;z-index:7;background:var(--bg);padding-block:6px}
 #bTabs:empty{display:none}
@@ -501,6 +518,7 @@ html[data-photo] .firstdeck{background:var(--frost);-webkit-backdrop-filter:blur
         <h1>Bounty Board</h1>
         <button class="lookbtn" id="acctBtn" type="button" aria-label="Account and sync"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><i class="acdot" hidden></i></button>
         <button class="lookbtn" id="lookBtn" type="button" aria-label="Background and colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></button>
+        <nav class="topnav" aria-label="Sections"><a href="#cards" data-tab="cards">Cards</a><a href="#decks" data-tab="decks">My Decks</a><a href="#lists" data-tab="lists">Lists</a></nav>
         <button class="deckchip" id="deckChip" type="button" aria-label="Open the build you're working on"><span class="nm" id="chipName"></span><span class="count" id="chipCount">0/50</span></button>
       </div>
     </header>
@@ -911,7 +929,7 @@ function renderQuick(){
   const lb = $("#leaderBanner");
   const wide = innerWidth >= 1024;
   lb.innerHTML = ctx !== "build" ? "" :
-    (wide ? `<div class="banner"><span class="sw" style="background:${DL?bandBg(DL):"var(--line)"}"></span><span>Adding cards to <b>${esc(d.name)}</b>${DL?"":", which has no leader yet"}.</span><button class="btn sm" data-act3="switchBuild">Switch build</button><button class="btn sm dark" data-act3="doneAdding">Done</button></div>` : "")
+    (wide ? `<div class="bldbar">${jollyHTML(DL && DL.co.length ? DL.co : [])}<span class="t"><small>${DL ? "Leader" : "No leader yet"}</small><b>${DL ? esc(DL.n) : esc(d.name)}</b></span><span class="muted" style="font-size:13px">Adding to <b>${esc(d.name)}</b></span><button class="btn sm" data-act3="switchBuild">Switch build</button><button class="btn sm dark" data-act3="doneAdding">Done</button></div>` : "")
     + (!DL ? `<div class="banner"><span>“${esc(d.name)}” has no leader yet. Its colors and compatibility checks come from the leader.</span><button class="btn sm primary" id="pickLeader">Show leaders</button></div>` : "");
   renderHome();
 }
@@ -986,7 +1004,7 @@ V.addEventListener("click", e => {
   else if (t.dataset.rb){ workOn(t.dataset.rb); openBuild("add"); return; }
   else if (t.id === "recentBtn"){ S.prefs.recentOpen = !S.prefs.recentOpen; save(); renderHome(); return; }
   else if (t.dataset.act3 === "switchBuild"){ openWorkOn(); return; }
-  else if (t.dataset.act3 === "doneAdding"){ setCtx("cards"); return; }
+  else if (t.dataset.act3 === "doneAdding"){ go("decks"); return; }
   else if (t.id === "qLock"){ FB.lock = !FB.lock; }
   else if (t.id === "artsBtn"){ S.prefs.arts = !S.prefs.arts; save(); }
   else if (t.id === "qLegal"){ S.prefs.pool = S.prefs.pool === "std" ? "all" : "std"; save(); }
@@ -1010,8 +1028,7 @@ let bSub = "add";
 function openBuild(sub){
   if (deck().ghost){ setCtx("cards"); go("decks"); return; }
   if (sub) bSub = sub;
-  if (innerWidth >= 1024){ setCtx("build"); renderDeckViews(); go("cards"); window.scrollTo({top:0}); }
-  else go("build");
+  go("build");
 }
 
 /* ================= filters sheet ================= */
@@ -1624,7 +1641,7 @@ function renderDeckViews(){
   const a = $("#asideDeck"), st = a.scrollTop;
   if (deck().ghost){ a.innerHTML = firstDeckHTML(); $("#bHead").innerHTML = ""; $("#bTabs").innerHTML = ""; $("#bBody").innerHTML = ""; $("#bAddSlot").hidden = true; updateChip(); return; }
   a.innerHTML = buildHeadHTML() + `<div class="row btabs" style="margin:10px 0 4px;justify-content:space-between">
-      <button class="btn sm ${ctx==="build"?"dark":"primary"}" data-act="addCards">${ctx==="build" ? "Adding cards ✓" : "Add cards"}</button>
+      <span></span>
       <div class="seg" role="group" aria-label="Build view"><button data-dtab="list" aria-pressed="${deckTab==="list"}">Decklist</button><button data-dtab="stats" aria-pressed="${deckTab==="stats"}">Stats</button></div></div>
     <div style="margin-top:10px">${buildBodyHTML(deckTab)}</div>`;
   a.scrollTop = st;
@@ -2034,24 +2051,26 @@ function show(tab){
   if (!TABS.includes(tab)) tab = "cards";
   const wide = innerWidth >= 1024;
   if (tab === "build" && deck().ghost){ tab = "decks"; history.replaceState(null, "", "#decks"); }
-  if (tab === "build" && wide){ setCtx("build"); tab = "cards"; }
+  const building = tab === "build" && wide;
+  document.documentElement.classList.toggle("building", building);
   scrollMem[curTab] = scrollY;
   curTab = tab;
-  $("#v-cards").hidden = tab !== "cards";
-  $("#v-deck").hidden = tab !== "build";
+  if (building){ setCtx("build"); renderDeckViews(); }
+  $("#v-cards").hidden = !(tab === "cards" || building);
+  $("#v-deck").hidden = !(tab === "build" && !wide);
   $("#v-decks").hidden = tab !== "decks";
   $("#v-lists").hidden = tab !== "lists";
   const navTab = tab === "build" ? "decks" : tab;      // a build lives inside My Decks
-  document.querySelectorAll(".nav a").forEach(a => a.setAttribute("aria-current", a.dataset.tab===navTab ? "page" : "false"));
-  if (tab === "cards" && !wide && ctx !== "cards") setCtx("cards");     // on a phone the Cards tab always searches everything
-  if (tab === "build"){ if (bSub === "add") setCtx("build"); renderDeckViews(); }
+  document.querySelectorAll(".nav a, .topnav a").forEach(a => a.setAttribute("aria-current", a.dataset.tab===navTab ? "page" : "false"));
+  if (tab === "cards" && ctx !== "cards") setCtx("cards");     // the Cards tab always searches everything
+  if (tab === "build" && !wide){ if (bSub === "add") setCtx("build"); renderDeckViews(); }
   if (tab === "decks") renderDecks();
   if (tab === "lists") renderLists();
   window.scrollTo({top: scrollMem[tab] || 0});
 }
 addEventListener("hashchange", () => show(location.hash.slice(1)));
 let wasWide = innerWidth >= 1024;
-addEventListener("resize", () => { const w = innerWidth >= 1024; if (w !== wasWide){ wasWide = w; setCtx(ctx); if (w && curTab === "build") go("cards"); else show(curTab); } });
+addEventListener("resize", () => { const w = innerWidth >= 1024; if (w !== wasWide){ wasWide = w; setCtx(ctx); show(curTab); } });
 
 
 /* ================= look: background colors & your own photos ================= */
