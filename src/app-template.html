@@ -492,7 +492,7 @@ textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13p
 .dempty{margin:28px 0 0;color:var(--muted);font-size:14px}
 .bldbar{display:flex;align-items:center;gap:12px;margin:10px 0 4px;padding:8px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
 .bldbar .jolly{width:40px;height:40px;flex:none}
-.bldbar .t{display:flex;flex-direction:column;line-height:1.15;margin-right:auto;min-width:0;flex:1}.bldbar .t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bldbar .t small{overflow-wrap:anywhere}.bldbar .btn{white-space:nowrap;flex:none}.bldbar .t small{font-size:12px;color:var(--muted);font-weight:700}.bldbar .t b{font-family:var(--f-display);font-size:20px}
+.bldbar .t{display:flex;flex-direction:column;line-height:1.15;margin-right:auto;min-width:0;flex:1}.bldbar .t .bnm{color:var(--accent)}.bldbar .t .lnm{white-space:nowrap}.bldbar .t{flex:1;min-width:0}.bldbar .t b{font-size:clamp(15px,1.55vw,20px)!important}.bldbar .btn{white-space:nowrap;flex:none}.bldbar .t small{font-size:12px;color:var(--muted);font-weight:700}.bldbar .t b{font-family:var(--f-display);font-size:20px}
 html[data-photo] .bldbar{background:var(--frost)}
 /* build tabs stay on screen so switching keeps your place in each tab */
 #bTabs{position:sticky;top:0;z-index:7;background:var(--bg);padding-block:6px}
@@ -1020,7 +1020,7 @@ function renderQuick(){
   const wide = innerWidth >= 1024;
   const LZ = ctx === "cards" && lens && BY.get(lens);
   lb.innerHTML = ctx !== "build" ? (LZ ? `<div class="banner lensbar">${jollyHTML(LZ.co.length ? LZ.co : [])}<button class="lenst" id="lensCard"><small>Searching for</small><b>${esc(LZ.n)}</b></button><button class="btn sm" id="lensOff">✕ Done</button></div>` : "") :
-    (wide ? `<div class="bldbar">${jollyHTML(DL && DL.co.length ? DL.co : [])}<span class="t"><small>${DL ? esc(DL.n) : "No leader yet"}</small><b>${esc(d.name)}</b></span><span class="muted" style="font-size:13px">Adding to <b>${esc(d.name)}</b></span><button class="btn sm" data-act3="switchBuild">Switch build</button><button class="btn sm dark" data-act3="doneAdding">Done</button></div>` : "")
+    (wide ? `<div class="bldbar">${jollyHTML(DL && DL.co.length ? DL.co : [])}<span class="t"><small>${DL ? "Leader · Build" : "No leader yet"}</small><b>${DL ? `<span class="lnm">${esc(DL.n)}:</span> <span class="bnm">${esc(d.name)}</span>` : esc(d.name)}</b></span><button class="btn sm" data-act3="switchBuild">Switch build</button></div>` : "")
     + (!DL ? `<div class="banner"><span>“${esc(d.name)}” has no leader yet. Its colors and compatibility checks come from the leader.</span><button class="btn sm primary" id="pickLeader">Show leaders</button></div>` : "");
   renderHome();
 }
@@ -1795,18 +1795,18 @@ function buildBodyHTML(tab){
          ${!rows.length ? `${L ? deckGridHTML(d) : ""}<p class="muted" style="margin-top:16px">No cards yet. Use Add cards, then + in a card's popup.</p>` : S.prefs.dview === "list" ? list : deckGridHTML(d)}`}
     ${d.sample?`<p class="foot-note">This sample build was made automatically from ST-01 cards so you can try the app. It isn't a tuned list.</p>`:""}`;
 }
-function buildHeadHTML(){
+function buildHeadHTML(wide){
   const d = deck(), L = d.leader && BY.get(d.leader), n = deckCount(d);
   return `<button class="crumb" data-act="toDecks">‹ My Decks</button>
     <div class="bhead">${jollyHTML(L && L.co.length ? L.co : [])}
     <span class="bhn"><b>${L ? esc(L.n) + " Deck" : "New deck"}</b><button class="bname" data-act="rename" title="Rename, cover, favorite"><span class="bl">Build</span> ${esc(d.name)}${d.star?' <span style="color:var(--accent)">★</span>':""} <span class="pen" aria-hidden="true">✎</span></button></span>
-    <span class="count ${n===50?"full":""}">${n}/50</span><button class="btn sm" data-act="switch">Switch build</button></div>`;
+    <span class="count ${n===50?"full":""}">${n}/50</span><button class="btn sm" data-act="switch">Switch build</button>${wide ? `<button class="btn sm dark" data-act="toDecks">Done</button>` : ""}</div>`;
 }
 function renderDeckViews(){
   const a = $("#asideDeck"), st = a.scrollTop;
   if (deck().ghost){ a.innerHTML = firstDeckHTML(); $("#bHead").innerHTML = ""; $("#bTabs").innerHTML = ""; $("#bBody").innerHTML = ""; $("#bAddSlot").hidden = true; updateChip(); return; }
   const dL = deck().leader;
-  a.innerHTML = buildHeadHTML() + `<div class="row btabs" style="margin:10px 0 4px;justify-content:space-between">
+  a.innerHTML = buildHeadHTML(true) + `<div class="row btabs" style="margin:10px 0 4px;justify-content:space-between">
       <div class="seg" role="group" aria-label="Build view"><button data-dtab="list" aria-pressed="${deckTab==="list"}">Decklist</button><button data-dtab="stats" aria-pressed="${deckTab==="stats"}">Stats</button></div>
       ${dL ? `<button class="btn sm" data-act="pool">★ Card Pool</button>` : ""}</div>
     <div style="margin-top:10px">${buildBodyHTML(deckTab)}</div>`;
