@@ -427,6 +427,12 @@ textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13p
 .btile .edit:hover{background:rgba(242,242,239,.3)}
 .newtile{flex:none;width:132px;height:184px;scroll-snap-align:start;border-radius:12px;border:1.5px dashed var(--line);background:transparent;color:var(--muted);font-weight:700;font-size:14px}
 .dempty{margin:28px 0 0;color:var(--muted);font-size:14px}
+/* build tabs stay on screen so switching keeps your place in each tab */
+#bTabs{position:sticky;top:0;z-index:7;background:var(--bg);padding-block:6px}
+#bTabs:empty{display:none}
+#bAddSlot .top{top:52px !important}
+#asideDeck .btabs{position:sticky;top:-1px;z-index:6;background:var(--surface);padding-block:6px;margin-inline:-2px}
+html[data-photo] #bTabs{background:var(--frost);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 /* build page: OPLAY-style stats strip + deck as card pictures */
 .sstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
 .sstrip .ss{background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
@@ -514,7 +520,7 @@ html[data-photo] .firstdeck{background:var(--frost);-webkit-backdrop-filter:blur
       </div>
     </header>
     <section id="v-cards" class="view-cards"></section>
-    <section id="v-deck" hidden><div id="bHead" class="gut" style="padding-block:12px 4px"></div><div id="bAddSlot"></div><div id="bBody" class="view gut"></div></section>
+    <section id="v-deck" hidden><div id="bHead" class="gut" style="padding-block:12px 4px"></div><div id="bTabs" class="gut"></div><div id="bAddSlot"></div><div id="bBody" class="view gut"></div></section>
     <section id="v-decks" class="view gut" hidden></section>
     <section id="v-lists" class="view gut" hidden></section>
   </div>
@@ -1067,7 +1073,7 @@ function openWorkOn(after){
     if (t.id === "woClose"){ closeSheet(); return; }
     if (t.dataset.fav){ toggleFav(t.dataset.fav); openWorkOn(after); renderResults(); return; }
     if (t.dataset.wo){ workOn(t.dataset.wo); closeSheet(); renderAll(); toast(`Building ${deck().name}`); if (after) after(); else openBuild(); return; }
-    if (t.dataset.wonew){ const L = BY.get(t.dataset.wonew); const nd = newBuild(L.i); workOn(nd.id); closeSheet(); renderAll(); toast(`New ${L.n} build. Rename it in Build list.`); if (after) after(); else openBuild("add"); return; }
+    if (t.dataset.wonew){ const L = BY.get(t.dataset.wonew); const nd = newBuild(L.i); workOn(nd.id); closeSheet(); renderAll(); toast(`New ${L.n} build. Rename it in Decklist.`); if (after) after(); else openBuild("add"); return; }
     if (t.id === "woBrowse"){ closeSheet(); setCtx("cards"); FC.cats = new Set(["L"]); FC.q = ""; qIn.value = ""; renderQuick(); renderResults(); go("cards"); window.scrollTo({top:0}); return; }
   });
 }
@@ -1295,7 +1301,7 @@ function openCard(id, suf, after){
     }
     else if (t.id === "favL"){ toggleFav(c.i); renderResults(); }
     else if (t.dataset.wo){ workOn(t.dataset.wo); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild(); toast(`Building ${deck().name}`); return; }
-    else if (t.id === "newL" || t.dataset.q === "newL"){ const nd = newBuild(c.i); workOn(nd.id); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild("add"); toast(`New ${c.n} build. Rename it in Build list.`); return; }
+    else if (t.id === "newL" || t.dataset.q === "newL"){ const nd = newBuild(c.i); workOn(nd.id); closeSheet(); leaveLeaderBrowse(); renderAll(); openBuild("add"); toast(`New ${c.n} build. Rename it in Decklist.`); return; }
     else if (t.dataset.quick){ const dk = S.decks.find(x=>x.id===t.dataset.quick); const cur = dk.cards[c.i]?.q || 0;
       if (cur >= limitFor(c)){ toast(`${dk.name} already has 4`); return; }
       dk.cards[c.i] = {q:cur+1, art:dk.cards[c.i]?.art ?? art}; dk.updated = Date.now(); save(); renderDeckViews(); toast(`Added ${c.n} to ${dk.name} (${cur+1})`); }
@@ -1537,7 +1543,7 @@ function openImportExport(start){
 }
 
 /* ================= build view ================= */
-let deckTab = "list", confirmDel = false;     // desktop panel: Build list / Stats
+let deckTab = "list", confirmDel = false;     // desktop panel: Decklist / Stats
 // Compact stats strip at the top of a build (cost curve, colors, card kinds, counter, top types).
 function statStripHTML(d){
   const s = statsFor(d), cur = s.curve.slice(); while (cur.length < 11) cur.push(0);
@@ -1566,8 +1572,23 @@ function deckGridHTML(d){
   }
   return h;
 }
+function fullStatsHTML(d){
+  const s = statsFor(d);
+  return `<div class="statgrid" style="margin-top:4px">
+      <div class="stat"><b>${s.n}/50</b><span>Cards</span></div>
+      <div class="stat"><b>${s.uniq}</b><span>Unique cards</span></div>
+      <div class="stat"><b>${s.trig}</b><span>Triggers</span></div>
+      <div class="stat"><b>${(s.ctrTotal/1000).toFixed(0)}k</b><span>Total counter</span></div>
+    </div>
+    ${statStripHTML(d)}
+    <div class="stats" style="margin-top:12px">
+      <div><div class="h3" style="margin-top:4px">All types &amp; traits</div>${hbars(s.types, null, 20)}</div>
+      <div><div class="h3" style="margin-top:4px">Abilities</div>${hbars(s.abil, k=>TAGLABEL[k], 14)}</div>
+    </div>`;
+}
 function buildBodyHTML(tab){
   const d = deck(); const L = d.leader && BY.get(d.leader);
+  if (tab === "stats") return deckCount(d) || L ? fullStatsHTML(d) : `<p class="muted" style="margin-top:16px">No cards yet. Stats appear as you add cards.</p>`;
   const rows = deckRows(d), n = deckCount(d);
   const iss = issuesFor(d);
   const missing = rows.reduce((m,r)=>m + Math.max(0, r.q - (S.owned[r.c.i]||0)), 0) + (L && !S.owned[L.i] ? 1 : 0);
@@ -1600,7 +1621,7 @@ function buildBodyHTML(tab){
       return `<details class="legal ${ok ? "ok" : "bad"}"><summary>${ok ? "✓ Legal deck" : `✕ Not legal yet · ${bad.length} to fix`}<span class="muted"> · ${n}/50</span></summary>
         <div class="issues">${iss.map(([k,m])=>`<div class="issue ${k}"><i></i><span>${esc(m)}</span></div>`).join("")}</div></details>`; })()}
     ${tab === "stats" ? `<div style="margin-top:14px">${statsHTML(d)}</div>`
-      : `${rows.length || L ? statStripHTML(d) : ""}
+      : `
          ${rows.length ? `<div class="row" style="margin-top:12px;justify-content:space-between"><div class="seg" role="group" aria-label="Show the deck as"><button data-dview="cards" aria-pressed="${S.prefs.dview!=="list"}">Cards</button><button data-dview="list" aria-pressed="${S.prefs.dview==="list"}">List · have/need</button></div>` : ""}
          ${rows.length?`<div class="row" style="margin:0;justify-content:flex-end"><button class="btn sm" data-act="wishMissing" ${missing===0?"disabled":""}>${missing?`Buy List for this build (${missing} to buy)`:"Nothing to buy ✓"}</button></div>`:""}
          ${rows.length ? `</div>` : ""}
@@ -1616,26 +1637,27 @@ function buildHeadHTML(){
 }
 function renderDeckViews(){
   const a = $("#asideDeck"), st = a.scrollTop;
-  if (deck().ghost){ a.innerHTML = firstDeckHTML(); $("#bHead").innerHTML = ""; $("#bBody").innerHTML = ""; $("#bAddSlot").hidden = true; updateChip(); return; }
-  a.innerHTML = buildHeadHTML() + `<div class="row" style="margin:10px 0 4px;justify-content:space-between">
+  if (deck().ghost){ a.innerHTML = firstDeckHTML(); $("#bHead").innerHTML = ""; $("#bTabs").innerHTML = ""; $("#bBody").innerHTML = ""; $("#bAddSlot").hidden = true; updateChip(); return; }
+  a.innerHTML = buildHeadHTML() + `<div class="row btabs" style="margin:10px 0 4px;justify-content:space-between">
       <button class="btn sm ${ctx==="build"?"dark":"primary"}" data-act="addCards">${ctx==="build" ? "Adding cards ✓" : "Add cards"}</button>
-      <div class="seg" role="group" aria-label="Build view"><button data-dtab="list" aria-pressed="${deckTab==="list"}">Build list</button><button data-dtab="stats" aria-pressed="${deckTab==="stats"}">Stats</button></div></div>
+      <div class="seg" role="group" aria-label="Build view"><button data-dtab="list" aria-pressed="${deckTab==="list"}">Decklist</button><button data-dtab="stats" aria-pressed="${deckTab==="stats"}">Stats</button></div></div>
     <div style="margin-top:10px">${buildBodyHTML(deckTab)}</div>`;
   a.scrollTop = st;
-  $("#bHead").innerHTML = buildHeadHTML() + `<div class="seg full" role="group" aria-label="Build view" style="margin-top:10px"><button data-bsub="add" aria-pressed="${bSub==="add"}">Add cards</button><button data-bsub="list" aria-pressed="${bSub==="list"}">Build list</button><button data-bsub="stats" aria-pressed="${bSub==="stats"}">Stats</button></div>`;
+  $("#bHead").innerHTML = buildHeadHTML(); $("#bTabs").innerHTML = `<div class="seg full" role="group" aria-label="Build view"><button data-bsub="add" aria-pressed="${bSub==="add"}">Add cards</button><button data-bsub="list" aria-pressed="${bSub==="list"}">Decklist</button><button data-bsub="stats" aria-pressed="${bSub==="stats"}">Stats</button></div>`;
   $("#bBody").innerHTML = bSub === "add" ? "" : buildBodyHTML(bSub);
   $("#bAddSlot").hidden = bSub !== "add";
   updateChip();
 }
+const tabScroll = {};     // where you were scrolled on each build tab, kept for this session
 function deckClick(e){
   if (e.target.closest("#searchBlock")) return;      // the search has its own click handling
   const nm = e.target.closest("#deckName"); if (nm) return;
   const t = e.target.closest("button"); if (!t) return;
   const d = deck();
   if (t.dataset.open){ openCard(t.dataset.open, t.dataset.suf); return; }
-  if (t.dataset.dtab){ deckTab = t.dataset.dtab; renderDeckViews(); return; }
+  if (t.dataset.dtab){ const a = $("#asideDeck"); tabScroll["aside-" + deckTab] = a.scrollTop; deckTab = t.dataset.dtab; renderDeckViews(); a.scrollTop = tabScroll["aside-" + deckTab] || 0; return; }
   if (t.dataset.dview){ S.prefs.dview = t.dataset.dview; save(); renderDeckViews(); return; }
-  if (t.dataset.bsub){ bSub = t.dataset.bsub; if (bSub === "add") setCtx("build"); renderDeckViews(); window.scrollTo({top:0}); return; }
+  if (t.dataset.bsub){ tabScroll[bSub] = window.scrollY; bSub = t.dataset.bsub; if (bSub === "add") setCtx("build"); renderDeckViews(); window.scrollTo({top: tabScroll[bSub] || 0}); return; }
   const a = t.dataset.act;
   if (a === "ie") openImportExport();
   else if (a === "switch") openWorkOn();
@@ -1644,7 +1666,7 @@ function deckClick(e){
   else if (a === "pool"){ poolView = d.leader; poolFilter = "all"; renderDecks(); go("decks"); }
   else if (a === "pickLeader"){ FB.cats = new Set(["L"]); FB.lock = false; openBuild("add"); if (ctx === "build"){ renderQuick(); renderResults(); } }
   else if (a === "dup"){ const nd = JSON.parse(JSON.stringify(d)); nd.id = uid(); nd.name = d.name.replace(/ \(copy.*\)$/,"") + " (copy)"; nd.updated = nd.used = Date.now(); nd.sample = false; S.decks.unshift(nd); workOn(nd.id); renderAll(); toast("Copied as a new build. Rename it above."); setTimeout(()=>{ const i = document.querySelector(innerWidth>=1024?"#asideDeck #deckName":"#v-deck #deckName"); i && (i.focus(), i.select()); }, 50); }
-  else if (a === "newdeck"){ const nd = newBuild(d.leader); workOn(nd.id); if (!d.leader) FB.cats = new Set(["L"]); renderAll(); openBuild("add"); toast(d.leader ? "New build started. Rename it in Build list." : "New build. Pick a leader."); }
+  else if (a === "newdeck"){ const nd = newBuild(d.leader); workOn(nd.id); if (!d.leader) FB.cats = new Set(["L"]); renderAll(); openBuild("add"); toast(d.leader ? "New build started. Rename it in Decklist." : "New build. Pick a leader."); }
   else if (a === "del"){ confirmDel = true; renderDeckViews(); }
   else if (a === "delNo"){ confirmDel = false; renderDeckViews(); }
   else if (a === "delYes"){ confirmDel = false; trashBuild(d.id); renderAll(); if (!S.decks.length) go("decks"); toast("Moved to the Junkyard"); }
@@ -1890,7 +1912,7 @@ $("#v-decks").addEventListener("click", e => {
   if (t.dataset.bstar){ const d = S.decks.find(x=>x.id===t.dataset.bstar); d.star = !d.star; save(); renderDecks(); toast(d.star ? `★ Bookmarked ${d.name}` : "Bookmark removed"); return; }
   if (t.dataset.lfav){ toggleFav(t.dataset.lfav); renderDecks(); return; }
   if (t.dataset.allb){ const k = t.dataset.allb; openAll.has(k) ? openAll.delete(k) : openAll.add(k); renderDecks(); return; }
-  if (t.dataset.newb){ const L = BY.get(t.dataset.newb); const nd = newBuild(L.i); workOn(nd.id); renderAll(); openBuild("add"); toast(`New ${L.n} build. Rename it in Build list.`); return; }
+  if (t.dataset.newb){ const L = BY.get(t.dataset.newb); const nd = newBuild(L.i); workOn(nd.id); renderAll(); openBuild("add"); toast(`New ${L.n} build. Rename it in Decklist.`); return; }
   if (t.dataset.deck){ workOn(t.dataset.deck); renderAll(); openBuild(); }
   else if (t.dataset.act === "new"){ const nd = newBuild(null); workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast("New deck. Pick its leader."); }
 });
