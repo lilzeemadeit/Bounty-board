@@ -400,6 +400,44 @@ details[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
 .chip.tog[aria-pressed="false"]{background:transparent}
 .costgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .costgrid .chip{justify-content:center;padding-inline:0;width:100%}
+.haverow{display:flex;align-items:center;gap:10px}
+.haverow .t{flex:1;min-width:0;display:flex;flex-direction:column}
+.havelab{font-size:12px;font-weight:700;color:var(--muted)}
+.newscroll.list{max-height:360px;overflow:auto}
+/* Buy Lists */
+.newwrap{display:grid;gap:8px}
+.newbtn{justify-self:start}
+.newpick{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:6px 12px 12px}
+.newscroll{max-height:320px;overflow:auto}
+.blentry{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:12px 14px;color:var(--ink)}
+.blentry .ble{flex:1;min-width:0;display:flex;flex-direction:column}
+.blentry .ble b{font-family:var(--f-display);font-size:20px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blentry .ble small{font-size:12.5px;color:var(--muted)}
+.blentry .chev{font-size:22px;color:var(--muted)}
+.blhead{display:flex;align-items:center;gap:10px;margin-top:10px}
+.blhead .blt{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.blhead .blt b{font-family:var(--f-display);font-size:28px;line-height:1.05}
+.buygrid .btl{position:relative}
+.buygrid .qty{top:6px;right:6px;font-size:16px;min-width:30px;height:26px;padding:0 6px}
+.buygrid .got .tile .face{opacity:.4;filter:grayscale(.6)}
+.buygrid .gotmark{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:22px;background:var(--ok);color:#fff;display:grid;place-items:center;font-size:24px;font-weight:800;z-index:3}
+.buygrid .binfo{position:absolute;left:6px;bottom:6px;z-index:3;width:26px;height:26px;border-radius:13px;border:0;background:rgba(0,0,0,.55);color:#fff;font-weight:800;font-style:italic;font-family:Georgia,serif;font-size:14px}
+html[data-photo] .blentry,html[data-photo] .newpick{background:var(--frost);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#printArea{display:none}
+@media print{
+  html.printing body > *:not(#printArea){display:none!important}
+  html.printing #printArea{display:block;color:#000;background:#fff;font-family:var(--f-body)}
+  html.printing #bgimg{display:none!important}
+  #printArea h1{font-family:var(--f-display);font-size:26pt;margin:0 0 2pt}
+  #printArea p{margin:0 0 10pt;font-size:11pt}
+  #printArea .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8pt}
+  #printArea .pcard{break-inside:avoid;font-size:9pt}
+  #printArea .pimg{position:relative;aspect-ratio:5/7;border:1px solid #999;border-radius:4pt;overflow:hidden;background:#eee}
+  #printArea .pimg img{width:100%;height:100%;object-fit:cover;display:block}
+  #printArea .pq{position:absolute;right:3pt;top:3pt;background:#000;color:#fff;border-radius:10pt;padding:1pt 6pt;font-weight:700;font-size:11pt}
+  #printArea b{display:block;margin-top:2pt}
+  #printArea small{color:#444}
+}
 /* Home */
 .home{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-block:18px 20px;max-width:720px;margin:0 auto}
 .hmain,.hside{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start;min-width:0}
@@ -752,9 +790,10 @@ S.junk = (S.junk || []).filter(j => Date.now() - (j.deletedAt||0) < JUNK_DAYS*86
 S.cur = S.decks.find(d=>d.id===S.cur) ? S.cur : (S.decks[0] ? S.decks[0].id : null);
 S.owned = S.owned || {};
 S.wish = S.wish || [];
-for (const w of S.wish){            // Buy Lists: {items: extra copies added by hand, decks: deck ids to buy for, mode}
+for (const w of S.wish){            // Buy Lists: {need: copies to buy per card, got: copies bought, decks: builds it was made for}
   w.items = w.items || {};
   if (!w.decks){ w.decks = w.fromDeck ? [w.fromDeck] : []; if (w.fromDeck) w.items = {}; delete w.fromDeck; }
+  w.got = w.got || {};
   w.mode = w.mode || "all";
 }
 S.treasure = S.treasure || [];
@@ -1335,8 +1374,8 @@ function openImportList(){
       let where = "";
       if (listSel.startsWith("w:")){
         let w = S.wish.find(x => "w:" + x.id === listSel);
-        if (!w){ w = {id: uid(), name: "Imported list", items: {}, decks: [], mode: "all"}; S.wish.unshift(w); }
-        for (const [id, q] of all) w.items[id] = (w.items[id] || 0) + q;
+        if (!w) w = newBuyList("Imported list", [], {});
+        const nd = needOf(w); for (const [id, q] of all) nd[id] = (nd[id] || 0) + q;
         where = w.name; listTab = "wish";
       } else if (listSel === "want" || listSel === "box"){
         const arr = listSel === "want" ? S.want : S.treasure;
@@ -1621,7 +1660,7 @@ function openCard(id, suf, after, back){
     }
     if (!S.wish.find(w => w.id === buyTarget)) buyTarget = S.wish[0] ? S.wish[0].id : null;
     const lists = S.wish.map(w=>`<option value="${w.id}" ${w.id===buyTarget?"selected":""}>${esc(w.name)}</option>`).join("");
-    const inBuy = S.wish.reduce((n, w) => n + (w.items[c.i] || 0), 0);
+    const inBuy = S.wish.reduce((n, w) => n + Math.max(0, (needOf(w)[c.i] || 0) - (w.got[c.i] || 0)), 0);
     const isLeader = c.c === "L";
     $("#layer").innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.n)}"><div class="grab"></div><div class="gut">
       <div class="shead">${back ? `<button class="btn sm" id="cBack">‹ Back</button>` : ""}<span class="mono muted">${c.i}${art}</span><button class="btn sm x" id="cClose" style="margin-left:auto">Close</button></div>
@@ -1731,8 +1770,8 @@ function openCard(id, suf, after, back){
     else if (t.id === "tBox"){ const i = S.treasure.indexOf(vk()); if (i>=0) S.treasure.splice(i,1); else S.treasure.unshift(vk()); save(); toast(i>=0?"Removed from ☆Treasure Box☆":"Saved to ☆Treasure Box☆"); }
     else if (t.id === "svBuy"){
       let w = S.wish.find(x => x.id === buyTarget);
-      if (!w){ w = {id:uid(), name:"My Buy List", items:{}, decks:[], mode:"all"}; S.wish.push(w); buyTarget = w.id; }
-      w.items[c.i] = (w.items[c.i]||0) + 1; save(); toast(`Added to ${w.name} (${w.items[c.i]} to buy). Change the amount on the Lists tab.`); }
+      if (!w){ w = newBuyList("My Buy List", [], {}); buyTarget = w.id; }
+      const nd = needOf(w); nd[c.i] = (nd[c.i]||0) + 1; save(); toast(`Added to ${w.name} (${nd[c.i] - (w.got[c.i]||0)} to buy)`); }
     else if (t.id === "svWant"){ const i = S.want.indexOf(vk()); if (i >= 0) S.want.splice(i,1); else S.want.unshift(vk()); save(); toast(i >= 0 ? "Removed from Wish List" : "Added to Wish List"); }
     else if (t.id === "useArt"){ d.cards[c.i].art = art; touch(d); toast("This build uses this art now"); }
     else if (t.dataset.unpool){ delete S.pools[t.dataset.unpool].cards[c.i]; save(); toast(`Removed from ★ ${BY.get(t.dataset.unpool).n} Pool`); }
@@ -1992,12 +2031,11 @@ function buildBodyHTML(tab){
   let list = "";
   for (const cat of ["C","E","S"]){
     const rs = rows.filter(r=>r.c.c===cat); if (!rs.length) continue;
-    list += `<div class="h3 rhhead"><span>${CATNAME[cat]}s · ${rs.reduce((a,r)=>a+r.q,0)}</span><span class="rhlab">Plan to run<br><small>Have</small></span></div><div class="list">`;
+    list += `<div class="h3 rhhead"><span>${CATNAME[cat]}s · ${rs.reduce((a,r)=>a+r.q,0)}</span><span class="rhlab">Copies</span></div><div class="list">`;
     for (const r of rs){
-      const own = S.owned[r.c.i]||0, need = Math.max(0, r.q-own);
-      list += `<button class="li" data-open="${r.c.i}" data-suf="${r.art}" aria-label="${esc(r.c.n)}: run ${r.q}, have ${own}${need?", need "+need:""}"><span class="bar" style="background:${bandBg(r.c)}"></span><span class="c">${r.c.k??"–"}</span>
+      list += `<button class="li" data-open="${r.c.i}" data-suf="${r.art}" aria-label="${esc(r.c.n)}: ${r.q} copies"><span class="bar" style="background:${bandBg(r.c)}"></span><span class="c">${r.c.k??"–"}</span>
         <span class="t"><b>${esc(r.c.n)}</b><span class="mono muted">${r.c.i}${r.art}</span></span>
-        <span class="rh"><span class="run">${r.q}</span><span class="have ${need?"short":"ok"}">Have ${own}${need?` · need ${need}`:" ✓"}</span></span></button>`;
+        <span class="rh"><span class="run">${r.q}</span></span></button>`;
     }
     list += `</div>`;
   }
@@ -2019,8 +2057,8 @@ function buildBodyHTML(tab){
         <div class="issues">${iss.map(([k,m])=>`<div class="issue ${k}"><i></i><span>${esc(m)}</span></div>`).join("")}</div></details>`; })()}
     ${tab === "stats" ? `<div style="margin-top:14px">${statsHTML(d)}</div>`
       : `
-         ${rows.length ? `<div class="row" style="margin-top:12px;justify-content:space-between"><div class="seg" role="group" aria-label="Show the deck as"><button data-dview="cards" aria-pressed="${S.prefs.dview!=="list"}">Cards</button><button data-dview="list" aria-pressed="${S.prefs.dview==="list"}">List · have/need</button></div>` : ""}
-         ${rows.length?`<div class="row" style="margin:0;justify-content:flex-end"><button class="btn sm" data-act="wishMissing" ${missing===0?"disabled":""}>${missing?`Buy List for this build (${missing} to buy)`:"Nothing to buy ✓"}</button></div>`:""}
+         ${rows.length ? `<div class="row" style="margin-top:12px;justify-content:space-between"><div class="seg" role="group" aria-label="Show the deck as"><button data-dview="cards" aria-pressed="${S.prefs.dview!=="list"}">Cards</button><button data-dview="list" aria-pressed="${S.prefs.dview==="list"}">List</button></div>` : ""}
+         ${rows.length?`<div class="row" style="margin:0;justify-content:flex-end"><button class="btn sm" data-act="wishMissing">Make a Buy List</button></div>`:""}
          ${rows.length ? `</div>` : ""}
          ${!rows.length ? `${L ? deckGridHTML(d) : ""}<p class="muted" style="margin-top:16px">No cards yet. Use Add cards, then + in a card's popup.</p>` : S.prefs.dview === "list" ? list : deckGridHTML(d)}`}
     ${d.sample?`<p class="foot-note">This sample build was made automatically from ST-01 cards so you can try the app. It isn't a tuned list.</p>`:""}`;
@@ -2070,9 +2108,8 @@ function deckClick(e){
   else if (a === "delNo"){ confirmDel = false; renderDeckViews(); }
   else if (a === "delYes"){ confirmDel = false; trashBuild(d.id); renderAll(); if (!S.decks.length) go("decks"); toast("Moved to the Junkyard"); }
   else if (a === "wishMissing"){
-    let w = S.wish.find(x=>x.decks.length===1 && x.decks[0]===d.id);
-    if (!w){ w = {id:uid(), name:`${d.name} — Buy List`, items:{}, decks:[d.id], mode:"all"}; S.wish.unshift(w); }
-    save(); toast(`Buy List ready: ${buyRows(w).total} cards to buy`); listTab = "wish"; renderLists(); go("lists");
+    newSel = new Set([d.id]); newOpen = true; newStep = 2; newHave = {}; newShare = false; openList = null;
+    listTab = "wish"; renderLists(); go("lists");
   }
 }
 for (const el of [$("#v-deck"), $("#asideDeck")]){
@@ -2354,47 +2391,112 @@ function buyRows(w){
 function wantText(){
   return "Wish List\n" + (S.want||[]).map(k => { const v = vsplit(k), c = BY.get(v.id); return c ? `${c.i} ${c.n}${v.suf ? ` (${vname(c, v.suf)})` : ""}` : ""; }).filter(Boolean).join("\n");
 }
-function wishText(w){
-  const b = buyRows(w);
-  const strip = t => t.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-  const lines = b.rows.map(r => `Need ${r.total}× ${r.c.i} ${r.c.n}` + ((r.parts.length > 1 || (r.parts.length && r.extra)) ? ` (${strip([...r.parts, ...(r.extra?[r.extra+" extra"]:[])].join(", "))})` : ""));
-  return `${w.name}\n${lines.join("\n") || "Nothing to buy."}`;
+// A Buy List's copies to buy, fixed when it was made (older lists are worked out once, then kept).
+function needOf(w){
+  if (!w.need){ w.need = {}; for (const r of buyRows(w).rows) w.need[r.c.i] = r.total; }
+  w.have = w.have || {};
+  return w.need;
 }
-function buyListHTML(w){
-  const b = buyRows(w);
+// How many copies of each card the picked builds (and Wish List) run.
+function runsFor(deckIds, share, withWant){
+  const need = {};
+  for (const id of deckIds){ const d = S.decks.find(x => x.id === id); if (!d) continue;
+    const add = (cid, q) => { need[cid] = share ? Math.max(need[cid] || 0, q) : (need[cid] || 0) + q; };
+    if (d.leader) add(d.leader, 1); for (const [cid, v] of Object.entries(d.cards)) add(cid, v.q); }
+  if (withWant) for (const k of S.want){ const id = vsplit(k).id; if (!need[id]) need[id] = 1; }
+  return need;
+}
+// What's still left to buy, and what's been bought, as card rows.
+function leftOf(w){
+  const nd = needOf(w), left = [], done = [];
+  for (const [id, q] of Object.entries(nd)){ const c = BY.get(id); if (!c || q <= 0) continue;
+    const h = Math.min(q, w.have[id] || 0), g = Math.min(q - h, w.got[id] || 0);
+    if (q - h - g > 0) left.push({c, q: q - h - g, need: q, have: h}); if (g) done.push({c, q: g, need: q, have: h}); }
+  const ord = (a,b) => "LCES".indexOf(a.c.c)-"LCES".indexOf(b.c.c) || (a.c.k??0)-(b.c.k??0) || a.c._order-b.c._order;
+  left.sort(ord); done.sort(ord);
+  return {left, done, total: left.reduce((n, r) => n + r.q, 0), all: Object.entries(nd).reduce((n, [id, q]) => n + Math.max(0, q - (w.have[id] || 0)), 0)};
+}
+function newBuyList(name, decks, need, have){
+  const w = {id: uid(), name, items: {}, decks, mode: "all", need, have: have || {}, got: {}, created: Date.now()};
+  S.wish.unshift(w); return w;
+}
+// Make a Buy List from builds (and the Wish List): what they need that My Collection doesn't cover.
+function makeBuyList(deckIds, share, withWant, have){
+  const need = runsFor(deckIds, share, withWant);
+  const names = deckIds.map(id => S.decks.find(d => d.id === id)).filter(Boolean).map(d => d.name);
+  if (withWant) names.push("Wish List");
+  const name = names.length > 3 ? `${names.slice(0,3).join(" + ")} +${names.length - 3}` : names.join(" + ") || "Buy List";
+  return newBuyList(name, deckIds, need, have);
+}
+function wishText(w){
+  const {left} = leftOf(w);
+  return `${w.name}\n${left.map(r => `${r.q} ${r.c.i} ${r.c.n}`).join("\n") || "Nothing left to buy."}`;
+}
+let openList = null, newOpen = false, newSel = new Set(), newShare = false, newStep = 1, newHave = {}, haveEdit = false;
+// One row per card with "need N · have [− 0 +]"; used before making a list and to edit it after.
+const haveRowsHTML = (rows, key) => rows.map(([c, need, have]) => `<div class="li haverow"><span class="bar" style="background:${bandBg(c)}"></span>
+    <button class="t" data-open="${c.i}" style="border:0;background:none;padding:0;text-align:left"><b>${esc(c.n)}</b><span class="mono muted">${c.i} · needs ${need}</span></button>
+    <span class="havelab">Have</span><span class="stepper sm"><button data-have="${key}|${c.i}|-1" ${have ? "" : "disabled"} aria-label="Have one fewer ${esc(c.n)}">−</button><output>${have}</output><button data-have="${key}|${c.i}|1" ${have >= need ? "disabled" : ""} aria-label="Have one more ${esc(c.n)}">+</button></span></div>`).join("");
+const cardOrder = (a,b) => "LCES".indexOf(a.c)-"LCES".indexOf(b.c) || (a.k??0)-(b.k??0) || a._order-b._order;
+function buyListsHTML(){
+  const w = openList && S.wish.find(x => x.id === openList);
+  if (w){
+    const L = leftOf(w), allDone = !L.total && L.all > 0;
+    const tile = (r, done) => `<div class="btl${done ? " got" : ""}"><button class="tile" data-wgot="${w.id}|${r.c.i}" aria-label="${esc(r.c.n)}, ${r.q} ${done ? "bought, tap to undo" : "to buy, tap when bought"}">${faceHTML(r.c, "")}<span class="qty">×${r.q}</span>${done ? `<span class="gotmark" aria-hidden="true">✓</span>` : ""}</button><button class="binfo" data-open="${r.c.i}" aria-label="Card details for ${esc(r.c.n)}">i</button></div>`;
+    return `<button class="btn sm" data-wback="1">‹ Buy Lists</button>
+      <div class="blhead"><span class="blt">${renameId === w.id ? `<input class="field" id="wName" value="${esc(w.name)}" autofocus>` : `<b>${esc(w.name)}</b>`}<button class="linkbtn" data-wren="${w.id}">${renameId === w.id ? "Save" : "✎ Rename"}</button></span>
+        <span class="count ${allDone ? "full" : ""}">${allDone ? "✓ All bought" : `${L.total} to buy`}</span></div>
+      <div class="row" style="margin:6px 0 4px"><button class="btn sm dark" data-wcopy="${w.id}">Copy card list</button><button class="btn sm" data-wpdf="${w.id}">Save as PDF</button><button class="btn sm" data-wedit="1" aria-pressed="${haveEdit}">${haveEdit ? "Done editing" : "Edit what I have"}</button><button class="btn sm danger" data-wdel="${w.id}" style="margin-left:auto">Delete</button></div>
+      ${haveEdit ? `<p class="muted" style="font-size:13px;margin:6px 0">Set how many of each you already have. The rest stays on the list.</p><div class="list">${haveRowsHTML(Object.entries(needOf(w)).map(([id, q]) => [BY.get(id), q, Math.min(q, w.have[id] || 0)]).filter(r => r[0] && r[1] > 0).sort((a,b) => cardOrder(a[0], b[0])), "w:" + w.id)}</div>` : `
+      <p class="muted" style="font-size:13px;margin:6px 0 10px">${allDone ? "Everything on this list is bought. Delete it when you're ready." : "Tap a card when you've bought it: it moves to Bought and the copies go into My Collection. Tap i for card details."}</p>
+      ${L.left.length ? `<div class="miniGrid grid buygrid" data-size="l">${L.left.map(r => tile(r, false)).join("")}</div>` : ""}
+      ${L.done.length ? `<div class="sect">Bought · ${L.done.reduce((n,r)=>n+r.q,0)}</div><div class="miniGrid grid buygrid" data-size="l">${L.done.map(r => tile(r, true)).join("")}</div>` : ""}
+      ${!L.all ? `<p class="muted">Nothing on this list yet. Add cards from any card's popup (Save to → Buy List).</p>` : ""}`}`;
+  }
   const {groups, none} = leaderGroups();
-  const deckBox = d => `<label class="ar"><input type="checkbox" data-wdeck="${w.id}|${d.id}" ${w.decks.includes(d.id)?"checked":""}><span class="nm2">${esc(d.name)}</span><span class="st">${deckCount(d)}/50</span></label>`;
-  const picker = `<details class="addto" data-pick="${w.id}" ${pickOpen.has(w.id)?"open":""}><summary>Buying for: ${b.decks.length ? b.decks.map(d=>esc(d.name)).join(", ") : "pick builds"}</summary><div class="addlist">
-      ${groups.map(g=>`<div class="ag"><div class="agh"><span class="sw" style="background:${bandBg(g.L)}"></span>${esc(g.L.n)}</div>${g.decks.map(deckBox).join("")}</div>`).join("")}
-      ${none.length?`<div class="ag"><div class="agh"><span class="sw" style="background:var(--line)"></span>No leader yet</div>${none.map(deckBox).join("")}</div>`:""}
-    </div></details>`;
-  const shared = b.decks.length > 1 ? `<div class="row" style="margin-top:8px"><div class="seg" role="group" aria-label="When builds share a card"><button data-wmode="${w.id}|all" aria-pressed="${w.mode!=="share"}">Own copies for each build</button><button data-wmode="${w.id}|share" aria-pressed="${w.mode==="share"}">Share my copies</button></div></div>
-    <p class="muted" style="font-size:12.5px;margin:4px 0 0">${w.mode==="share" ? "You'll move cards between builds, so you only buy enough for the build that runs the most." : "Every build gets its own copies. Cards you own count toward the first build listed."}</p>` : "";
-  const deckTotals = b.decks.length > 1 && w.mode !== "share" ? `<div class="row" style="margin-top:8px;font-size:13px">${b.decks.map(d=>`<span class="tag">${esc(d.name)}: ${b.perDeck.get(d.id)}</span>`).join("")}</div>` : "";
-  const manual = !b.decks.length;
-  const rows = b.rows.map(r => `<div class="li buyrow"><span class="bar" style="background:${bandBg(r.c)}"></span>
-      <button class="t" data-open="${r.c.i}" style="border:0;background:none;padding:0;text-align:left"><b>${esc(r.c.n)}</b><span class="mono muted">${r.c.i}</span>
-        ${r.parts.length||r.extra ? `<span class="own">${[...r.parts, ...(r.extra?[`${r.extra} extra`]:[])].join(" · ")}</span>` : ""}</button>
-      <span class="rh"><span class="run">${r.total}</span><span class="have">to buy</span></span>
-      ${manual || r.extra ? `<span class="stepper sm" title="Extra copies"><button data-wq="${w.id}|${r.c.i}|-1" aria-label="One fewer extra">−</button><output>${r.extra}</output><button data-wq="${w.id}|${r.c.i}|1" aria-label="One more extra">+</button></span>` : `<span></span>`}
-    </div>`).join("");
-  return `<div class="leaderbox" style="display:block">
-    <div class="row" style="justify-content:space-between">${renameId===w.id?`<input class="field" id="wName" value="${esc(w.name)}" style="max-width:260px" autofocus>`:`<b style="font-family:var(--f-display);font-size:19px">${esc(w.name)}</b>`}<span class="count ${b.total?"":"full"}">${b.total ? b.total+" to buy" : "All set"}</span></div>
-    <div style="margin-top:8px">${picker}</div>${shared}${deckTotals}
-    ${(S.want||[]).length ? `<div class="row" style="margin-top:8px"><button class="chip tog" data-wwant="${w.id}" aria-pressed="${!!w.incWant}">Include my Wish List (${S.want.length})</button></div>` : ""}
-    <div class="list" style="margin-top:6px">${rows || `<p class="muted">${b.decks.length ? "My Collection already covers these builds." : "Pick builds above, or add cards from their popup."}</p>`}</div>
-    ${b.covered ? `<p class="muted" style="font-size:12.5px;margin:6px 0 0">${b.covered} card${b.covered===1?" is":"s are"} already covered by My Collection.</p>` : ""}
-    <div class="out" id="wt-${w.id}" style="margin-top:8px;max-height:120px">${esc(wishText(w))}</div>
-    <div class="row" style="margin-top:8px"><button class="btn sm dark" data-wcopy="${w.id}">Copy for friends</button><button class="btn sm" data-wren="${w.id}">${renameId===w.id?"Save name":"Rename"}</button><button class="btn sm danger" data-wdel="${w.id}">Delete</button></div>
-  </div>`;
+  const box = d => `<label class="ar"><input type="checkbox" data-nsel="${d.id}" ${newSel.has(d.id) ? "checked" : ""}><span class="nm2">${esc(d.name)}</span><span class="st">${deckCount(d)}/50</span></label>`;
+  const nPick = newSel.size;
+  if (newOpen && newStep === 2){
+    const need = runsFor([...newSel].filter(x => x !== "want"), newShare, newSel.has("want"));
+    const rows = Object.entries(need).map(([id, q]) => [BY.get(id), q, Math.min(q, newHave[id] || 0)]).filter(r => r[0]).sort((a,b) => cardOrder(a[0], b[0]));
+    const tot = rows.reduce((n, r) => n + r[1] - r[2], 0);
+    return `<div class="newwrap"><div class="newpick">
+        <div class="row" style="justify-content:space-between;margin:6px 0"><button class="btn sm" data-wstep="1">‹ Back</button><b>How many do you already have?</b></div>
+        <p class="muted" style="font-size:13px;margin:0 0 6px">Everything starts at 0. Add what you own and only the rest goes on the list. You can change this later.</p>
+        <div class="list newscroll">${haveRowsHTML(rows, "new")}</div>
+        <button class="btn primary" data-wmake="1" style="width:100%;margin-top:10px" ${tot ? "" : "disabled"}>${tot ? `Create list · ${tot} card${tot === 1 ? "" : "s"} to buy` : "You have everything"}</button>
+      </div></div>`;
+  }
+  const picker = newOpen ? `<div class="newpick">
+      <div class="newscroll">
+        ${groups.map(g => `<div class="ag"><div class="agh"><span class="sw" style="background:${bandBg(g.L)}"></span>${esc(g.L.n)}</div>${g.decks.map(box).join("")}</div>`).join("")}
+        ${none.length ? `<div class="ag"><div class="agh"><span class="sw" style="background:var(--line)"></span>No leader yet</div>${none.map(box).join("")}</div>` : ""}
+        ${S.want.length ? `<div class="ag"><div class="agh">Other</div><label class="ar"><input type="checkbox" data-nsel="want" ${newSel.has("want") ? "checked" : ""}><span class="nm2">Wish List</span><span class="st">${S.want.length} cards</span></label></div>` : ""}
+        ${!S.decks.length && !S.want.length ? `<p class="muted">Make a build first, then come back to buy what it needs.</p>` : ""}
+      </div>
+      ${[...newSel].filter(x => x !== "want").length > 1 ? `<label class="ar" style="border-top:1px solid var(--line)"><input type="checkbox" data-nshare="1" ${newShare ? "checked" : ""}><span class="nm2">These builds share cards<small style="display:block;color:var(--muted);font-weight:400">Only buy enough for the build that runs the most</small></span></label>` : ""}
+      <button class="btn primary" data-wstep="2" ${nPick ? "" : "disabled"} style="width:100%;margin-top:8px">${nPick ? `Next · ${nPick} pick${nPick === 1 ? "" : "s"}` : "Tick what you're buying for"}</button>
+    </div>` : "";
+  const entry = x => { const L = leftOf(x), allDone = !L.total && L.all > 0;
+    return `<button class="blentry" data-wopen="${x.id}"><span class="ble"><b>${esc(x.name)}</b><small>${x.created ? shortDate(x.created) + " · " : ""}${L.all} card${L.all === 1 ? "" : "s"}</small></span><span class="count ${allDone ? "full" : ""}">${allDone ? "✓ All bought" : `${L.total} to buy`}</span><span aria-hidden="true" class="chev">›</span></button>`; };
+  return `<div class="newwrap"><button class="btn primary newbtn" data-wnew="1" aria-expanded="${newOpen}">+ New Buy List <span aria-hidden="true">${newOpen ? "▴" : "▾"}</span></button>${picker}</div>
+    <div class="stack" style="margin-top:12px">${S.wish.length ? S.wish.map(entry).join("") : `<p class="muted">No Buy Lists yet. Tap + New Buy List, tick the builds you're buying for, and it lists every card you still need.</p>`}</div>`;
+}
+function printList(w){
+  const {left} = leftOf(w);
+  let el = $("#printArea"); if (!el){ el = document.createElement("div"); el.id = "printArea"; document.body.appendChild(el); }
+  el.innerHTML = `<h1>${esc(w.name)}</h1><p>${left.reduce((n,r)=>n+r.q,0)} cards to buy · ${new Date().toLocaleDateString()}</p>
+    <div class="pgrid">${left.map(r => `<div class="pcard"><div class="pimg">${imgTag(r.c.i, "")}<span class="pq">×${r.q}</span></div><b>${esc(r.c.n)}</b><small>${r.c.i}</small></div>`).join("")}</div>`;
+  document.documentElement.classList.add("printing");
+  const done = () => { document.documentElement.classList.remove("printing"); removeEventListener("afterprint", done); };
+  addEventListener("afterprint", done);
+  setTimeout(() => { window.print(); setTimeout(done, 1500); }, 400);
 }
 function renderLists(){
   const v = $("#v-lists");
   let body = "";
   if (listTab === "wish"){
-    body = `<div class="row" style="justify-content:space-between;margin:12px 0"><span class="muted" style="font-size:13px">Shared lists show what you need, never what you own.</span><button class="btn sm primary" data-act="newWish">New Buy List</button></div>
-      <div class="stack">${S.wish.length ? S.wish.map(buyListHTML).join("") : `<p class="muted">No Buy Lists yet. Start one here and pick the builds you're buying for, or open a build and tap “Buy List for this build”.</p>`}</div>
-      <p class="foot-note">Prices, purchase links and share links that open the list on a friend's phone come with hosting and the price sync.</p>`;
+    body = `<div style="margin-top:12px">${buyListsHTML()}</div>`;
   } else if (listTab === "want"){
     body = `<p class="muted" style="font-size:13px;margin:12px 0">Cards you have your eye on, not tied to a build. Add them from any card's popup (Save to → Wish List). Any Buy List can include them too.</p>
       ${S.want.length ? `<div class="out" id="wantTxt" style="max-height:120px">${esc(wantText())}</div><div class="row" style="margin:8px 0 12px"><button class="btn sm dark" data-wantcopy="1">Copy for friends</button></div>` : ""}
@@ -2416,19 +2518,39 @@ function renderLists(){
 }
 $("#v-lists").addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
-  if (t.dataset.lt){ listTab = t.dataset.lt; renderLists(); return; }
+  if (t.dataset.lt){ listTab = t.dataset.lt; openList = null; renderLists(); return; }
   if (t.dataset.open){ openCard(t.dataset.open, t.dataset.suf || "", renderLists); return; }
-  if (t.dataset.act === "newWish"){ const w = {id:uid(), name:"New Buy List", items:{}, decks:[], mode:"all"}; S.wish.unshift(w); renameId = w.id; pickOpen.add(w.id); save(); renderLists(); return; }
+  if (t.dataset.wnew){ newOpen = !newOpen; newStep = 1; renderLists(); return; }
+  if (t.dataset.wstep){ newStep = +t.dataset.wstep; if (newStep === 2) newHave = {}; renderLists(); return; }
+  if (t.dataset.have){ const [key, cid, dl] = t.dataset.have.split("|"), dlt = +dl;
+    const y = scrollY, sc = $(".newscroll") ? $(".newscroll").scrollTop : 0;
+    if (key === "new") newHave[cid] = Math.max(0, (newHave[cid] || 0) + dlt);
+    else { const w = S.wish.find(x => "w:" + x.id === key); if (w){ needOf(w); w.have[cid] = Math.max(0, (w.have[cid] || 0) + dlt); save(); } }
+    renderLists(); window.scrollTo({top: y}); if ($(".newscroll")) $(".newscroll").scrollTop = sc; return; }
+  if (t.dataset.wedit){ haveEdit = !haveEdit; renderLists(); return; }
+  if (t.dataset.wmake){ const ids = [...newSel].filter(x => x !== "want"); const w = makeBuyList(ids, newShare, newSel.has("want"), {...newHave});
+    newSel.clear(); newOpen = false; newShare = false; newStep = 1; newHave = {}; save(); openList = w.id; renderLists(); window.scrollTo({top:0}); toast(`Made “${w.name}” · ${leftOf(w).total} cards to buy`); return; }
+  if (t.dataset.wopen){ openList = t.dataset.wopen; renameId = null; haveEdit = false; renderLists(); window.scrollTo({top:0}); return; }
+  if (t.dataset.wback){ openList = null; renameId = null; renderLists(); return; }
+  if (t.dataset.wgot){ const [wid, id] = t.dataset.wgot.split("|"); const w = S.wish.find(x => x.id === wid); if (!w) return;
+    const need = Math.max(0, (needOf(w)[id] || 0) - (w.have[id] || 0)), had = Math.min(need, w.got[id] || 0);
+    if (had >= need){ delete w.got[id]; const o = (S.owned[id] || 0) - had; if (o > 0) S.owned[id] = o; else delete S.owned[id]; toast(`Moved ${BY.get(id).n} back to buy`); }
+    else { const add = need - had; w.got[id] = need; S.owned[id] = (S.owned[id] || 0) + add; toast(`Bought ${add}× ${BY.get(id).n} · added to My Collection`); }
+    save(); renderLists(); renderDeckViews(); return; }
+  if (t.dataset.wpdf){ const w = S.wish.find(x => x.id === t.dataset.wpdf); if (w) printList(w); return; }
   if (t.dataset.wmode){ const [wid,m] = t.dataset.wmode.split("|"); S.wish.find(x=>x.id===wid).mode = m; save(); renderLists(); return; }
   if (t.dataset.wq){ const [wid,id,dlt] = t.dataset.wq.split("|"); const w = S.wish.find(x=>x.id===wid); w.items[id] = Math.max(0,(w.items[id]||0)+ +dlt); if (!w.items[id]) delete w.items[id]; save(); renderLists(); return; }
   if (t.dataset.wantcopy){ copyText(wantText(), $("#wantTxt")); return; }
   if (t.dataset.wwant){ const w = S.wish.find(x=>x.id===t.dataset.wwant); w.incWant = !w.incWant; save(); renderLists(); return; }
-  if (t.dataset.wcopy){ const w = S.wish.find(x=>x.id===t.dataset.wcopy); copyText(wishText(w), $("#wt-"+w.id)); return; }
+  if (t.dataset.wcopy){ const w = S.wish.find(x=>x.id===t.dataset.wcopy); copyText(wishText(w), null); return; }
   if (t.dataset.wren){ if (renameId === t.dataset.wren){ const w = S.wish.find(x=>x.id===renameId); const v = $("#wName").value.trim(); if (v) w.name = v; renameId = null; save(); } else renameId = t.dataset.wren; renderLists(); return; }
-  if (t.dataset.wdel){ S.wish = S.wish.filter(x=>x.id!==t.dataset.wdel); save(); renderLists(); toast("Buy List deleted"); return; }
+  if (t.dataset.wdel){ S.wish = S.wish.filter(x=>x.id!==t.dataset.wdel); openList = null; save(); renderLists(); toast("Buy List deleted"); return; }
   if (t.dataset.own){ const [id,dlt] = t.dataset.own.split("|"); const n = (S.owned[id]||0)+ +dlt; if (n<=0) delete S.owned[id]; else S.owned[id]=n; save(); renderLists(); renderDeckViews(); return; }
 });
 $("#v-lists").addEventListener("change", e => {
+  const ns = e.target.dataset && e.target.dataset.nsel;
+  if (ns){ e.target.checked ? newSel.add(ns) : newSel.delete(ns); const y = scrollY, sc = $(".newscroll") && $(".newscroll").scrollTop; renderLists(); window.scrollTo({top:y}); if ($(".newscroll")) $(".newscroll").scrollTop = sc; return; }
+  if (e.target.dataset && e.target.dataset.nshare){ newShare = e.target.checked; return; }
   const k = e.target.dataset && e.target.dataset.wdeck; if (!k) return;
   const [wid, did] = k.split("|"); const w = S.wish.find(x=>x.id===wid);
   w.decks = e.target.checked ? [...w.decks.filter(x=>x!==did), did] : w.decks.filter(x=>x!==did);
