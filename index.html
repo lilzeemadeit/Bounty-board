@@ -415,6 +415,74 @@ details[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
 .chip.tog[aria-pressed="false"]{background:transparent}
 .costgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .costgrid .chip{justify-content:center;padding-inline:0;width:100%}
+/* Home */
+.home{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-block:6px 20px}
+.hmain,.hside{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start;min-width:0}
+.hsearch span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.impopts + .impgo, .shead .btn{white-space:nowrap}
+.hsearch{display:flex;align-items:center;gap:10px;height:50px;padding:0 16px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:15px;text-align:left;box-shadow:var(--shadow);width:100%}
+.hacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.hact{height:72px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:12.5px;font-weight:700;padding:0 4px;text-align:center;line-height:1.15}
+.hact.pri{background:var(--accent-fill);color:var(--on-accent);border-color:transparent}
+.hcont{border-radius:16px;padding:14px;background:var(--surface);border:1px solid var(--line);display:grid;gap:10px}
+.hkick{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted)}
+.hrow{display:flex;align-items:center;gap:12px}
+.hrow .jolly{width:44px;height:44px;flex:none}
+.ht{flex:1;min-width:0;display:flex;flex-direction:column}
+.ht b{font-family:var(--f-display);font-size:24px;line-height:1.05}
+.ht small{font-size:14px;font-weight:700;color:var(--accent)}
+.hbar{height:6px;border-radius:3px;background:color-mix(in srgb,var(--ink) 12%,transparent);overflow:hidden;display:block}
+.hbar i{display:block;height:100%;background:var(--accent-fill)}
+.hstat{flex:1;font-size:13.5px;font-weight:700;color:var(--warn)}
+.hstat.ok{color:var(--ok)}
+.hnums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-radius:14px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.hnums span{padding:10px 4px;text-align:center;display:flex;flex-direction:column}
+.hnums span+span{border-left:1px solid var(--line)}
+.hnums b{font-family:var(--f-display);font-size:24px;line-height:1}
+.hnums b.ok{color:var(--ok)}
+.hnums small{font-size:11.5px;color:var(--muted)}
+.hsetbox{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:#2B2620;color:#EFE6D3}
+.hdays{display:flex;flex-direction:column;align-items:center;min-width:46px}
+.hdays b{font-family:var(--f-display);font-size:30px;line-height:1;color:#E8BC2E}
+.hdays small{font-size:10.5px;letter-spacing:.06em}
+.hsett{flex:1;display:flex;flex-direction:column}
+.hsett b{font-size:14px}.hsett small{font-size:12.5px;color:#C9C2B4}
+.hlink{background:none;border:0;color:#E8BC2E;font-weight:700;font-size:13px}
+.hbuilds,.hrv{display:grid;gap:8px;min-width:0}
+.hsl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.htiles{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * var(--gut,16px));padding:2px var(--gut,16px) 6px}
+.htiles::-webkit-scrollbar{display:none}
+.htiles .newtile{flex:none;width:110px;height:184px}
+html[data-photo] .hsearch,html[data-photo] .hact:not(.pri),html[data-photo] .hcont,html[data-photo] .hnums{background:var(--frost);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+html[data-photo] .hsl{text-shadow:var(--glow);color:var(--ink)}
+@media (min-width:900px){
+  .home{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:18px;max-width:1180px;margin:0 auto}
+  .hbuilds,.hrv{grid-column:1/-1}
+  .hacts .hact{flex-direction:row;height:56px;font-size:14px;gap:8px}
+  .hcont{padding:18px 20px}
+  .ht b{font-size:32px}
+  .hrow .jolly{width:56px;height:56px}
+  .hnums{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hnums span{padding:16px 18px;text-align:left}
+  .hnums span:nth-child(3){border-left:0}
+  .hnums span:nth-child(n+3){border-top:1px solid var(--line)}
+  .hnums b{font-size:34px}
+  .htiles{margin:0;padding-inline:0}
+}
+/* Import cardlist */
+.imptext{width:100%;min-height:200px;font-family:var(--f-mono);font-size:13px;line-height:1.6;resize:vertical;box-sizing:border-box}
+.impsum{margin-top:10px;border-radius:12px;background:var(--sunk);padding:10px 12px;display:grid;gap:6px;font-size:14px}
+.impsum .big{font-family:var(--f-display);font-size:26px;line-height:1}
+.impsum .ok{color:var(--ok)}
+.warnline{font-size:13px;color:var(--warn);font-weight:700}
+.impgo{width:100%;height:48px;margin-top:12px;font-size:15.5px}
+.impopts{display:grid;gap:10px}
+.impopt{border-radius:14px;border:1px solid var(--line);background:var(--bg);padding:12px 14px;display:grid;gap:10px;cursor:pointer}
+.impopt.on{border:2px solid var(--ink)}
+.impopt input[type=radio]{width:20px;height:20px;accent-color:var(--ink);margin:0;flex:none}
+.impopt b{display:block;font-size:16px}.impopt small{display:block;font-size:13px;color:var(--muted)}
+.impin{display:grid;gap:5px;padding-left:30px}
+.impin .field{width:100%;box-sizing:border-box}
 /* version thumbnails under the card */
 .vthumbs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:10px auto 0;max-width:340px;padding:2px 2px 4px;justify-content:safe center}
 .vthumbs::-webkit-scrollbar{display:none}
@@ -601,12 +669,13 @@ html[data-photo] .junklink{background:var(--frost);padding:8px 12px;border-radiu
     <header class="brandbar" style="background:var(--surface)">
       <div class="brand gut">
         <svg class="pose" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 3h14v18H5z"/><path d="M8 7h8"/><rect x="8.5" y="9.5" width="7" height="6" rx="1"/><path d="M8 18h8"/></svg>
-        <h1><a href="#cards" id="homeLink" class="homelink" aria-label="Bounty Board, go to Cards">Bounty Board</a></h1>
+        <h1><a href="#home" id="homeLink" class="homelink" aria-label="Bounty Board, go Home">Bounty Board</a></h1>
         <button class="lookbtn" id="acctBtn" type="button" aria-label="Account and sync"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><i class="acdot" hidden></i></button>
         <button class="lookbtn" id="lookBtn" type="button" aria-label="Background and colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></button>
         <button class="deckchip" id="deckChip" type="button" aria-label="Open the build you're working on"><span class="nm" id="chipName"></span><span class="count" id="chipCount">0/50</span></button>
       </div>
     </header>
+    <section id="v-home" class="view gut" hidden></section>
     <section id="v-cards" class="view-cards"></section>
     <section id="v-deck" hidden><div id="bHead" class="gut" style="padding-block:12px 4px"></div><div id="bTabs" class="gut"></div><div id="bAddSlot"></div><div id="bBody" class="view gut"></div></section>
     <section id="v-decks" class="view gut" hidden></section>
@@ -616,6 +685,7 @@ html[data-photo] .junklink{background:var(--frost);padding:8px 12px;border-radiu
 </div>
 
 <nav class="nav" aria-label="Sections">
+  <a href="#home" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>Home</a>
   <a href="#cards" data-tab="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="10" rx="1.5"/><rect x="14" y="4" width="7" height="10" rx="1.5"/><circle cx="11" cy="18" r="3"/><path d="M13.2 20.2L15 22"/></svg>Cards</a>
   <a href="#decks" data-tab="decks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="3" width="12" height="17" rx="2"/><path d="M3.5 6.5v12A2.5 2.5 0 006 21h9"/></svg>My Decks<span class="pill" id="navCount" hidden></span></a>
   <a href="#lists" data-tab="lists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Lists</a>
@@ -1103,6 +1173,7 @@ qIn.addEventListener("input", () => setTimeout(renderHome, 150));
 function renderHome(){
   const el = $("#homeStrip"); if (!el) return;
   const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.type || F.set;
+  el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return;     // recent builds and recently viewed live on Home now
   if (ctx !== "cards" || busy){ el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,12), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
   const open = S.prefs.recentOpen ?? true;
@@ -1162,11 +1233,165 @@ function startLens(lid){
 document.getElementById("homeLink").addEventListener("click", e => {
   e.preventDefault();
   if ($("#scrim")) closeSheet();
-  lens = null; FC.lock = true; FC.q = ""; FC.nameOnly = false;
   if (ctx !== "cards") setCtx("cards");
-  qIn.value = ""; $("#qclr").hidden = true;
-  go("cards"); renderQuick(); renderResults(); window.scrollTo({top:0});
+  go("home"); window.scrollTo({top:0});
 });
+/* ================= Home ================= */
+// The next set, for the countdown on Home. Update when Bandai announces the following one.
+const NEXT_SET = {code: "OP-18", name: "The Dominance of God", date: "2026-11-20"};
+const ICON = {
+  plus: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`,
+  imp: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>`,
+  buy: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11h11l2-8H6.3"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>`,
+  wish: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`,
+  search: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>`
+};
+const isLegal = d => !issuesFor(d).some(i => i[0] === "bad" || i[0] === "warn");
+function renderHomePage(){
+  const v = $("#v-home"); if (!v) return;
+  const d = deck(), has = S.decks.length && !d.ghost, L = has && d.leader && BY.get(d.leader), n = has ? deckCount(d) : 0;
+  const legal = has && isLegal(d), toGo = Math.max(0, 50 - n);
+  const owned = Object.values(S.owned).reduce((a,b) => a + b, 0);
+  const toBuy = S.wish.reduce((a, w) => a + buyRows(w).total, 0);
+  const legalN = S.decks.filter(isLegal).length;
+  const builds = recentBuilds().slice(0, 12), rv = (S.recent||[]).map(id => BY.get(id)).filter(Boolean).slice(0, 10);
+  const rel = new Date(NEXT_SET.date + "T00:00:00"), days = Math.ceil((rel - new Date()) / 864e5);
+  const out = CARDS.some(c => c.s === NEXT_SET.code || c.v.some(x => x[1] === NEXT_SET.code));
+  const setBox = days > 0 || out ? `<section class="hsetbox" aria-label="Next set">
+      ${days > 0 ? `<span class="hdays"><b>${days}</b><small>DAY${days === 1 ? "" : "S"}</small></span>` : `<span class="hdays"><b>NEW</b></span>`}
+      <span class="hsett"><b>${NEXT_SET.code} · ${esc(NEXT_SET.name)}</b><small>${days > 0 ? `English release ${rel.toLocaleDateString([], {month:"short", day:"numeric"})}` : out ? "Out now" : "Released · cards arrive with the next update"}</small></span>
+      ${out ? `<button class="hlink" data-h="newset">Cards →</button>` : ""}</section>` : "";
+  v.innerHTML = `<div class="home">
+    <div class="hmain">
+      <button class="hsearch" data-h="search">${ICON.search}<span>Search cards: name, number, type or effect</span></button>
+      <div class="hacts">
+        <button class="hact pri" data-h="new">${ICON.plus}New deck</button>
+        <button class="hact" data-h="import">${ICON.imp}Import cardlist</button>
+        <button class="hact" data-h="buy">${ICON.buy}Buy List</button>
+        <button class="hact" data-h="wish">${ICON.wish}Wish List</button>
+      </div>
+      ${has ? `<section class="hcont" aria-label="Pick up where you left off">
+        <span class="hkick">PICK UP WHERE YOU LEFT OFF</span>
+        <div class="hrow">${jollyHTML(L && L.co.length ? L.co : [])}<span class="ht"><b>${L ? esc(L.n) + " Deck" : "New deck"}</b><small>${esc(d.name)}</small></span><span class="count ${n===50?"full":""}">${n}/50</span></div>
+        <span class="hbar"><i style="width:${Math.min(100, n * 2)}%"></i></span>
+        <div class="hrow"><span class="hstat ${legal ? "ok" : ""}">${legal ? "✓ Legal and ready" : !L ? "Pick a leader to start" : toGo ? `${toGo} card${toGo===1?"":"s"} to go · not legal yet` : "Not legal yet · see what to fix"}</span><button class="btn dark" data-h="continue">Continue</button></div>
+      </section>` : ""}
+    </div>
+    <div class="hside">
+      ${S.decks.length ? `<section class="hnums" aria-label="Your numbers">
+        <span><b>${S.decks.length}</b><small>build${S.decks.length===1?"":"s"}</small></span>
+        <span><b class="ok">${legalN}</b><small>legal</small></span>
+        <span><b>${owned.toLocaleString()}</b><small>cards owned</small></span>
+        <span><b>${toBuy.toLocaleString()}</b><small>to buy</small></span>
+      </section>` : ""}
+      ${setBox}
+    </div>
+    <section class="hbuilds" aria-label="Your builds">
+      <span class="hsl">Your builds</span>
+      <div class="htiles"><button class="newtile" data-h="new">+ New deck</button>${builds.map(tileHTMLb).join("")}</div>
+    </section>
+    ${rv.length ? `<section class="hrv" aria-label="Recently viewed"><span class="hsl">Recently viewed</span><div class="hsr">${rv.map(c => `<button class="chip" data-open="${c.i}"><span class="dot" style="background:${bandBg(c)}"></span>${esc(c.n)} <span class="mono muted">${c.i}</span></button>`).join("")}</div></section>` : ""}
+  </div>`;
+}
+$("#v-home").addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  const h = t.dataset.h;
+  if (t.dataset.open){ openCard(t.dataset.open, "", renderHomePage); return; }
+  if (t.dataset.deck){ workOn(t.dataset.deck); renderAll(); openBuild("list"); return; }
+  if (t.dataset.bedit){ editBuild(t.dataset.bedit); const prev = onClose; onClose = () => { prev && prev(); renderHomePage(); }; return; }
+  if (h === "search"){ lens = null; if (ctx !== "cards") setCtx("cards"); history.pushState(null, "", "#cards"); show("cards"); renderQuick(); renderResults(); window.scrollTo({top:0}); qIn.focus(); return; }
+  if (h === "new"){ makeBuild(null).then(nd => { if (!nd) return; workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast(`Made ${nd.name}. Pick its leader.`); }); return; }
+  if (h === "import"){ openImportList(); return; }
+  if (h === "buy"){ listTab = "wish"; go("lists"); return; }
+  if (h === "wish"){ listTab = "want"; go("lists"); return; }
+  if (h === "continue"){ openBuild("list"); return; }
+  if (h === "newset"){ lens = null; if (ctx !== "cards") setCtx("cards"); FC.set = NEXT_SET.code; go("cards"); renderQuick(); renderResults(); window.scrollTo({top:0}); return; }
+});
+
+/* ================= Import cardlist: paste a list, then choose where it goes ================= */
+function openImportList(){
+  let text = "", step = 1, dest = "deck", P = null, name = "", listSel = "", buildSel = "";
+  const draw = () => {
+    P = parseList(text);
+    const L = P.leader && BY.get(P.leader), kinds = Object.keys(P.cards).length, total = P.n + (L ? 1 : 0);
+    if (!name) name = L ? sugName(L.i) : "Imported deck";
+    if (!listSel) listSel = S.wish[0] ? "w:" + S.wish[0].id : "w:new";
+    if (!buildSel && S.decks[0]) buildSel = recentBuilds()[0].id;
+    const sum = text.trim() ? `<div class="impsum"><div class="row" style="gap:8px;align-items:baseline"><b class="big">${total}</b><span>card${total===1?"":"s"} found · ${kinds + (L?1:0)} different</span>${L ? `<span class="ok" style="margin-left:auto;font-weight:700">✓ Leader: ${esc(L.n)}</span>` : ""}</div>
+        ${[...P.errors, ...P.notes.filter(x => /^(Skipped|More than one card)/.test(x))].slice(0, 4).map(x => `<div class="warnline">${esc(x)}</div>`).join("")}</div>` : "";
+    const opt = (k, label, sub, inner) => `<label class="impopt${dest===k?" on":""}"><span class="row" style="gap:10px;flex-wrap:nowrap"><input type="radio" name="impDest" value="${k}" ${dest===k?"checked":""}><span><b>${label}</b><small>${sub}</small></span></span>${dest===k && inner ? `<span class="impin">${inner}</span>` : ""}</label>`;
+    const lists = `<select class="field" id="impList" aria-label="Which list"><optgroup label="Buy Lists">${S.wish.map(w => `<option value="w:${w.id}" ${listSel==="w:"+w.id?"selected":""}>${esc(w.name)}</option>`).join("")}<option value="w:new" ${listSel==="w:new"?"selected":""}>+ New Buy List</option></optgroup><option value="want" ${listSel==="want"?"selected":""}>Wish List</option><option value="box" ${listSel==="box"?"selected":""}>☆Treasure Box☆</option><option value="own" ${listSel==="own"?"selected":""}>My Collection (cards I own)</option></select>`;
+    const blds = `<select class="field" id="impBuild" aria-label="Which build">${recentBuilds().map(x => { const XL = x.leader && BY.get(x.leader); return `<option value="${x.id}" ${buildSel===x.id?"selected":""}>${esc(x.name)}${XL ? " · " + esc(XL.n) : ""} (${deckCount(x)}/50)</option>`; }).join("")}</select>`;
+    const sc = sheet(step === 1 ? `<div class="shead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">STEP 1 OF 2</span><h2 class="h2" style="margin:0">Import cardlist</h2></span><button class="btn sm x" data-im="close" style="margin-left:auto">Cancel</button></div>
+        <p class="muted" style="margin:0 0 10px;font-size:14px">Paste one card per line. Lists from other deck builders, OPTCGSim, or just card numbers all work.</p>
+        <textarea class="field imptext" id="impText" rows="10" placeholder="4 OP01-016 Nami&#10;4xOP05-007&#10;2 ST13-007" aria-label="Cards to import">${esc(text)}</textarea>
+        <div id="impSum">${sum}</div>
+        <button class="btn primary impgo" data-im="next" ${total ? "" : "disabled"}>Next: choose where to save</button>`
+      : `<div class="shead"><button class="btn sm" data-im="back">‹ Back</button><span style="margin-left:6px"><span class="mono muted" style="font-size:11px;letter-spacing:.08em">STEP 2 OF 2 · ${total} CARDS</span><h2 class="h2" style="margin:0">Where should these go?</h2></span></div>
+        <div class="impopts" role="radiogroup" aria-label="Save to">
+          ${opt("deck", "New deck", L ? `Leader found: ${esc(L.n)} · ${P.n} other cards` : "No leader in the list · you can pick one after", `<span class="lab">Name</span><input class="field" id="impName" maxlength="40" value="${esc(name)}">`)}
+          ${opt("list", "Save to a list", "Adds the cards and their counts", lists)}
+          ${S.decks.length ? opt("build", "Add to a build I have", "Adds these to one of your builds", blds) : ""}
+        </div>
+        <button class="btn primary impgo" data-im="save">${dest === "deck" ? `Create “${esc(name)}”` : dest === "list" ? "Save to list" : "Add to build"}</button>`, "Import cardlist");
+    const ta = $("#impText", sc);
+    if (ta){ setTimeout(() => ta.focus(), 30);
+      ta.addEventListener("input", () => { text = ta.value; const pos = ta.selectionStart; P = parseList(text);
+        const L2 = P.leader && BY.get(P.leader), t2 = P.n + (L2 ? 1 : 0);
+        $("#impSum", sc).innerHTML = text.trim() ? `<div class="impsum"><div class="row" style="gap:8px;align-items:baseline"><b class="big">${t2}</b><span>card${t2===1?"":"s"} found · ${Object.keys(P.cards).length + (L2?1:0)} different</span>${L2 ? `<span class="ok" style="margin-left:auto;font-weight:700">✓ Leader: ${esc(L2.n)}</span>` : ""}</div>${[...P.errors, ...P.notes.filter(x => /^(Skipped|More than one card)/.test(x))].slice(0, 4).map(x => `<div class="warnline">${esc(x)}</div>`).join("")}</div>` : "";
+        $("[data-im=next]", sc).disabled = !t2; name = ""; }); }
+    sc.addEventListener("change", e => {
+      if (e.target.name === "impDest"){ dest = e.target.value; draw(); }
+      if (e.target.id === "impList") listSel = e.target.value;
+      if (e.target.id === "impBuild") buildSel = e.target.value;
+    });
+    sc.addEventListener("input", e => { if (e.target.id === "impName"){ name = e.target.value; const b = $("[data-im=save]", sc); if (b) b.textContent = `Create “${name.trim() || "Imported deck"}”`; } });
+    sc.addEventListener("click", e => {
+      const t = e.target.closest("button"); if (!t) return;
+      const a = t.dataset.im;
+      if (a === "close"){ closeSheet(); return; }
+      if (a === "next"){ step = 2; draw(); return; }
+      if (a === "back"){ step = 1; draw(); return; }
+      if (a === "save") saveImport();
+    });
+  };
+  const saveImport = () => {
+    const L = P.leader && BY.get(P.leader);
+    const all = Object.entries(P.cards).map(([id, v]) => [id, v.q, v.art || ""]);
+    if (L) all.unshift([L.i, 1, ""]);
+    if (dest === "deck"){
+      const nd = newBuild(L ? L.i : null, name.trim() || "Imported deck");
+      for (const [id, v] of Object.entries(P.cards)) nd.cards[id] = {q: v.q, art: v.art || ""};
+      workOn(nd.id); save(); closeSheet(); renderAll();
+      if (!L){ FB.cats = new Set(["L"]); FB.lock = false; openBuild("add"); toast(`Made ${nd.name}. Pick its leader.`); }
+      else { openBuild("list"); toast(`Made ${nd.name} · ${deckCount(nd)}/50`); }
+      return;
+    }
+    if (dest === "list"){
+      let where = "";
+      if (listSel.startsWith("w:")){
+        let w = S.wish.find(x => "w:" + x.id === listSel);
+        if (!w){ w = {id: uid(), name: "Imported list", items: {}, decks: [], mode: "all"}; S.wish.unshift(w); }
+        for (const [id, q] of all) w.items[id] = (w.items[id] || 0) + q;
+        where = w.name; listTab = "wish";
+      } else if (listSel === "want" || listSel === "box"){
+        const arr = listSel === "want" ? S.want : S.treasure;
+        for (const [id, , art] of all){ const k = id + art; if (!arr.includes(k)) arr.push(k); }
+        where = listSel === "want" ? "Wish List" : "☆Treasure Box☆"; listTab = listSel === "want" ? "want" : "box";
+      } else {
+        for (const [id, q] of all) S.owned[id] = (S.owned[id] || 0) + q;
+        where = "My Collection"; listTab = "coll";
+      }
+      save(); closeSheet(); toast(`Saved ${all.reduce((a, x) => a + x[1], 0)} cards to ${where}`); go("lists"); renderLists(); return;
+    }
+    const dk = S.decks.find(x => x.id === buildSel); if (!dk) return;
+    if (L && !dk.leader) dk.leader = L.i;
+    for (const [id, v] of Object.entries(P.cards)){ const c = BY.get(id), cur = dk.cards[id]?.q || 0; dk.cards[id] = {q: Math.min(limitFor(c), cur + v.q), art: dk.cards[id]?.art ?? (v.art || "")}; }
+    dk.updated = dk.used = Date.now(); workOn(dk.id); save(); closeSheet(); renderAll(); openBuild("list"); toast(`Added to ${dk.name} · ${deckCount(dk)}/50`);
+  };
+  draw();
+}
+
 /* ================= quick view: every card of a type or name ================= */
 function typeView(kind, val, back){
   const ok = x => S.prefs.pool !== "std" || (standardOK(x) && !x.ban);
@@ -1333,7 +1558,7 @@ function openCard(id, suf, after, back){
   const fitsBuild = d => !d.leader || sharesColor(c, BY.get(d.leader));
   const primary = ctx === "build" ? deck() : null;
   const lensL = ctx === "cards" && lens ? lens : null;
-  const offer = (primary ? [primary, ...recentBuilds().filter(d=>d.id!==primary.id && fitsBuild(d))]
+  const offer = (primary ? [primary]
     : lensL ? recentBuilds().filter(d => d.leader === lensL) : recentBuilds().filter(fitsBuild)).slice(0, lensL ? 6 : 3).map(d=>d.id);
   const colorWord = cs => cs.join("/");
   const leaderCtl = d => {
@@ -1356,7 +1581,7 @@ function openCard(id, suf, after, back){
       out += `<div class="rbs"><div class="rb"><span class="sw" style="background:${bandBg(LL)}"></span><span class="rbn"><b>★ ${esc(LL.n)} Pool</b><small>Ideas for this leader</small></span>${ip ? `<button class="btn sm" data-unpool="${lensL}">In pool ✓ · Remove</button>` : `<button class="btn sm primary" data-topool="${lensL}">+ Add</button>`}</div>${rows.map(rowHTML).join("")}</div>
         <div class="row"><button class="btn sm" data-nbl="${lensL}">+ New ${esc(LL.n)} build</button></div>`;
     }
-    else if (rows.length) out += `<div class="rbs">${rows.map(rowHTML).join("")}</div><div class="muted" style="font-size:12px">${primary ? "The build you're working on, then your most recent builds this card fits." : "Your 3 most recent builds this card fits."} Max ${c.any?"any number":"4"} per build.</div>`;
+    else if (rows.length) out += `<div class="rbs">${rows.map(rowHTML).join("")}</div>${primary ? "" : `<div class="muted" style="font-size:12px">Your 3 most recent builds this card fits. Max ${c.any?"any number":"4"} per build.</div>`}`;
     else {
       const myLeaders = new Set(leaderGroups().groups.map(g=>g.L.i));
       const leaders = CARDS.filter(x => x.c === "L" && sharesColor(c, x)).sort((a,b)=>a.n.localeCompare(b.n));
@@ -1658,10 +1883,20 @@ function parseList(text){
   for (const raw of text.split(/\r?\n/)){
     const line = raw.trim(); if (!line) continue;
     const m = line.match(ID_RX);
-    if (!m){ if (/\d/.test(line) && /[a-z]/i.test(line) && !/^(leader|characters?|events?|stages?|main|deck)\b/i.test(line)) notes.push(`Skipped a line with no card number: “${line.slice(0,40)}”`); continue; }
-    const id = m[1].toUpperCase(), art = (m[2]||"").toLowerCase();
-    let q = 1; const qm = line.match(/^(\d+)\s*[x×]?\s*/i) || line.match(/[x×]\s*(\d+)\s*$/i) || line.match(/\s(\d+)\s*$/);
-    if (qm) q = +qm[1]; else notes.push(`No quantity on “${line.slice(0,30)}”, so it counts as 1.`);
+    let id, art = "", q = 1;
+    if (!m){
+      if (/^(leader|characters?|events?|stages?|main|deck|don)\b/i.test(line)) continue;
+      // no card number: try the card's name ("3 Emporio.Ivankov", "Koala x4")
+      const lead = line.match(/^(\d+)\s*[x×]?\s+(.+)$/i), tail = line.match(/^(.+?)\s*[x×]?\s*(\d+)$/i);
+      let nm = line; if (lead){ q = +lead[1]; nm = lead[2]; } else if (tail){ nm = tail[1]; q = +tail[2]; }
+      const key = nrm(nm), hits = key ? CARDS.filter(c => c._name === key) : [];
+      if (hits.length === 1) id = hits[0].i;
+      else { if (/[a-z]/i.test(line)) notes.push(hits.length > 1 ? `More than one card is called “${nm.slice(0,30)}”. Add its card number, like ${hits[0].i}.` : `Skipped a line we couldn't match: “${line.slice(0,40)}”`); continue; }
+    } else {
+      id = m[1].toUpperCase(); art = (m[2]||"").toLowerCase();
+      const qm = line.match(/^(\d+)\s*[x×]?\s*/i) || line.match(/[x×]\s*(\d+)\s*$/i) || line.match(/\s(\d+)\s*$/);
+      if (qm) q = +qm[1]; else notes.push(`No quantity on “${line.slice(0,30)}”, so it counts as 1.`);
+    }
     const c = BY.get(id);
     if (!c){ errors.push(`Card not found: ${id}`); continue; }
     if (c.c === "L"){ if (leader && leader !== id) notes.push(`More than one leader listed. Using ${BY.get(leader).n}.`); else leader = id; continue; }
@@ -2232,13 +2467,13 @@ $("#v-lists").addEventListener("toggle", e => { const p = e.target.dataset && e.
 $("#v-lists").addEventListener("input", e => { if (e.target.id === "collQ"){ collQ = e.target.value; const pos = e.target.selectionStart; renderLists(); const i = $("#collQ"); i.focus(); i.setSelectionRange(pos,pos); } });
 
 /* ================= routing ================= */
-const TABS = ["cards","build","decks","lists"];
+const TABS = ["home","cards","build","decks","lists"];
 const scrollMem = {};
 let curTab = "cards";
 function go(tab){ if (location.hash !== "#"+tab) location.hash = tab; else show(tab); }
 function show(tab){
   if (tab === "deck") tab = "build"; if (tab === "builds") tab = "decks";
-  if (!TABS.includes(tab)) tab = "cards";
+  if (!TABS.includes(tab)) tab = "home";
   const wide = innerWidth >= 1024;
   if (tab === "build" && deck().ghost){ tab = "decks"; history.replaceState(null, "", "#decks"); }
   const building = tab === "build" && wide;
@@ -2250,12 +2485,14 @@ function show(tab){
   $("#v-deck").hidden = !(tab === "build" && !wide);
   $("#v-decks").hidden = tab !== "decks";
   $("#v-lists").hidden = tab !== "lists";
+  $("#v-home").hidden = tab !== "home";
   const navTab = tab === "build" ? "decks" : tab;      // a build lives inside My Decks
   document.querySelectorAll(".nav a, .topnav a").forEach(a => a.setAttribute("aria-current", a.dataset.tab===navTab ? "page" : "false"));
   if (tab === "cards" && ctx !== "cards") setCtx("cards");     // the Cards tab always searches everything
   if (tab === "build" && !wide){ if (bSub === "add") setCtx("build"); renderDeckViews(); }
   if (tab === "decks") renderDecks();
   if (tab === "lists") renderLists();
+  if (tab === "home") renderHomePage();
   window.scrollTo({top: scrollMem[tab] || 0});
 }
 addEventListener("hashchange", () => show(location.hash.slice(1)));
@@ -2542,9 +2779,9 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 (() => { const m = sessionStorage.getItem("bb.toast"); if (m){ sessionStorage.removeItem("bb.toast"); setTimeout(() => toast(m), 300); } })();
 loadSupabase();
 if ("serviceWorker" in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(()=>{});
-function renderAll(){ compatCache.clear(); renderQuick(); renderResults(); renderDeckViews(); renderDecks(); renderLists(); updateChip(); }
+function renderAll(){ compatCache.clear(); renderQuick(); renderResults(); renderDeckViews(); renderDecks(); renderLists(); updateChip(); if (!$("#v-home").hidden) renderHomePage(); }
 renderAll();
-show(location.hash.slice(1) || "cards");
+show(location.hash.slice(1) || "home");
 })();
 </script>
 
