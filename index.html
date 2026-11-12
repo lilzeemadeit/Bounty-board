@@ -1281,7 +1281,7 @@ $("#v-home").addEventListener("click", e => {
   if (t.dataset.deck){ workOn(t.dataset.deck); renderAll(); openBuild("list"); return; }
   if (t.dataset.bedit){ editBuild(t.dataset.bedit); const prev = onClose; onClose = () => { prev && prev(); renderHomePage(); }; return; }
   if (h === "search"){ lens = null; if (ctx !== "cards") setCtx("cards"); history.pushState(null, "", "#cards"); show("cards"); renderQuick(); renderResults(); window.scrollTo({top:0}); qIn.focus(); return; }
-  if (h === "new"){ makeBuild(null).then(nd => { if (!nd) return; workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast(`Made ${nd.name}. Pick its leader.`); }); return; }
+  if (h === "new"){ makeBuild(null).then(nd => { if (!nd) return; workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast("New deck: pick its leader"); }); return; }
   if (h === "import"){ openImportList(); return; }
   if (h === "buy"){ listTab = "wish"; go("lists"); return; }
   if (h === "wish"){ listTab = "want"; go("lists"); return; }
@@ -1342,7 +1342,7 @@ function openImportList(){
       const nd = newBuild(L ? L.i : null, name.trim() || "Imported deck");
       for (const [id, v] of Object.entries(P.cards)) nd.cards[id] = {q: v.q, art: v.art || ""};
       workOn(nd.id); save(); closeSheet(); renderAll();
-      if (!L){ FB.cats = new Set(["L"]); FB.lock = false; openBuild("add"); toast(`Made ${nd.name}. Pick its leader.`); }
+      if (!L){ FB.cats = new Set(["L"]); FB.lock = false; openBuild("add"); toast("New deck: pick its leader"); }
       else { openBuild("list"); toast(`Made ${nd.name} · ${deckCount(nd)}/50`); }
       return;
     }
@@ -1411,6 +1411,8 @@ function sugName(leaderId){
   return L ? `${L.n} build ${S.decks.filter(d => d.leader === leaderId).length + 1}` : "New deck";
 }
 async function makeBuild(leaderId){
+  // No leader yet: start the deck now and ask for its name once a leader is picked.
+  if (!leaderId){ const nd = newBuild(null, "New deck"); nd.needsName = true; save(); return nd; }
   const L = leaderId && BY.get(leaderId);
   const name = await askName(L ? `New ${L.n} build` : "New deck", sugName(leaderId));
   return name == null ? null : newBuild(leaderId, name);
@@ -1728,10 +1730,15 @@ function openCard(id, suf, after, back){
       makeBuild(null).then(nd => { if (!nd) return; nd.cards[c.i] = {q:1, art}; workOn(nd.id); closeSheet();
         FB.cats = new Set(["L"]); FB.colors = new Set(c.co); FB.lock = false;
         renderAll(); openBuild("add"); window.scrollTo({top:0});
-        toast(`${nd.name} started with ${c.n}. Pick a ${colorWord(c.co)} leader.`); }); return;
+        toast(`New deck started with ${c.n}. Pick a ${colorWord(c.co)} leader.`); }); return;
     }
     else if (t.id === "setLeader" || t.dataset.q === "setLeader"){
+      const sug = sugName(c.i);
       d.leader = c.i; touch(d); compatCache.clear(); FB.lock = true;
+      if (d.needsName || d.name === "New deck" || d.name === "New build"){      // now that it has a leader, name it
+        delete d.needsName;
+        askName(`Name your ${c.n} build`, sug).then(nm => { d.name = (nm || sug).trim() || sug; touch(d); renderQuick(); renderDeckViews(); updateChip(); });
+      }
       F.cats.delete("L"); F.colors.clear(); closeSheet();
       toast(`${c.n} is your leader. Showing cards in its colors.`);
       renderQuick(); renderResults(); renderDeckViews(); return;
@@ -2073,7 +2080,7 @@ function deckClick(e){
   else if (a === "pool"){ poolView = d.leader; poolFilter = "all"; renderDecks(); go("decks"); }
   else if (a === "pickLeader"){ FB.cats = new Set(["L"]); FB.lock = false; openBuild("add"); if (ctx === "build"){ renderQuick(); renderResults(); } }
   else if (a === "dup"){ const nd = JSON.parse(JSON.stringify(d)); nd.id = uid(); nd.name = d.name.replace(/ \(copy.*\)$/,"") + " (copy)"; nd.updated = nd.used = Date.now(); nd.sample = false; S.decks.unshift(nd); workOn(nd.id); renderAll(); toast("Copied as a new build. Rename it above."); setTimeout(()=>{ const i = document.querySelector(innerWidth>=1024?"#asideDeck #deckName":"#v-deck #deckName"); i && (i.focus(), i.select()); }, 50); }
-  else if (a === "newdeck"){ makeBuild(d.leader).then(nd => { if (!nd) return; workOn(nd.id); if (!d.leader) FB.cats = new Set(["L"]); renderAll(); openBuild("add"); toast(d.leader ? `Made ${nd.name}` : `Made ${nd.name}. Pick a leader.`); }); }
+  else if (a === "newdeck"){ makeBuild(d.leader).then(nd => { if (!nd) return; workOn(nd.id); if (!d.leader) FB.cats = new Set(["L"]); renderAll(); openBuild("add"); toast(d.leader ? `Made ${nd.name}` : "New deck: pick its leader"); }); }
   else if (a === "del"){ confirmDel = true; renderDeckViews(); }
   else if (a === "delNo"){ confirmDel = false; renderDeckViews(); }
   else if (a === "delYes"){ confirmDel = false; trashBuild(d.id); renderAll(); if (!S.decks.length) go("decks"); toast("Moved to the Junkyard"); }
@@ -2191,7 +2198,7 @@ function firstDeckHTML(){
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("[data-first]")) return;
-  makeBuild(null).then(nd => { if (!nd) return; workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast(`Made ${nd.name}. Pick its leader.`); });
+  makeBuild(null).then(nd => { if (!nd) return; workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast("New deck: pick its leader"); });
 });
 function renderDecks(){
   const v = $("#v-decks");
@@ -2320,7 +2327,7 @@ $("#v-decks").addEventListener("click", e => {
   if (t.dataset.newb){ const L = BY.get(t.dataset.newb); makeBuild(L.i).then(nd => { if (!nd) return; workOn(nd.id); renderAll(); openBuild("add"); toast(`Made ${nd.name}`); }); return; }
   if (t.dataset.lens){ startLens(t.dataset.lens); return; }
   if (t.dataset.deck){ workOn(t.dataset.deck); renderAll(); openBuild("list"); }
-  else if (t.dataset.act === "new"){ makeBuild(null).then(nd => { if (!nd) return; workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast(`Made ${nd.name}. Pick its leader.`); }); }
+  else if (t.dataset.act === "new"){ makeBuild(null).then(nd => { if (!nd) return; workOn(nd.id); FB.cats = new Set(["L"]); FB.lock = false; renderAll(); openBuild("add"); toast("New deck: pick its leader"); }); }
 });
 
 /* ================= lists: buy lists, collection, treasure box ================= */
