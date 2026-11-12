@@ -416,7 +416,7 @@ details[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
 .costgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .costgrid .chip{justify-content:center;padding-inline:0;width:100%}
 /* Home */
-.home{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-block:6px 20px}
+.home{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-block:18px 20px;max-width:720px;margin:0 auto}
 .hmain,.hside{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start;min-width:0}
 .hsearch span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .impopts + .impgo, .shead .btn{white-space:nowrap}
@@ -456,7 +456,8 @@ details[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
 html[data-photo] .hsearch,html[data-photo] .hact:not(.pri),html[data-photo] .hcont,html[data-photo] .hnums{background:var(--frost);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 html[data-photo] .hsl{text-shadow:var(--glow);color:var(--ink)}
 @media (min-width:900px){
-  .home{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:18px;max-width:1180px;margin:0 auto}
+  .home{padding-top:12vh;gap:16px}
+  .hsearch{height:58px;font-size:17px}
   .hbuilds,.hrv{grid-column:1/-1}
   .hacts .hact{flex-direction:row;height:56px;font-size:14px;gap:8px}
   .hcont{padding:18px 20px}
@@ -1173,7 +1174,6 @@ qIn.addEventListener("input", () => setTimeout(renderHome, 150));
 function renderHome(){
   const el = $("#homeStrip"); if (!el) return;
   const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.type || F.set;
-  el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return;     // recent builds and recently viewed live on Home now
   if (ctx !== "cards" || busy){ el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,12), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
   const open = S.prefs.recentOpen ?? true;
@@ -1237,8 +1237,17 @@ document.getElementById("homeLink").addEventListener("click", e => {
   go("home"); window.scrollTo({top:0});
 });
 /* ================= Home ================= */
-// The next set, for the countdown on Home. Update when Bandai announces the following one.
-const NEXT_SET = {code: "OP-18", name: "The Dominance of God", date: "2026-11-20"};
+// Events for the countdown on Home. The live site reads events.json from the GitHub repo (edit it there to
+// add your own); this list is the fallback when that file can't be read.
+let EVENTS = [{name: "OP-18 · The Dominance of God", date: "2026-11-20", note: "English release"}], eventsLoaded = false;
+async function loadEvents(){
+  try {
+    const r = await fetch("events.json", {cache: "no-cache"}); if (!r.ok) return;
+    const list = await r.json();
+    if (Array.isArray(list)){ EVENTS = list.filter(e => e && e.name && /^\d{4}-\d{2}-\d{2}$/.test(e.date || "")); eventsLoaded = true; if (curTab === "home") renderHomePage(); }
+  } catch(e){}
+}
+if (location.protocol.startsWith("http")) loadEvents();
 const ICON = {
   plus: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`,
   imp: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>`,
@@ -1246,51 +1255,23 @@ const ICON = {
   wish: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`,
   search: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>`
 };
-const isLegal = d => !issuesFor(d).some(i => i[0] === "bad" || i[0] === "warn");
+// Home: just a search box, four shortcuts, and the countdowns.
 function renderHomePage(){
   const v = $("#v-home"); if (!v) return;
-  const d = deck(), has = S.decks.length && !d.ghost, L = has && d.leader && BY.get(d.leader), n = has ? deckCount(d) : 0;
-  const legal = has && isLegal(d), toGo = Math.max(0, 50 - n);
-  const owned = Object.values(S.owned).reduce((a,b) => a + b, 0);
-  const toBuy = S.wish.reduce((a, w) => a + buyRows(w).total, 0);
-  const legalN = S.decks.filter(isLegal).length;
-  const builds = recentBuilds().slice(0, 12), rv = (S.recent||[]).map(id => BY.get(id)).filter(Boolean).slice(0, 10);
-  const rel = new Date(NEXT_SET.date + "T00:00:00"), days = Math.ceil((rel - new Date()) / 864e5);
-  const out = CARDS.some(c => c.s === NEXT_SET.code || c.v.some(x => x[1] === NEXT_SET.code));
-  const setBox = days > 0 || out ? `<section class="hsetbox" aria-label="Next set">
-      ${days > 0 ? `<span class="hdays"><b>${days}</b><small>DAY${days === 1 ? "" : "S"}</small></span>` : `<span class="hdays"><b>NEW</b></span>`}
-      <span class="hsett"><b>${NEXT_SET.code} · ${esc(NEXT_SET.name)}</b><small>${days > 0 ? `English release ${rel.toLocaleDateString([], {month:"short", day:"numeric"})}` : out ? "Out now" : "Released · cards arrive with the next update"}</small></span>
-      ${out ? `<button class="hlink" data-h="newset">Cards →</button>` : ""}</section>` : "";
+  const today = new Date(); today.setHours(0,0,0,0);
+  const evs = EVENTS.map(e => ({...e, days: Math.round((new Date(e.date + "T00:00:00") - today) / 864e5)}))
+    .filter(e => e.days >= 0).sort((a,b) => a.days - b.days).slice(0, 4);
   v.innerHTML = `<div class="home">
-    <div class="hmain">
-      <button class="hsearch" data-h="search">${ICON.search}<span>Search cards: name, number, type or effect</span></button>
-      <div class="hacts">
-        <button class="hact pri" data-h="new">${ICON.plus}New deck</button>
-        <button class="hact" data-h="import">${ICON.imp}Import cardlist</button>
-        <button class="hact" data-h="buy">${ICON.buy}Buy List</button>
-        <button class="hact" data-h="wish">${ICON.wish}Wish List</button>
-      </div>
-      ${has ? `<section class="hcont" aria-label="Pick up where you left off">
-        <span class="hkick">PICK UP WHERE YOU LEFT OFF</span>
-        <div class="hrow">${jollyHTML(L && L.co.length ? L.co : [])}<span class="ht"><b>${L ? esc(L.n) + " Deck" : "New deck"}</b><small>${esc(d.name)}</small></span><span class="count ${n===50?"full":""}">${n}/50</span></div>
-        <span class="hbar"><i style="width:${Math.min(100, n * 2)}%"></i></span>
-        <div class="hrow"><span class="hstat ${legal ? "ok" : ""}">${legal ? "✓ Legal and ready" : !L ? "Pick a leader to start" : toGo ? `${toGo} card${toGo===1?"":"s"} to go · not legal yet` : "Not legal yet · see what to fix"}</span><button class="btn dark" data-h="continue">Continue</button></div>
-      </section>` : ""}
+    <button class="hsearch" data-h="search">${ICON.search}<span>Search cards: name, number, type or effect</span></button>
+    <div class="hacts">
+      <button class="hact pri" data-h="new">${ICON.plus}New deck</button>
+      <button class="hact" data-h="import">${ICON.imp}Import cardlist</button>
+      <button class="hact" data-h="buy">${ICON.buy}Buy List</button>
+      <button class="hact" data-h="wish">${ICON.wish}Wish List</button>
     </div>
-    <div class="hside">
-      ${S.decks.length ? `<section class="hnums" aria-label="Your numbers">
-        <span><b>${S.decks.length}</b><small>build${S.decks.length===1?"":"s"}</small></span>
-        <span><b class="ok">${legalN}</b><small>legal</small></span>
-        <span><b>${owned.toLocaleString()}</b><small>cards owned</small></span>
-        <span><b>${toBuy.toLocaleString()}</b><small>to buy</small></span>
-      </section>` : ""}
-      ${setBox}
-    </div>
-    <section class="hbuilds" aria-label="Your builds">
-      <span class="hsl">Your builds</span>
-      <div class="htiles"><button class="newtile" data-h="new">+ New deck</button>${builds.map(tileHTMLb).join("")}</div>
-    </section>
-    ${rv.length ? `<section class="hrv" aria-label="Recently viewed"><span class="hsl">Recently viewed</span><div class="hsr">${rv.map(c => `<button class="chip" data-open="${c.i}"><span class="dot" style="background:${bandBg(c)}"></span>${esc(c.n)} <span class="mono muted">${c.i}</span></button>`).join("")}</div></section>` : ""}
+    ${evs.map(e => `<section class="hsetbox" aria-label="${esc(e.name)}">
+      <span class="hdays">${e.days === 0 ? `<b>TODAY</b>` : `<b>${e.days}</b><small>DAY${e.days === 1 ? "" : "S"}</small>`}</span>
+      <span class="hsett"><b>${esc(e.name)}</b><small>${esc(e.note ? e.note + " · " : "")}${new Date(e.date + "T00:00:00").toLocaleDateString([], {weekday:"short", month:"short", day:"numeric"})}</small></span></section>`).join("")}
   </div>`;
 }
 $("#v-home").addEventListener("click", e => {
@@ -1304,8 +1285,6 @@ $("#v-home").addEventListener("click", e => {
   if (h === "import"){ openImportList(); return; }
   if (h === "buy"){ listTab = "wish"; go("lists"); return; }
   if (h === "wish"){ listTab = "want"; go("lists"); return; }
-  if (h === "continue"){ openBuild("list"); return; }
-  if (h === "newset"){ lens = null; if (ctx !== "cards") setCtx("cards"); FC.set = NEXT_SET.code; go("cards"); renderQuick(); renderResults(); window.scrollTo({top:0}); return; }
 });
 
 /* ================= Import cardlist: paste a list, then choose where it goes ================= */
