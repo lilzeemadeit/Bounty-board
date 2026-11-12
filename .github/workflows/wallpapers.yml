@@ -1,0 +1,34 @@
+name: Update wallpapers
+# Runs whenever pictures are added to, renamed in or removed from the wallpapers/ folder.
+# Makes phone-sized copies + thumbnails in wp/ and the list the app reads (wp/list.json).
+on:
+  push:
+    paths:
+      - "wallpapers/**"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: wallpapers
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install picture tools
+        run: pip install pillow pillow-heif
+      - name: Build wallpapers
+        run: python3 -I tools/build_wallpapers.py
+      - name: Publish if changed
+        run: |
+          git add -A wp
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git config user.name "bounty-board-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update wallpapers"
+          git pull --rebase
+          git push

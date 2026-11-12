@@ -2136,13 +2136,34 @@ function photoFromFile(file){
     im.src = url;
   });
 }
-const curPhoto = () => S.prefs.bgPhoto ? bgPhotos.find(p => p.id === S.prefs.bgPhoto) : null;
+// Built-in wallpapers: pictures the app's owner adds to the wallpapers/ folder on GitHub. An action makes
+// phone-sized copies in wp/ and the list wp/list.json. The pick is kept in prefs, so it follows you to other devices.
+let walls = [], wallsLoaded = false;
+async function loadWalls(){
+  try {
+    const r = await fetch("wp/list.json", {cache: "no-cache"}); if (!r.ok) return;
+    const ok = v => typeof v === "string" && /^wp\/[\w.-]+$/.test(v);
+    walls = (await r.json()).filter(w => w && w.id && ok(w.src) && ok(w.thumb)); wallsLoaded = true;
+    const id = S.prefs.bgPhoto;   // a wallpaper that was taken out of the folder: go back to colors
+    if (id && id.startsWith("wp:") && !walls.some(w => "wp:" + w.id === id)){ S.prefs.bgPhoto = null; save(); applyLook(); }
+  } catch(e){}
+}
+const curPhoto = () => {
+  const id = S.prefs.bgPhoto; if (!id) return null;
+  if (id.startsWith("wp:")){
+    const w = S.prefs.wp; if (!w || "wp:" + w.id !== id) return null;
+    const pos = (S.prefs.wpPos || {})[w.id] || {x: 50, y: 50};
+    return {id, wall: true, wid: w.id, url: w.src, lum: w.lum, name: w.name, credit: w.credit, x: pos.x, y: pos.y};
+  }
+  return bgPhotos.find(p => p.id === id) || null;
+};
+const photoURL = p => p.wall ? p.url : bgURLs.get(p.id);
 const backingFor = p => S.prefs.backing === "light" || S.prefs.backing === "dark" ? S.prefs.backing : (p.lum > 0.4 ? "light" : "dark");
 function applyLook(){
   const root = document.documentElement, layer = $("#bgimg"), p = curPhoto();
   if (p){
     root.dataset.photo = ""; root.dataset.theme = backingFor(p);
-    layer.style.backgroundImage = `url("${bgURLs.get(p.id)}")`; layer.style.backgroundPosition = `${p.x}% ${p.y}%`;
+    layer.style.backgroundImage = `url("${photoURL(p)}")`; layer.style.backgroundPosition = `${p.x}% ${p.y}%`;
   } else {
     delete root.dataset.photo; layer.style.backgroundImage = "";
     const look = S.prefs.look || "phone";
@@ -2154,14 +2175,17 @@ function openLook(){
     const p = curPhoto();
     const sc = sheet(`<div class="ebhead"><span><span class="mono muted" style="font-size:11px;letter-spacing:.08em">BOUNTY BOARD</span><b>Background</b></span><button class="btn primary" data-lk="done">Done</button></div>
       <div class="fld"><span>Colors</span><div class="looks" role="group" aria-label="Colors">${LOOKS.map(([k,l,bg]) => `<button data-look="${k}" aria-pressed="${!p && (S.prefs.look||"phone")===k}"><span class="sw" style="background:${bg}"></span>${l}</button>`).join("")}</div></div>
+      ${walls.length ? `<div class="fld"><span>Wallpapers</span><div class="bgthumbs" role="group" aria-label="Wallpapers">
+        ${walls.map(w => `<button data-wp="${esc(w.id)}" aria-pressed="${!!(p && p.id === "wp:" + w.id)}" aria-label="${esc(w.name)}" title="${esc(w.name)}" style="background-image:url('${w.thumb}')"></button>`).join("")}
+      </div>${p && p.wall ? `<p class="muted" style="font-size:12.5px;margin:6px 0 0">${esc(p.name || "")}${p.credit ? ` · Art by ${esc(p.credit)}` : ""}</p>` : ""}</div>` : ""}
       <div class="fld"><span>Your photos</span><div class="bgthumbs" role="group" aria-label="Your photos">
         <label>+ Add<br>photo<input type="file" accept="image/*" id="lkFile" style="position:absolute;width:1px;height:1px;opacity:0"></label>
         ${[...bgPhotos].sort((a,b)=>b.added-a.added).map(ph => `<button data-ph="${ph.id}" aria-pressed="${p && p.id===ph.id}" aria-label="Use this photo" style="background-image:url('${bgURLs.get(ph.id)}');background-position:${ph.x}% ${ph.y}%"></button>`).join("")}
       </div>${memOnly ? `<p class="muted" style="font-size:12.5px;margin:6px 0 0">This preview can't keep photos after you close it. The installed app will.</p>` : ""}</div>
       ${p ? `<div class="fld"><span>Text backing</span><div><div class="seg3" role="group" aria-label="Text backing">${[["auto","Auto"],["light","Light"],["dark","Dark"]].map(([k,l]) => `<button data-bk="${k}" aria-pressed="${(S.prefs.backing||"auto")===k}">${l}</button>`).join("")}</div>
           <p class="muted" style="font-size:12.5px;margin:6px 0 0">${(S.prefs.backing||"auto")==="auto" ? `Auto picked ${backingFor(p)} for this photo.` : "Behind text, so it stays readable."}</p></div></div>
-        <div class="fld"><span>Framing · drag the photo</span><div class="frame" id="lkFrame" style="background-image:url('${bgURLs.get(p.id)}');background-position:${p.x}% ${p.y}%"><span>Drag to move</span></div></div>
-        <div class="row" style="gap:16px"><button class="linkbtn" data-lk="none">Stop using a photo</button><button class="linkbtn" data-lk="del" style="color:var(--bad)">Remove this photo</button></div>` : ""}`, "Background");
+        <div class="fld"><span>Framing · drag the photo</span><div class="frame" id="lkFrame" style="background-image:url('${photoURL(p)}');background-position:${p.x}% ${p.y}%"><span>Drag to move</span></div></div>
+        <div class="row" style="gap:16px"><button class="linkbtn" data-lk="none">Stop using a photo</button>${p.wall ? "" : `<button class="linkbtn" data-lk="del" style="color:var(--bad)">Remove this photo</button>`}</div>` : ""}`, "Background");
     sc.classList.add("clear"); sc.querySelector(".sheet").classList.add("seethru");
     $("#lkFile", sc).addEventListener("change", async e => {
       const file = e.target.files && e.target.files[0]; if (!file) return;
@@ -2176,14 +2200,17 @@ function openLook(){
         const r = fr.getBoundingClientRect();
         p.x = Math.max(0, Math.min(100, start.px - (e.clientX - start.x) / r.width * 100));
         p.y = Math.max(0, Math.min(100, start.py - (e.clientY - start.y) / r.height * 100));
+        if (p.wall) (S.prefs.wpPos ||= {})[p.wid] = {x: Math.round(p.x), y: Math.round(p.y)};
         fr.style.backgroundPosition = `${p.x}% ${p.y}%`; applyLook(); });
-      const end = () => { if (start){ start = null; storePhoto(p); } };
+      const end = () => { if (start){ start = null; if (p.wall) save(); else storePhoto(p); } };
       fr.addEventListener("pointerup", end); fr.addEventListener("pointercancel", end);
     }
     sc.addEventListener("click", async e => {
       const t = e.target.closest("button"); if (!t) return;
       if (t.dataset.lk === "done"){ closeSheet(); return; }
       if (t.dataset.look){ S.prefs.look = t.dataset.look; S.prefs.bgPhoto = null; save(); applyLook(); draw(); return; }
+      if (t.dataset.wp){ const w = walls.find(x => x.id === t.dataset.wp); if (!w) return;
+        S.prefs.wp = {id: w.id, src: w.src, lum: w.lum, name: w.name, credit: w.credit}; S.prefs.bgPhoto = "wp:" + w.id; save(); applyLook(); draw(); return; }
       if (t.dataset.ph){ S.prefs.bgPhoto = t.dataset.ph; save(); applyLook(); draw(); return; }
       if (t.dataset.bk){ S.prefs.backing = t.dataset.bk; save(); applyLook(); draw(); return; }
       if (t.dataset.lk === "none"){ S.prefs.bgPhoto = null; save(); applyLook(); draw(); return; }
@@ -2191,15 +2218,17 @@ function openLook(){
     });
   };
   draw();
+  if (!wallsLoaded) loadWalls().then(() => { if (walls.length && $("#lkFile")) draw(); });
 }
 $("#lookBtn").onclick = openLook;
 applyLook();
 loadPhotos().then(applyLook);
+if (location.protocol.startsWith("http")) loadWalls();
 
 /* ================= account & cloud sync (Supabase) ================= */
 // Email + password sign-in. Your whole app state is saved to your account and kept in step across devices:
 // every change is pushed a moment later, and the app checks for changes from your other devices when it opens
-// or comes back to the front. Background photos stay on each device.
+// or comes back to the front. Your own background photos stay on each device.
 const SB_URL = "https://ebsgqefxokkgihfjrvvh.supabase.co", SB_KEY = "sb_publishable_NW0xhb1zRJ4DNj-zLc80xg_9AnJaZGK";
 const SYNC_KEY = "bountyboard.sync";
 let sb = null, sbUser = null, sbState = "off", pushT = null, busy = false, recovering = false;
@@ -2288,7 +2317,7 @@ function openAccount(msg, bad){
       <button class="btn primary" data-ac="setpw" style="width:100%;justify-content:center;height:46px">Save new password</button>`
     : sbUser ? `<p style="margin:0 0 4px">Signed in as <b>${esc(sbUser.email)}</b></p><p class="muted" style="margin:0 0 16px;font-size:13.5px">${status}</p>
       <div class="row" style="gap:8px"><button class="btn" data-ac="sync">Sync now</button><button class="btn" data-ac="out">Sign out</button></div>
-      <p class="muted" style="font-size:12.5px;margin:16px 0 0">Builds, collection, Buy Lists, Treasure Box, pools and settings sync to your account. Background photos stay on each device.</p>`
+      <p class="muted" style="font-size:12.5px;margin:16px 0 0">Builds, collection, Buy Lists, Treasure Box, pools and settings sync to your account. Your own background photos stay on each device.</p>`
     : `<p class="muted" style="margin:0 0 14px;font-size:14px">Sign in to keep your decks safe and the same on all your devices.</p>
       <label class="fld"><span>Email</span><input type="email" id="acEmail" autocomplete="email" inputmode="email" autofocus></label>
       <label class="fld"><span>Password</span><input type="password" id="acPw" autocomplete="current-password"></label>
