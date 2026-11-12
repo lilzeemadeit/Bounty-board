@@ -1,1 +1,18 @@
-[]
+[
+ {
+  "id": "cc81633999",
+  "name": "Beach hangs copy",
+  "credit": "",
+  "src": "wp/cc81633999.jpg",
+  "thumb": "wp/cc81633999-t.jpg",
+  "lum": 0.417
+ },
+ {
+  "id": "cfe8046ad7",
+  "name": "Beach hangs",
+  "credit": "",
+  "src": "wp/cfe8046ad7.jpg",
+  "thumb": "wp/cfe8046ad7-t.jpg",
+  "lum": 0.424
+ }
+]
