@@ -100,6 +100,25 @@ def parse_cond(clause):
     unknown = (not alts) and bool(re.search(r"[\[{\"<]", part))
     return alts, unknown
 
+# Effects aimed only at a certain Leader ("Your {Fish-Man} or {Merfolk} type Leader gains +4000",
+# "give DON!! to your [Shanks] Leader") do nothing for any other Leader, so they count as conditions too.
+# Skipped when Characters/Stages can be picked instead ("Leader and Character cards", "or up to 1 of your Characters").
+LTARGET = re.compile(r'(?<!or )[Yy]our (?:((?:\{[^}]+\}(?:,? (?:or )?)?)+) type Leader\b|\[([^\]]+)\] Leader\b|Leader with a type including "([^"]+)")')
+LT_OTHER = re.compile(r"(?:'s)?,?\s+(?:or|and) (?:up to \d+ of )?(?:your )?(?:\{|\[|Character|Stage)")
+
+def leader_target(s):
+    alts, txt = [], []
+    for m in LTARGET.finditer(s):
+        if LT_OTHER.match(s, m.end()): continue
+        if m.group(1):
+            ts = re.findall(r"\{([^}]+)\}", m.group(1)); alts += [["type", t] for t in ts]
+            txt.append("Your Leader must be " + " or ".join("{%s}" % t for t in ts) + " type")
+        elif m.group(2):
+            alts.append(["name", m.group(2)]); txt.append("Your Leader must be [%s]" % m.group(2))
+        else:
+            alts.append(["typeinc", m.group(3)]); txt.append('Your Leader\'s type must include "%s"' % m.group(3))
+    return alts, "; ".join(txt)
+
 def segments(effect, trigger):
     segs = []
     prev_c = None
@@ -123,6 +142,9 @@ def segments(effect, trigger):
                     alts += a
                     ctext = (ctext + "; " if ctext else "") + ("If your Leader " + clause).strip()
                 unk = unk or u
+            if not alts and not unk:
+                a2, t2 = leader_target(s)
+                if a2: alts, ctext = a2, t2
             if not alts and not unk and prev_c and re.match(r"Then,", s):
                 seg["c"], seg["ct"] = prev_c  # "Then," follows the previous condition
             if alts:
