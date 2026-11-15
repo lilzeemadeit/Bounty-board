@@ -212,6 +212,8 @@ button{cursor:pointer}
 .flag.unk{color:var(--muted)}
 .tile.dim .face{filter:grayscale(1);opacity:.32}
 .tile.half .face{opacity:.72}
+.art.pdim .face{filter:grayscale(1);opacity:.32}
+.art.phalf .face{opacity:.72}
 .tile.dim .flag{opacity:1}
 .grid[data-size="s"] .flag{font-size:8px;padding:1px 4px}
 
@@ -1762,7 +1764,7 @@ function openCard(id, suf, after, back){
     $("#layer").innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.n)}"><div class="grab"></div><div class="gut">
       <div class="shead">${back ? `<button class="btn sm" id="cBack">‹ Back</button>` : ""}<span class="mono muted">${c.i}${art}</span>${nav ? `<span class="cnav"><button id="cPrev" aria-label="Previous card" ${navI ? "" : "disabled"}>‹</button><span class="muted mono">${navI+1}/${nav.length}</span><button id="cNext" aria-label="Next card" ${navI < nav.length-1 ? "" : "disabled"}>›</button></span>` : ""}<button class="btn sm x" id="cClose" style="margin-left:auto">Close</button></div>
       <div class="pop">
-        <div>${(() => { const qh = quickHTML(d); return `<div class="popl${qh ? " has-q" : ""}"><div class="art grid" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>${qh}</div>${underHTML(d)}`; })()}
+        <div>${(() => { const qh = quickHTML(d); return `<div class="popl${qh ? " has-q" : ""}"><div class="art grid${S.prefs.compat && cm ? (cm.st === "C" ? " pdim" : cm.st === "B" ? " phalf" : "") : ""}" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>${qh}</div>${underHTML(d)}`; })()}
           ${c.v.length>1?`<div class="vthumbs" role="group" aria-label="Versions of this card">${c.v.map(v=>`<button class="vth" data-art="${v[0]}" aria-pressed="${v[0]===art}" aria-label="${esc(vlabel(v))}"><span class="vimg" style="background:${bandBg(c)}">${imgTag(c.i, v[0])}</span><small>${esc(v[0] ? vname(c, v[0]) : "Standard")}<i>${esc(v[1])}</i></small></button>`).join("")}</div>`:""}
         </div>
         <div style="min-width:0">
