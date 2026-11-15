@@ -316,6 +316,11 @@ button{cursor:pointer}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}}
 .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 6px}
 .shead{display:flex;align-items:center;gap:8px;padding-block:4px 8px}
+.cnav{display:inline-flex;align-items:center;gap:6px;margin-left:auto}
+.cnav button{width:38px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--card,#fff);color:inherit;font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0 0 3px}
+.cnav button:disabled{opacity:.35;cursor:default}
+.cnav span{font-size:12px;min-width:44px;text-align:center}
+.cnav + .x{margin-left:0!important}
 .shead .x{margin-left:auto}
 .pop{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
 @media (min-width:600px){.pop{grid-template-columns:240px minmax(0,1fr)}}
@@ -1634,6 +1639,24 @@ function openFilters(){
 
 /* ================= card popup ================= */
 let buyTarget = null;
+// Next / previous card: the popup remembers the row of cards you opened it from (search results, a deck, a list…)
+let NAV = [], cardGo = null;
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-open],[data-tvo]"); if (!b) return;
+  const key = b.dataset.open ? "open" : "tvo";
+  const dg = b.closest(".dg");
+  const box = dg ? dg.parentElement : (b.closest(".hsr, .list, .miniGrid, #grid, .sheet") || b.parentElement);
+  const seen = new Set(); NAV = [];
+  box.querySelectorAll(key === "open" ? "[data-open]" : "[data-tvo]").forEach(x => {
+    const id = x.dataset[key], suf = x.dataset.suf || "", k = id + "|" + suf;
+    if (BY.get(id) && !seen.has(k)){ seen.add(k); NAV.push([id, suf]); }
+  });
+}, true);
+document.addEventListener("keydown", e => {
+  if (!cardGo || !$("#cClose") || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+  if (e.target.closest && e.target.closest("input, select, textarea")) return;
+  e.preventDefault(); cardGo(e.key === "ArrowRight" ? 1 : -1);
+});
 function openCard(id, suf, after, back){
   const c = BY.get(id); if (!c) return;
   const d0 = deck();
@@ -1642,6 +1665,11 @@ function openCard(id, suf, after, back){
   const artFor = dk => artPicked ? art : (dk.cards[c.i]?.art ?? art);
   const vk = () => c.i + art;
   const me = () => openCard(id, art, after, back);
+  let navI = NAV.findIndex(([i,s]) => i === id && s === (suf || ""));
+  if (navI < 0) navI = NAV.findIndex(([i]) => i === id);
+  const nav = navI >= 0 && NAV.length > 1 ? NAV : null;
+  cardGo = dir => { if (!nav) return; const j = navI + dir; if (j < 0 || j >= nav.length) return;
+    const [nid, nsuf] = nav[j]; closeSheet(); openCard(nid, nsuf, after, back); };
   S.recent = [id, ...(S.recent||[]).filter(x=>x!==id)].slice(0,12); save();
   // the builds offered in this popup: the open build first when you're in the Build tab, then your most recent builds this card fits
   const fitsBuild = d => !d.leader || sharesColor(c, BY.get(d.leader));
@@ -1747,7 +1775,7 @@ function openCard(id, suf, after, back){
     const inBuy = S.wish.reduce((n, w) => n + Math.max(0, (needOf(w)[c.i] || 0) - (w.got[c.i] || 0)), 0);
     const isLeader = c.c === "L";
     $("#layer").innerHTML = `<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(c.n)}"><div class="grab"></div><div class="gut">
-      <div class="shead">${back ? `<button class="btn sm" id="cBack">‹ Back</button>` : ""}<span class="mono muted">${c.i}${art}</span><button class="btn sm x" id="cClose" style="margin-left:auto">Close</button></div>
+      <div class="shead">${back ? `<button class="btn sm" id="cBack">‹ Back</button>` : ""}<span class="mono muted">${c.i}${art}</span>${nav ? `<span class="cnav"><button id="cPrev" aria-label="Previous card" ${navI ? "" : "disabled"}>‹</button><span class="muted mono">${navI+1}/${nav.length}</span><button id="cNext" aria-label="Next card" ${navI < nav.length-1 ? "" : "disabled"}>›</button></span>` : ""}<button class="btn sm x" id="cClose" style="margin-left:auto">Close</button></div>
       <div class="pop">
         <div>${(() => { const qh = quickHTML(d); return `<div class="popl${qh ? " has-q" : ""}"><div class="art grid" data-size="l" style="display:block;padding:0">${faceHTML(c, art)}</div>${qh}</div>${underHTML(d)}`; })()}
           ${c.v.length>1?`<div class="vthumbs" role="group" aria-label="Versions of this card">${c.v.map(v=>`<button class="vth" data-art="${v[0]}" aria-pressed="${v[0]===art}" aria-label="${esc(vlabel(v))}"><span class="vimg" style="background:${bandBg(c)}">${imgTag(c.i, v[0])}</span><small>${esc(v[0] ? vname(c, v[0]) : "Standard")}<i>${esc(v[1])}</i></small></button>`).join("")}</div>`:""}
@@ -1799,6 +1827,7 @@ function openCard(id, suf, after, back){
     const t = e.target.closest("button"); if (!t) return;
     const d = deck(); const msg = () => $("#cMsg");
     if (t.id === "cClose"){ closeSheet(); return; }
+    if (t.id === "cPrev" || t.id === "cNext"){ cardGo(t.id === "cNext" ? 1 : -1); return; }
     if (t.id === "cBack"){ closeSheet(); back(); return; }
     if (t.dataset.tq){ const k = t.dataset.tq.slice(0,1), v = t.dataset.tq.slice(2); closeSheet(); typeView(k, v, me); return; }
     if (t.dataset.topool){ (S.pools[t.dataset.topool] = S.pools[t.dataset.topool] || {cards:{}}).cards[c.i] = Date.now(); save(); toast(`Added to ★ ${BY.get(t.dataset.topool).n} Pool`); draw(); return; }
