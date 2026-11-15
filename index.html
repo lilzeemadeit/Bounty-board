@@ -973,7 +973,7 @@ function compat(c){
 /* ================= search ================= */
 // Two searches share one engine: the Cards tab searches everything; the Build tab's "Add cards"
 // searches for the open build, locked to its leader's colors until "Leader colors" is switched off.
-const mkF = () => ({ q:"", nameOnly:false, colors:new Set(), cats:new Set(), costs:new Set(), pows:new Set(), counter:"any", tags:new Set(), blocks:new Set(), types:[], typeAll:false, set:"", exact:false, lock:true });
+const mkF = () => ({ q:"", nameOnly:false, colors:new Set(), cats:new Set(), costs:new Set(), pows:new Set(), counter:"any", trig:"any", tags:new Set(), blocks:new Set(), types:[], typeAll:false, set:"", exact:false, lock:true });
 const FC = mkF(); let FB = mkF();
 let ctx = "cards", F = FC;
 const isFav = id => S.favLeaders.includes(id);
@@ -1029,6 +1029,7 @@ function passFilters(c, L, hideLeaders){
   if (L && c.c !== "L" && !sharesColor(c, L)) return false;
   if (F.costs.size && !F.costs.has(c.k ?? 0)) return false;
   if (F.blocks && F.blocks.size && !F.blocks.has(c.b)) return false;
+  if (F.trig && F.trig !== "any" && (F.trig === "has") !== !!c.tr) return false;
   if (F.pows && F.pows.size && !(c.p != null && F.pows.has(Math.min(Math.floor(c.p / 1000), 12)))) return false;
   if (F.counter === "none" && c.ct) return false;
   if (F.counter === "has" && !c.ct) return false;
@@ -1203,7 +1204,7 @@ function renderQuick(){
     ? `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`
     : `<svg viewBox="0 0 24 24" fill="currentColor">${[3,8,13,18].map(x=>[3,8,13,18].map(y=>`<rect x="${x}" y="${y}" width="3.4" height="3.4" rx=".6"/>`).join("")).join("")}</svg>`;
   gb.setAttribute("aria-label", S.prefs.grid === "l" ? "Showing 2 per row. Switch to 4 per row" : "Showing 4 per row. Switch to 2 per row");
-  const n = F.costs.size + (F.pows ? F.pows.size : 0) + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + F.types.length + !!F.set + (S.prefs.pool!=="all");
+  const n = F.costs.size + (F.pows ? F.pows.size : 0) + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + (!!F.trig && F.trig!=="any") + F.types.length + !!F.set + (S.prefs.pool!=="all");
   const fc = $("#fcount"); fc.hidden = !n; fc.textContent = n;
   const lb = $("#leaderBanner");
   const wide = innerWidth >= 1024;
@@ -1268,7 +1269,7 @@ qIn.addEventListener("input", () => setTimeout(renderHome, 150));
 // Cards tab "home": recent builds and recently viewed cards, shown until you search or filter
 function renderHome(){
   const el = $("#homeStrip"); if (!el) return;
-  const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.pows && F.pows.size) || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.types.length || F.set;
+  const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.pows && F.pows.size) || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || (F.trig && F.trig !== "any") || F.types.length || F.set;
   if (ctx !== "cards" || busy){ el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,12), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
   const open = S.prefs.recentOpen ?? true;
@@ -1604,6 +1605,7 @@ function openFilters(){
     <div class="fgroup"><div class="lab">Block icon</div><div class="costgrid blocks">${blockChips}</div></div>
     ${ctx === "build" || lens ? `<div class="fgroup"><div class="lab">Leader match</div><div class="wrapchips"><button class="chip tog" id="fCompat" aria-pressed="${S.prefs.compat}">Dim cards that don't work with my leader</button></div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Cards that only partly work are dimmed less.</p></div>` : ""}
     <div class="fgroup"><div class="lab">Counter</div><div class="wrapchips">${[["any","Any"],["has","Has counter"],["1000","+1000"],["2000","+2000"],["none","No counter"]].map(([v,l])=>`<button class="chip" data-fctr="${v}" aria-pressed="${F.counter===v}">${l}</button>`).join("")}</div></div>
+    <div class="fgroup"><div class="lab">Trigger</div><div class="wrapchips">${[["any","Any"],["has","Has trigger"],["none","No trigger"]].map(([v,l])=>`<button class="chip" data-ftrig="${v}" aria-pressed="${(F.trig||"any")===v}">${l}</button>`).join("")}</div></div>
     <details class="fgroup effects"${effOn?" open":""}><summary class="lab">What the card does <span class="bcount" id="effCount">${effOn?effOn+" selected":""}</span></summary>
       <div class="buckets">${bucketHTML}</div></details>
     <div class="fgroup" id="fTypes">${typesHTML()}</div>
@@ -1615,6 +1617,7 @@ function openFilters(){
     const t = e.target.closest("button"); if (!t) return;
     if (t.dataset.fcost){ const k=+t.dataset.fcost; F.costs.has(k)?F.costs.delete(k):F.costs.add(k); t.setAttribute("aria-pressed",F.costs.has(k)); }
     else if (t.dataset.fcat){ const k=t.dataset.fcat; F.cats.has(k)?F.cats.delete(k):F.cats.add(k); t.setAttribute("aria-pressed",F.cats.has(k)); }
+    else if (t.dataset.ftrig){ F.trig = t.dataset.ftrig; sc.querySelectorAll("[data-ftrig]").forEach(x=>x.setAttribute("aria-pressed", x.dataset.ftrig===F.trig)); }
     else if (t.dataset.fpow){ const k=+t.dataset.fpow; F.pows.has(k)?F.pows.delete(k):F.pows.add(k); t.setAttribute("aria-pressed",F.pows.has(k)); }
     else if (t.dataset.fblock){ const k=+t.dataset.fblock; F.blocks.has(k)?F.blocks.delete(k):F.blocks.add(k); t.setAttribute("aria-pressed",F.blocks.has(k)); }
     else if (t.id === "fCompat"){ S.prefs.compat = !S.prefs.compat; save(); compatCache.clear(); t.setAttribute("aria-pressed", S.prefs.compat); }
@@ -1629,7 +1632,7 @@ function openFilters(){
     else if (t.id === "fTypeAll"){ F.typeAll = !F.typeAll; drawTypes(); }
     else if (t.dataset.fpool){ S.prefs.pool = t.dataset.fpool; save(); sc.querySelectorAll("[data-fpool]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fpool===S.prefs.pool)); }
     else if (t.id === "fArts"){ S.prefs.arts = !S.prefs.arts; save(); t.setAttribute("aria-pressed", S.prefs.arts); }
-    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),pows:new Set(),blocks:new Set(),counter:"any",tags:new Set(),types:[],typeAll:false,set:""}); S.prefs.pool="all"; save(); closeSheet(); }
+    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),pows:new Set(),blocks:new Set(),counter:"any",trig:"any",tags:new Set(),types:[],typeAll:false,set:""}); S.prefs.pool="all"; save(); closeSheet(); }
     else if (t.id === "fDone") closeSheet();
   });
   // add the typed type when it matches one from the list (or on Enter / Add for free text)
