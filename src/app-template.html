@@ -875,16 +875,18 @@ function sharesColor(c, L){ return !L || c.co.some(x => L.co.includes(x)); }
 const KWRE = /^(On |When |Activate|Main|Counter|Blocker|Rush|Banish|Double Attack|Once Per Turn|DON!!|Your Turn|Opponent's Turn|Opponent’s Turn|End of Your Turn|Unblockable|On Your Opponent|Trigger)/;
 // The {types} and [card names] a card's effect looks for (not keywords like [Blocker]).
 function refsOf(c){
-  const txt = (c.e || "") + " " + (c.tr || ""), types = new Set(), names = new Set();
+  const txt = (c.e || "") + " " + (c.tr || ""), types = new Set(), names = new Set(), inc = new Set();
   for (const m of txt.matchAll(/\{([^}]{1,40})\}/g)) types.add(m[1]);
+  for (const m of txt.matchAll(/type (?:including|includes) "([^"]{1,40})"/g)) inc.add(m[1]);
   for (const m of txt.matchAll(/\[([^\]]{1,40})\]/g)) if (!KWRE.test(m[1])) names.add(m[1]);
-  return {types: [...types], names: [...names]};
+  return {types: [...types], names: [...names], inc: [...inc]};
 }
 function fmtText(t){
   return esc(t)
     .replace(/\[(Trigger)\]/g,'<span class="kw trg">$1</span>')
     .replace(/\[([^\]]{1,40})\]/g,(m,k)=> KWRE.test(k) ? `<span class="kw">${k}</span>` : `<button class="tylink nm" data-tq="n:${k}">[${k}]</button>`)
-    .replace(/\{([^}]{1,40})\}/g,'<button class="tylink" data-tq="t:$1">{$1}</button>');
+    .replace(/\{([^}]{1,40})\}/g,'<button class="tylink" data-tq="t:$1">{$1}</button>')
+    .replace(/(type (?:including|includes) )&quot;([^&]{1,40})&quot;/g,'$1<button class="tylink" data-tq="i:$2">&quot;$2&quot;</button>');
 }
 const STD_PERMIT = new Set(META.stdPermitted), STD_B4 = new Set(META.stdBlock4);
 function stdStatus(c){
@@ -1009,7 +1011,7 @@ function passFilters(c, L, hideLeaders){
   if ((F.counter === "1000" || F.counter === "2000") && String(c.ct) !== F.counter) return false;
   for (const g of F.tags) if (!c._tags.has(g)) return false;
   if (F.types.length){                       // several types / attributes: any of them, or all of them when "Must match all" is on
-    const hit = p => ATTRS.includes(p) ? c.a === p : (c.t.some(x => x.toLowerCase() === p.toLowerCase()) || c._types.includes(nrm(p)));
+    const hit = p => ATTRS.includes(p) ? c.a === p : TYPESET.has(p.toLowerCase()) ? c.t.some(x => x.toLowerCase() === p.toLowerCase()) : c._types.includes(nrm(p));
     if (F.typeAll ? !F.types.every(hit) : !F.types.some(hit)) return false;
   }
   if (F.set && !c.v.some(v=>v[1]===F.set)) return false;
@@ -1443,12 +1445,12 @@ function openImportList(){
 /* ================= quick view: every card of a type or name ================= */
 function typeView(kind, val, back){
   const ok = x => S.prefs.pool !== "std" || (standardOK(x) && !x.ban);
-  const list = CARDS.filter(x => (kind === "t" ? x.t.includes(val) : x.n === val) && ok(x))
+  const list = CARDS.filter(x => (kind === "t" ? x.t.includes(val) : kind === "i" ? x.t.some(t => t.includes(val)) : x.n === val) && ok(x))
     .sort((a,b) => ("LCES".indexOf(a.c) - "LCES".indexOf(b.c)) || (COLORS.indexOf(a.co[0]) - COLORS.indexOf(b.co[0])) || ((a.k??0)-(b.k??0)) || (a._order-b._order));
   const cols = COLORS.map(col => [col, list.filter(x => x.co.includes(col)).length]).filter(([,n]) => n);
   const cats = [["L","Leader"],["C","Character"],["E","Event"],["S","Stage"]].map(([k,l]) => { const n = list.filter(x => x.c === k).length; return n ? `${n} ${l}${n===1?"":"s"}` : ""; }).filter(Boolean);
   const sc = sheet(`<div class="shead"><button class="btn sm" data-tv="back">‹ Back</button><button class="btn sm x" data-tv="close" style="margin-left:auto">Close</button></div>
-    <div class="tvh"><span class="mono muted" style="font-size:11px;letter-spacing:.08em">${kind === "t" ? "TYPE" : "CARD NAME"}${S.prefs.pool === "std" ? " · LEGAL ONLY" : ""}</span><h2 class="h2" style="margin:2px 0 4px">${esc(val)}</h2>
+    <div class="tvh"><span class="mono muted" style="font-size:11px;letter-spacing:.08em">${kind === "t" ? "TYPE" : kind === "i" ? "ANY TYPE INCLUDING" : "CARD NAME"}${S.prefs.pool === "std" ? " · LEGAL ONLY" : ""}</span><h2 class="h2" style="margin:2px 0 4px">${esc(val)}</h2>
       <div class="tvc">${cols.map(([col,n]) => `<span class="tag" style="background:${colorVar(col)};color:#fff">${col} ${n}</span>`).join("")}</div>
       <div class="muted" style="font-size:13px;margin-top:6px">${list.length} card${list.length===1?"":"s"}${cats.length ? " · " + cats.join(" · ") : ""}</div></div>
     ${list.length ? `<div class="grid" data-size="s">${list.map(x => `<button class="tile" data-tvo="${x.i}" aria-label="${esc(x.n)} ${x.i}">${faceHTML(x, "")}</button>`).join("")}</div>` : `<p class="muted">No cards found.</p>`}`, val);
@@ -1534,6 +1536,8 @@ function openWorkOn(after){
   });
 }
 const allTypes = [...new Set(CARDS.flatMap(c=>c.t))].sort();
+// Exact type names, lowercased. "Fish-Man" matches only Fish-Man, never Fish-Man Island.
+const TYPESET = new Set(allTypes.map(t => t.toLowerCase()));
 const ATTRS = ["Slash","Strike","Ranged","Special","Wisdom"];
 // Filters → Type, trait or attribute: pick several; cards match any of them, or all with "Must match all".
 function typesHTML(){
@@ -1700,11 +1704,11 @@ function openCard(id, suf, after, back){
   // "Looks for Alabasta or Straw Hat Crew · you have 0 in this build" (only inside a build)
   const looksHTML = () => {
     const d = deck(); if (ctx !== "build" || d.ghost) return "";
-    const {types, names} = refsOf(c); if (!types.length && !names.length) return "";
+    const {types, names, inc} = refsOf(c); if (!types.length && !names.length && !inc.length) return "";
     const ids = [d.leader, ...Object.keys(d.cards)].filter(x => x && x !== c.i);
     let n = 0; for (const x of ids){ const y = BY.get(x); if (!y) continue; const q = x === d.leader ? 1 : d.cards[x].q;
-      if (y.t.some(t => types.includes(t)) || names.includes(y.n)) n += q; }
-    const what = [...types, ...names.map(x => `[${x}]`)];
+      if (y.t.some(t => types.includes(t) || inc.some(v => t.includes(v))) || names.includes(y.n)) n += q; }
+    const what = [...types, ...inc.map(x => `any "${x}" type`), ...names.map(x => `[${x}]`)];
     return `<span class="looks4">Looks for ${esc(what.join(" or "))} · <b style="display:inline">${n}</b> in this build</span>`;
   };
   const draw = () => {
