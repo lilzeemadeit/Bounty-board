@@ -434,6 +434,7 @@ details[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
 .chip.tog[aria-pressed="false"]{background:transparent}
 .costgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .costgrid .chip{justify-content:center;padding-inline:0;width:100%}
+.costgrid.pow{grid-template-columns:repeat(6,minmax(0,1fr))}
 .haverow{display:flex;align-items:center;gap:10px}
 .haverow .t{flex:1;min-width:0;display:flex;flex-direction:column}
 .havelab{font-size:12px;font-weight:700;color:var(--muted)}
@@ -579,7 +580,7 @@ html[data-photo] .hsl{text-shadow:var(--glow);color:var(--ink)}
 .chip.picked{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
 #nameSlot:empty{display:none}
-@media (min-width:560px){.costgrid:not(.blocks){grid-template-columns:repeat(10,minmax(0,1fr))}.costgrid.blocks{max-width:50%}}
+@media (min-width:560px){.costgrid:not(.blocks):not(.pow){grid-template-columns:repeat(10,minmax(0,1fr))}.costgrid.pow{grid-template-columns:repeat(12,minmax(0,1fr))}.costgrid.blocks{max-width:50%}}
 @media (max-width:380px){.brand h1{font-size:15px}.brand .lookbtn{width:30px;height:30px}.brand{gap:6px}}
 .field{height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:0 10px;width:100%;font-size:16px}
 textarea.field{height:180px;padding:10px;font-family:var(--f-mono);font-size:13px;resize:vertical}
@@ -972,7 +973,7 @@ function compat(c){
 /* ================= search ================= */
 // Two searches share one engine: the Cards tab searches everything; the Build tab's "Add cards"
 // searches for the open build, locked to its leader's colors until "Leader colors" is switched off.
-const mkF = () => ({ q:"", nameOnly:false, colors:new Set(), cats:new Set(), costs:new Set(), counter:"any", tags:new Set(), blocks:new Set(), types:[], typeAll:false, set:"", exact:false, lock:true });
+const mkF = () => ({ q:"", nameOnly:false, colors:new Set(), cats:new Set(), costs:new Set(), pows:new Set(), counter:"any", tags:new Set(), blocks:new Set(), types:[], typeAll:false, set:"", exact:false, lock:true });
 const FC = mkF(); let FB = mkF();
 let ctx = "cards", F = FC;
 const isFav = id => S.favLeaders.includes(id);
@@ -1028,6 +1029,7 @@ function passFilters(c, L, hideLeaders){
   if (L && c.c !== "L" && !sharesColor(c, L)) return false;
   if (F.costs.size && !F.costs.has(c.k ?? 0)) return false;
   if (F.blocks && F.blocks.size && !F.blocks.has(c.b)) return false;
+  if (F.pows && F.pows.size && !(c.p != null && F.pows.has(Math.min(Math.floor(c.p / 1000), 12)))) return false;
   if (F.counter === "none" && c.ct) return false;
   if (F.counter === "has" && !c.ct) return false;
   if ((F.counter === "1000" || F.counter === "2000") && String(c.ct) !== F.counter) return false;
@@ -1201,7 +1203,7 @@ function renderQuick(){
     ? `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`
     : `<svg viewBox="0 0 24 24" fill="currentColor">${[3,8,13,18].map(x=>[3,8,13,18].map(y=>`<rect x="${x}" y="${y}" width="3.4" height="3.4" rx=".6"/>`).join("")).join("")}</svg>`;
   gb.setAttribute("aria-label", S.prefs.grid === "l" ? "Showing 2 per row. Switch to 4 per row" : "Showing 4 per row. Switch to 2 per row");
-  const n = F.costs.size + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + F.types.length + !!F.set + (S.prefs.pool!=="all");
+  const n = F.costs.size + (F.pows ? F.pows.size : 0) + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + F.types.length + !!F.set + (S.prefs.pool!=="all");
   const fc = $("#fcount"); fc.hidden = !n; fc.textContent = n;
   const lb = $("#leaderBanner");
   const wide = innerWidth >= 1024;
@@ -1266,7 +1268,7 @@ qIn.addEventListener("input", () => setTimeout(renderHome, 150));
 // Cards tab "home": recent builds and recently viewed cards, shown until you search or filter
 function renderHome(){
   const el = $("#homeStrip"); if (!el) return;
-  const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.types.length || F.set;
+  const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.pows && F.pows.size) || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.types.length || F.set;
   if (ctx !== "cards" || busy){ el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,12), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
   const open = S.prefs.recentOpen ?? true;
@@ -1588,6 +1590,8 @@ function openFilters(){
   }).join("");
   const effOn = F.tags.size;
   if (!F.blocks) F.blocks = new Set();
+  if (!F.pows) F.pows = new Set();
+  const powChips = [1,2,3,4,5,6,7,8,9,10,11,12].map(k=>`<button class="chip" data-fpow="${k}" aria-pressed="${F.pows.has(k)}">${k}k${k===12?"+":""}</button>`).join("");
   const costChips = [1,2,3,4,5,6,7,8,9,10].map(k=>`<button class="chip" data-fcost="${k}" aria-pressed="${F.costs.has(k)}">${k}</button>`).join("");
   const blockChips = [1,2,3,4,5].map(k=>`<button class="chip" data-fblock="${k}" aria-pressed="${F.blocks.has(k)}">${k}</button>`).join("");
   const sc = sheet(`
@@ -1596,6 +1600,7 @@ function openFilters(){
       <p class="foot-note" style="margin-top:6px">Banned and rotated are separate. “Hide banned” removes only the ${META.banned.length} cards on the October 12, 2026 ban list. “Legal only” also removes rotated Block 1 cards, except the ${STD_PERMIT.size + STD_B4.size} that Bandai keeps legal.</p></div>
     <div class="fgroup"><div class="lab">Card type</div><div class="wrapchips">${[["L","Leaders"],["C","Characters"],["E","Events"],["S","Stages"]].map(([k,l])=>`<button class="chip" data-fcat="${k}" aria-pressed="${F.cats.has(k)}">${l}</button>`).join("")}</div></div>
     <div class="fgroup"><div class="lab">Cost</div><div class="costgrid">${costChips}</div></div>
+    <div class="fgroup"><div class="lab">Power</div><div class="costgrid pow">${powChips}</div></div>
     <div class="fgroup"><div class="lab">Block icon</div><div class="costgrid blocks">${blockChips}</div></div>
     ${ctx === "build" || lens ? `<div class="fgroup"><div class="lab">Leader match</div><div class="wrapchips"><button class="chip tog" id="fCompat" aria-pressed="${S.prefs.compat}">Dim cards that don't work with my leader</button></div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Cards that only partly work are dimmed less.</p></div>` : ""}
     <div class="fgroup"><div class="lab">Counter</div><div class="wrapchips">${[["any","Any"],["has","Has counter"],["1000","+1000"],["2000","+2000"],["none","No counter"]].map(([v,l])=>`<button class="chip" data-fctr="${v}" aria-pressed="${F.counter===v}">${l}</button>`).join("")}</div></div>
@@ -1610,6 +1615,7 @@ function openFilters(){
     const t = e.target.closest("button"); if (!t) return;
     if (t.dataset.fcost){ const k=+t.dataset.fcost; F.costs.has(k)?F.costs.delete(k):F.costs.add(k); t.setAttribute("aria-pressed",F.costs.has(k)); }
     else if (t.dataset.fcat){ const k=t.dataset.fcat; F.cats.has(k)?F.cats.delete(k):F.cats.add(k); t.setAttribute("aria-pressed",F.cats.has(k)); }
+    else if (t.dataset.fpow){ const k=+t.dataset.fpow; F.pows.has(k)?F.pows.delete(k):F.pows.add(k); t.setAttribute("aria-pressed",F.pows.has(k)); }
     else if (t.dataset.fblock){ const k=+t.dataset.fblock; F.blocks.has(k)?F.blocks.delete(k):F.blocks.add(k); t.setAttribute("aria-pressed",F.blocks.has(k)); }
     else if (t.id === "fCompat"){ S.prefs.compat = !S.prefs.compat; save(); compatCache.clear(); t.setAttribute("aria-pressed", S.prefs.compat); }
     else if (t.dataset.fctr){ F.counter = t.dataset.fctr; sc.querySelectorAll("[data-fctr]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fctr===F.counter)); }
@@ -1623,7 +1629,7 @@ function openFilters(){
     else if (t.id === "fTypeAll"){ F.typeAll = !F.typeAll; drawTypes(); }
     else if (t.dataset.fpool){ S.prefs.pool = t.dataset.fpool; save(); sc.querySelectorAll("[data-fpool]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fpool===S.prefs.pool)); }
     else if (t.id === "fArts"){ S.prefs.arts = !S.prefs.arts; save(); t.setAttribute("aria-pressed", S.prefs.arts); }
-    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),blocks:new Set(),counter:"any",tags:new Set(),types:[],typeAll:false,set:""}); S.prefs.pool="all"; save(); closeSheet(); }
+    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),pows:new Set(),blocks:new Set(),counter:"any",tags:new Set(),types:[],typeAll:false,set:""}); S.prefs.pool="all"; save(); closeSheet(); }
     else if (t.id === "fDone") closeSheet();
   });
   // add the typed type when it matches one from the list (or on Enter / Add for free text)
