@@ -569,6 +569,7 @@ html[data-photo] .hsl{text-shadow:var(--glow);color:var(--ink)}
 .askbox input{height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:0 12px;font:inherit;font-size:16px}
 
 .chip.sm{height:28px;padding:0 10px;font-size:12.5px}
+.chip.picked{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
 #nameSlot:empty{display:none}
 @media (min-width:560px){.costgrid:not(.blocks){grid-template-columns:repeat(10,minmax(0,1fr))}.costgrid.blocks{max-width:50%}}
@@ -962,7 +963,7 @@ function compat(c){
 /* ================= search ================= */
 // Two searches share one engine: the Cards tab searches everything; the Build tab's "Add cards"
 // searches for the open build, locked to its leader's colors until "Leader colors" is switched off.
-const mkF = () => ({ q:"", nameOnly:false, colors:new Set(), cats:new Set(), costs:new Set(), counter:"any", tags:new Set(), blocks:new Set(), type:"", set:"", exact:false, lock:true });
+const mkF = () => ({ q:"", nameOnly:false, colors:new Set(), cats:new Set(), costs:new Set(), counter:"any", tags:new Set(), blocks:new Set(), types:[], typeAll:false, set:"", exact:false, lock:true });
 const FC = mkF(); let FB = mkF();
 let ctx = "cards", F = FC;
 const isFav = id => S.favLeaders.includes(id);
@@ -1022,7 +1023,10 @@ function passFilters(c, L, hideLeaders){
   if (F.counter === "has" && !c.ct) return false;
   if ((F.counter === "1000" || F.counter === "2000") && String(c.ct) !== F.counter) return false;
   for (const g of F.tags) if (!c._tags.has(g)) return false;
-  if (F.type){ const t = nrm(F.type); if (!c._types.includes(t)) return false; }
+  if (F.types.length){                       // several types / attributes: any of them, or all of them when "Must match all" is on
+    const hit = p => ATTRS.includes(p) ? c.a === p : (c.t.some(x => x.toLowerCase() === p.toLowerCase()) || c._types.includes(nrm(p)));
+    if (F.typeAll ? !F.types.every(hit) : !F.types.some(hit)) return false;
+  }
   if (F.set && !c.v.some(v=>v[1]===F.set)) return false;
   if (S.prefs.pool === "std" && (!standardOK(c) || c.ban)) return false;
   if (S.prefs.pool === "noban" && c.ban) return false;
@@ -1188,7 +1192,7 @@ function renderQuick(){
     ? `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`
     : `<svg viewBox="0 0 24 24" fill="currentColor">${[3,8,13,18].map(x=>[3,8,13,18].map(y=>`<rect x="${x}" y="${y}" width="3.4" height="3.4" rx=".6"/>`).join("")).join("")}</svg>`;
   gb.setAttribute("aria-label", S.prefs.grid === "l" ? "Showing 2 per row. Switch to 4 per row" : "Showing 4 per row. Switch to 2 per row");
-  const n = F.costs.size + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + !!F.type + !!F.set + (S.prefs.pool!=="all");
+  const n = F.costs.size + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + F.types.length + !!F.set + (S.prefs.pool!=="all");
   const fc = $("#fcount"); fc.hidden = !n; fc.textContent = n;
   const lb = $("#leaderBanner");
   const wide = innerWidth >= 1024;
@@ -1253,7 +1257,7 @@ qIn.addEventListener("input", () => setTimeout(renderHome, 150));
 // Cards tab "home": recent builds and recently viewed cards, shown until you search or filter
 function renderHome(){
   const el = $("#homeStrip"); if (!el) return;
-  const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.type || F.set;
+  const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || F.types.length || F.set;
   if (ctx !== "cards" || busy){ el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,12), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
   const open = S.prefs.recentOpen ?? true;
@@ -1546,6 +1550,16 @@ function openWorkOn(after){
 }
 const allTypes = [...new Set(CARDS.flatMap(c=>c.t))].sort();
 const ATTRS = ["Slash","Strike","Ranged","Special","Wisdom"];
+// Filters → Type, trait or attribute: pick several; cards match any of them, or all with "Must match all".
+function typesHTML(){
+  const all = [...new Set(CARDS.flatMap(c => c.t))].sort((a,b) => a.localeCompare(b));
+  return `<label class="lab" for="fType">Type, trait or attribute</label>
+    ${F.types.length ? `<div class="wrapchips" style="margin-bottom:8px">${F.types.map(p => `<button class="chip picked" data-funtype="${esc(p)}" aria-label="Remove ${esc(p)}">${esc(p)} <span aria-hidden="true">✕</span></button>`).join("")}</div>` : ""}
+    <div class="row" style="gap:8px;flex-wrap:nowrap"><input class="field" id="fType" list="typeList" placeholder="Add a type: Fish-Man, Navy, Straw Hat Crew…" autocomplete="off" style="flex:1;min-width:0"><button class="btn sm" id="fTypeAdd">Add</button></div>
+    <datalist id="typeList">${all.map(t => `<option value="${esc(t)}">`).join("")}</datalist>
+    <div class="wrapchips" style="margin-top:8px">${ATTRS.map(a => `<button class="chip" data-fattr="${a}" aria-pressed="${F.types.includes(a)}">${a}</button>`).join("")}</div>
+    ${F.types.length > 1 ? `<div class="wrapchips" style="margin-top:8px"><button class="chip tog" id="fTypeAll" aria-pressed="${F.typeAll}">Must match all</button><span class="muted" style="font-size:12.5px;align-self:center">${F.typeAll ? "Showing cards that have every one picked" : "Showing cards that have any one picked"}</span></div>` : ""}`;
+}
 const BUCKETS = [
   ["Removal & disruption", ["ko","bounce","bottom","rest","powdown","costdown","discard","negate","noatk"]],
   ["Draw, search & recursion", ["draw","search","play","trash"]],
@@ -1576,8 +1590,7 @@ function openFilters(){
     <div class="fgroup"><div class="lab">Counter</div><div class="wrapchips">${[["any","Any"],["has","Has counter"],["1000","+1000"],["2000","+2000"],["none","No counter"]].map(([v,l])=>`<button class="chip" data-fctr="${v}" aria-pressed="${F.counter===v}">${l}</button>`).join("")}</div></div>
     <details class="fgroup effects"${effOn?" open":""}><summary class="lab">What the card does <span class="bcount" id="effCount">${effOn?effOn+" selected":""}</span></summary>
       <div class="buckets">${bucketHTML}</div></details>
-    <div class="fgroup"><label class="lab" for="fType">Type, trait or attribute</label><input class="field" id="fType" list="typeList" placeholder="e.g. Fish-Man, Navy, Slash, Wisdom" value="${esc(F.type)}"><datalist id="typeList">${ATTRS.map(a=>`<option value="${a}" label="Attribute">`).join("")}${allTypes.map(t=>`<option value="${esc(t)}">`).join("")}</datalist>
-      <div class="wrapchips" style="margin-top:8px">${ATTRS.map(a=>`<button class="chip" data-fattr="${a}" aria-pressed="${F.type.toLowerCase()===a.toLowerCase()}">${a}</button>`).join("")}</div></div>
+    <div class="fgroup" id="fTypes">${typesHTML()}</div>
     <div class="fgroup"><label class="lab" for="fSet">Set</label><select class="field" id="fSet"><option value="">All sets</option>${META.sets.map(s=>`<option ${F.set===s?"selected":""}>${esc(s)}</option>`).join("")}</select></div>
     <p class="foot-note">Card list: ${CARDS.length.toLocaleString()} cards and ${CARDS.reduce((n,c)=>n+c.v.length,0).toLocaleString()} printings, through ${META.through}, including promos. Card data from ${new Date(META.updated+"T12:00:00").toLocaleDateString([], {month:"long", day:"numeric", year:"numeric"})}; checked for new cards every night.</p>
   `, "Filters");
@@ -1593,14 +1606,25 @@ function openFilters(){
       const det = t.closest(".bucket"), n = det.querySelectorAll('[aria-pressed="true"]').length;
       det.querySelector("[data-bcount]").textContent = n ? n+" selected" : "";
       $("#effCount").textContent = F.tags.size ? F.tags.size+" selected" : ""; }
-    else if (t.dataset.fattr){ const a = t.dataset.fattr; F.type = F.type.toLowerCase()===a.toLowerCase() ? "" : a; $("#fType").value = F.type;
-      sc.querySelectorAll("[data-fattr]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fattr.toLowerCase()===F.type.toLowerCase())); }
+    else if (t.dataset.fattr){ const a = t.dataset.fattr; F.types = F.types.includes(a) ? F.types.filter(x => x !== a) : [...F.types, a]; drawTypes(); }
+    else if (t.dataset.funtype){ F.types = F.types.filter(x => x !== t.dataset.funtype); drawTypes(); }
+    else if (t.id === "fTypeAdd"){ addType(); }
+    else if (t.id === "fTypeAll"){ F.typeAll = !F.typeAll; drawTypes(); }
     else if (t.dataset.fpool){ S.prefs.pool = t.dataset.fpool; save(); sc.querySelectorAll("[data-fpool]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fpool===S.prefs.pool)); }
     else if (t.id === "fArts"){ S.prefs.arts = !S.prefs.arts; save(); t.setAttribute("aria-pressed", S.prefs.arts); }
-    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),blocks:new Set(),counter:"any",tags:new Set(),type:"",set:""}); S.prefs.pool="all"; save(); closeSheet(); }
+    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),blocks:new Set(),counter:"any",tags:new Set(),types:[],typeAll:false,set:""}); S.prefs.pool="all"; save(); closeSheet(); }
     else if (t.id === "fDone") closeSheet();
   });
-  $("#fType").addEventListener("input", e => { F.type = e.target.value.trim(); sc.querySelectorAll("[data-fattr]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fattr.toLowerCase()===F.type.toLowerCase())); });
+  // add the typed type when it matches one from the list (or on Enter / Add for free text)
+  const known = new Set(CARDS.flatMap(c => c.t).map(x => x.toLowerCase()));
+  const addType = () => { const inp = $("#fType", sc); const v = (inp.value || "").trim(); if (!v) return;
+    const canon = CARDS.flatMap(c => c.t).find(x => x.toLowerCase() === v.toLowerCase()) || ATTRS.find(x => x.toLowerCase() === v.toLowerCase()) || v;
+    if (!F.types.some(x => x.toLowerCase() === canon.toLowerCase())) F.types = [...F.types, canon];
+    drawTypes(); setTimeout(() => { const i2 = $("#fType", sc); if (i2) i2.focus(); }, 0); };
+  const drawTypes = () => { $("#fTypes", sc).innerHTML = typesHTML(); };
+  sc.addEventListener("input", e => { if (e.target.id === "fType" && known.has(e.target.value.trim().toLowerCase()) && e.inputType !== "insertText") addType(); });
+  sc.addEventListener("change", e => { if (e.target.id === "fType" && known.has(e.target.value.trim().toLowerCase())) addType(); });
+  sc.addEventListener("keydown", e => { if (e.target.id === "fType" && e.key === "Enter"){ e.preventDefault(); addType(); } });
   $("#fSet").addEventListener("change", e => F.set = e.target.value);
 }
 
