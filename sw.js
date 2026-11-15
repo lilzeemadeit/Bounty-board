@@ -1,12 +1,13 @@
 // Bounty Board service worker: the app opens offline, and card images you've seen are kept for offline use.
-const APP = "bb-app-v2", IMG = "bb-img-v1";
+const APP = "bb-app-v3", IMG = "bb-img-v1";
 self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil(caches.open(APP).then(c => c.addAll(["./", "./manifest.webmanifest", "./icon-192.png"]))); });
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
 self.addEventListener("fetch", e => {
   const req = e.request; if (req.method !== "GET") return;
   const u = new URL(req.url);
   if (u.origin === location.origin){        // the app itself: newest when online, saved copy when offline
-    e.respondWith(fetch(req).then(r => { const cp = r.clone(); caches.open(APP).then(c => c.put(req, cp)); return r; })
+    // always ask GitHub whether there's a newer copy (its pages are otherwise cached for up to 10 minutes)
+    e.respondWith(fetch(req.url, {cache: "no-cache", credentials: "same-origin"}).then(r => { const cp = r.clone(); caches.open(APP).then(c => c.put(req, cp)); return r; })
       .catch(() => caches.match(req).then(r => r || caches.match("./"))));
     return;
   }
