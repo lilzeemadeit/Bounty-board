@@ -460,6 +460,43 @@ html[data-photo] .blentry,html[data-photo] .newpick{background:var(--frost);-web
   #printArea b{display:block;margin-top:2pt}
   #printArea small{color:#444}
 }
+
+/* Battle Lab */
+.labhead{display:flex;align-items:center;gap:12px;margin-top:8px}
+.beta{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;font-weight:700;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;padding:2px 6px}
+.betasm{font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;border:1px solid currentColor;border-radius:4px;padding:0 3px;margin-left:3px;vertical-align:2px}
+.betadot{position:absolute;top:3px;left:calc(50% + 9px);font-size:10px;font-weight:800;color:var(--accent)}
+.labgrid .dgrid{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}
+.labgrid .dtile{cursor:pointer}
+.sheet.wide{max-width:1080px}
+.lhead{display:flex;gap:12px;align-items:center;margin:4px 0 12px}
+.lth{position:relative;flex:none;width:44px;aspect-ratio:5/7;border-radius:5px;overflow:hidden;display:block}
+.lth img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.lth.big{width:72px;border-radius:7px}
+.lseg{margin-bottom:10px}
+.lcols[data-show="syn"] .ans,.lcols[data-show="ans"] .syn{display:none}
+.lcolh{margin:6px 0 8px}
+.lgrp{margin-top:12px}
+.lgh2{font-weight:800;font-size:14.5px;margin-bottom:4px}
+.lnote{font-size:12.5px;margin:0 0 6px}
+.lrows{display:grid;gap:0;grid-template-columns:minmax(0,1fr)}
+.lcol{min-width:0}
+.lrw{display:flex;align-items:center;gap:10px;padding:7px 2px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;color:var(--ink);width:100%}
+.lt2{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.lt2 b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.lt2 small{font-size:11.5px;color:var(--muted)}
+.lt2 .lwhy{color:var(--accent);font-weight:700}
+.ltag{flex:none;font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 7px;background:var(--ink);color:var(--surface);white-space:nowrap}
+.ltag.dim{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.lsum{font-size:14px;padding:10px 12px;border-radius:12px;background:var(--sunk)}
+.lsum b{font-family:var(--f-display);font-size:22px;margin-right:2px}
+.lprot{font-size:13px;margin:8px 0 0;padding:8px 10px;border-radius:10px;border:1px dashed var(--warn)}
+@media (min-width:900px){
+  .seg.lseg{display:none}
+  .lcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+  .lcols .syn,.lcols .ans{display:block!important}
+}
+html[data-photo] #v-lab{background:color-mix(in srgb, var(--bg) 62%, transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 /* Home */
 .home{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-block:18px 20px;max-width:720px;margin:0 auto}
 .hmain,.hside{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start;min-width:0}
@@ -717,7 +754,7 @@ html[data-photo] .junklink{background:var(--frost);padding:8px 12px;border-radiu
       <div class="brand gut">
         <svg class="pose" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 3h14v18H5z"/><path d="M8 7h8"/><rect x="8.5" y="9.5" width="7" height="6" rx="1"/><path d="M8 18h8"/></svg>
         <h1><a href="#home" id="homeLink" class="homelink" aria-label="Bounty Board, go Home">Bounty Board</a></h1>
-        <nav class="topnav" aria-label="Sections"><a href="#home" data-tab="home">Home</a><a href="#cards" data-tab="cards">Cards</a><a href="#decks" data-tab="decks">My Decks</a><a href="#lists" data-tab="lists">Lists</a></nav>
+        <nav class="topnav" aria-label="Sections"><a href="#home" data-tab="home">Home</a><a href="#cards" data-tab="cards">Cards</a><a href="#decks" data-tab="decks">My Decks</a><a href="#lists" data-tab="lists">Lists</a><a href="#lab" data-tab="lab">Battle Lab <span class="betasm">BETA</span></a></nav>
         <button class="lookbtn" id="acctBtn" type="button" aria-label="Account and sync"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><i class="acdot" hidden></i></button>
         <button class="lookbtn" id="lookBtn" type="button" aria-label="Background and colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></button>
         <button class="deckchip" id="deckChip" type="button" aria-label="Open the build you're working on"><span class="nm" id="chipName"></span><span class="count" id="chipCount">0/50</span></button>
@@ -728,6 +765,7 @@ html[data-photo] .junklink{background:var(--frost);padding:8px 12px;border-radiu
     <section id="v-deck" hidden><div id="bHead" class="gut" style="padding-block:12px 4px"></div><div id="bTabs" class="gut"></div><div id="bAddSlot"></div><div id="bBody" class="view gut"></div></section>
     <section id="v-decks" class="view gut" hidden></section>
     <section id="v-lists" class="view gut" hidden></section>
+    <section id="v-lab" class="view gut" hidden></section>
   </div>
   <aside class="aside"><div id="asideDeck" class="view gut"></div></aside>
 </div>
@@ -737,6 +775,7 @@ html[data-photo] .junklink{background:var(--frost);padding:8px 12px;border-radiu
   <a href="#cards" data-tab="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="10" rx="1.5"/><rect x="14" y="4" width="7" height="10" rx="1.5"/><circle cx="11" cy="18" r="3"/><path d="M13.2 20.2L15 22"/></svg>Cards</a>
   <a href="#decks" data-tab="decks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="3" width="12" height="17" rx="2"/><path d="M3.5 6.5v12A2.5 2.5 0 006 21h9"/></svg>My Decks<span class="pill" id="navCount" hidden></span></a>
   <a href="#lists" data-tab="lists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v17l-7-4-7 4z"/></svg>Lists</a>
+  <a href="#lab" data-tab="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/></svg>Lab<span class="betadot">β</span></a>
 </nav>
 <div id="layer"></div>
 
@@ -2696,8 +2735,323 @@ $("#v-lists").addEventListener("change", e => {
 $("#v-lists").addEventListener("toggle", e => { const p = e.target.dataset && e.target.dataset.pick; if (p){ e.target.open ? pickOpen.add(p) : pickOpen.delete(p); } }, true);
 $("#v-lists").addEventListener("input", e => { if (e.target.id === "collQ"){ collQ = e.target.value; const pos = e.target.selectionStart; renderLists(); const i = $("#collQ"); i.focus(); i.setSelectionRange(pos,pos); } });
 
+/* ================= Battle Lab: card reader ================= */
+const KW_STRIP = /\[(?:On Play|When Attacking|Activate: ?Main|Main|Counter|Trigger|On K\.O\.|Your Turn|Opponent's Turn|Once Per Turn|End of Your Turn|On Block|On Your Opponent's Attack|DON!! x\d+|Start of Your Turn|Blocker|Rush|Rush: Character|Banish|Double Attack|Unblockable)\]/g;
+const COLORS_RX = /\b(red|green|blue|purple|black|yellow)\b/gi;
+const END = /(?:$|[.;]| to the owner's| to the top| at the bottom| from your| from the top| [−-]\d| \+\d| gains?\b| gain\b| cannot\b| will not\b| and up to\b| and add\b| and (?:this|your|that|play|rest|K\.O\.|give|draw|trash)\b|, then\b|, and\b| during\b| as active\b| until\b| up to \d+ (?:rested |active )?DON| and set\b| and give\b| and place\b| face-up\b)/;
+
+function targetOf(seg){
+  // seg = the words after "up to N" / "all of": "your opponent's rested {Navy} type Characters with a cost of 5 or less other than [X]"
+  const t = {kinds: "", ids: [], cols: [], excl: []};
+  if (/opponent's/.test(seg)) t.side = "opp"; else if (/\byour\b/.test(seg)) t.side = "own";
+  let s = seg;
+  for (const m of s.matchAll(/other than \[([^\]]+)\]/g)) t.excl.push(m[1]);
+  s = s.replace(/other than \[[^\]]+\]/g, " ");
+  const k = new Set();
+  if (/\bLeaders?\b/.test(s)) k.add("L");
+  if (/\bCharacters?\b/.test(s)) k.add("C");
+  if (/\bEvents?\b/.test(s)) k.add("E");
+  if (/\bStages?\b/.test(s)) k.add("S");
+  if (/DON!!/.test(s) && !k.size) k.add("D");
+  if (!k.size && /\bcards?\b/.test(s)) ["L","C","E","S"].forEach(x => k.add(x));
+  if (/DON!! cards? or|or DON!!/.test(s)) k.add("D");
+  if (!k.size && /\[[^\]]+\]/.test(s.replace(/\[(?:Trigger|Blocker|Rush|Banish|Double Attack|Unblockable)\]/g, ""))) ["L","C","E","S"].forEach(x => k.add(x));   // "play up to 1 [Penguin]"
+  t.kinds = [...k].join("");
+  let m;
+  if ((m = s.match(/cost (?:equal to or less than|of up to)|total (?:cost|power)|cost equal to|power equal to/))) t.vary = 1;
+  if ((m = s.match(/(base )?cost of (\d+) or less/))){ t.cmax = +m[2]; if (m[1]) t.base = 1; }
+  else if ((m = s.match(/(base )?cost of (\d+) or more/))){ t.cmin = +m[2]; if (m[1]) t.base = 1; }
+  else if ((m = s.match(/(base )?cost of (\d+) to (\d+)/))){ t.cmin = +m[2]; t.cmax = +m[3]; }
+  else if ((m = s.match(/(base )?cost of (\d+)\b/))){ t.cmin = t.cmax = +m[2]; if (m[1]) t.base = 1; }
+  else if ((m = s.match(/\b(\d+) cost (?:Characters?|cards?)/))){ t.cmin = t.cmax = +m[1]; }
+  if (t.cmin == null && t.cmax == null && (m = s.match(/(base )?cost (\d+) or (less|more)/))){ if (m[3] === "less") t.cmax = +m[2]; else t.cmin = +m[2]; if (m[1]) t.base = 1; }
+  if ((m = s.match(/(\d+) (base )?power or less/))){ t.pmax = +m[1]; if (m[2]) t.base = 1; }
+  else if ((m = s.match(/(\d+) (base )?power or more/))){ t.pmin = +m[1]; }
+  else if ((m = s.match(/(base )?power of (\d+) or less/))){ t.pmax = +m[2]; if (m[1]) t.base = 1; }
+  else if ((m = s.match(/(base )?power of (\d+) or more/))){ t.pmin = +m[2]; }
+  else if ((m = s.match(/(base )?power of (\d+)\b/))){ t.pmin = t.pmax = +m[2]; if (m[1]) t.base = 1; }
+  for (const mm of s.matchAll(/\{([^}]+)\}/g)) t.ids.push(["type", mm[1]]);
+  for (const mm of s.matchAll(/type including "([^"]+)"/g)) t.ids.push(["typeinc", mm[1]]);
+  for (const mm of s.matchAll(/<([^>]+)> attribute/g)) t.ids.push(["attr", mm[1]]);
+  s = s.replace(/\u2024/g, ".");
+  t.excl = t.excl.map(x => x.replace(/\u2024/g, "."));
+  for (const mm of s.matchAll(/\[([^\]]+)\]/g)) if (!/^(Trigger|Blocker|Rush|Banish|Double Attack|Unblockable)$/.test(mm[1])) t.ids.push(["name", mm[1]]);
+  for (const mm of s.matchAll(COLORS_RX)) t.cols.push(mm[1][0].toUpperCase() + mm[1].slice(1).toLowerCase());
+  if (/with an? TRIGGERFLAG/.test(s)) t.trig = 1;
+  if (/no base effect|with no effect/.test(s)) t.noeff = 1;
+  if (/\brested\b/.test(s)) t.rested = 1;
+  return t;
+}
+
+// what the clause does to the target, from the words before and after it
+function verbOf(before, after, side){
+  const b = before.slice(-40), a = after.slice(0, 260);
+  if (/K\.O\.\s*$/.test(b)) return "ko";
+  if (/[Rr]eturn\s*$/.test(b) && /to the owner's hand/.test(a)) return "bounce";
+  if (/[Pp]lace\s*$/.test(b) && /at the bottom/.test(a)) return "bottom";
+  if (/[Aa]dd\s*$/.test(b) && /Life/.test(a) && side === "opp") return "life";
+  if (/[Tt]rash\s*$/.test(b) && !/from the top|Life/.test(a)) return side === "opp" ? "trash" : "fuel";
+  if (/[Nn]egate the effects? of\s*$/.test(b)) return "negate";
+  if (/[Pp]lay\s*$/.test(b)) return "play";
+  if (/[Rr]eveal\s*$/.test(b) && /add (?:it|them) to your hand/.test(a)) return "search";
+  if (/[Aa]dd\s*$/.test(b) && /from your trash to your hand/.test(a)) return "recur";
+  if (/[Aa]dd\s*$/.test(b) && /from your deck to your hand/.test(a)) return "search";
+  if (/[Ss]et\s*$/.test(b) && /as active/.test(a)) return side === "opp" ? null : "active";
+  if (/[Rr]est\s*$/.test(b)) return side === "opp" ? "rest" : "fuel";
+  if (/[Gg]ive\s*$/.test(b)){
+    if (/^[^.]*?[−-]\d+ power/.test(a)) return side === "opp" ? "powdown" : null;
+    if (/^[^.]*?[−-]\d+ cost/.test(a)) return side === "opp" ? "costdown" : null;
+    if (/^[^.]*?\+\d+ power/.test(a)) return side === "own" ? "buff" : null;
+    if (/^[^.]*?DON!!/.test(a) || /DON!!.*$/.test(b)) return side === "own" ? "don" : null;
+  }
+  // "Up to 1 of your opponent's Characters ... cannot attack / gains −2000 power"
+  if (/^[^.]*?(?:cannot attack|will not become active|cannot be rested|cannot activate)/.test(a)) return side === "opp" ? "lock" : null;
+  if (/^[^.]*?gains? [−-]\d+ power/.test(a) || /^[^.]*?[−-]\d+ power/.test(a)) return side === "opp" ? "powdown" : null;
+  if (/^[^.]*?[−-]\d+ cost/.test(a)) return side === "opp" ? "costdown" : null;
+  if (/^[^.]*?cannot be (?:K\.O\.'d|removed)/.test(a)) return side === "own" ? "protect" : null;
+  if (/^[^.]*?(?:gains? \+\d+ power|gains? \[(?:Rush|Blocker|Double Attack|Banish|Unblockable)\]|\+\d+ power)/.test(a)) return side === "own" ? "buff" : null;
+  if (/^[^.]*?as active/.test(a) && /[Ss]et\b/.test(b)) return side === "own" ? "active" : null;
+  return null;
+}
+
+const QTY = /\b(?:[Uu]p to (?:a total of )?\d+ (?:of (?:each of )?)?|[Aa]ll (?:of )?|[Yy]ou may (?:trash|rest|return|place) \d+ (?:of )?|\b(?:[Tt]rash|[Rr]est|[Rr]eturn|[Pp]lace) \d+ (?:of )?)/g;
+function readCard(c){
+  const out = [];
+  const texts = [c.e || "", c.tr || ""];
+  for (const raw of texts){
+    if (!raw) continue;
+    const txt = raw.replace(/\([^)]*\)/g, "").replace(/with an? \[Trigger\]/g, "with a TRIGGERFLAG").replace(KW_STRIP, " ").replace(/\s+/g, " ").replace(/ [–－‐-](\d)/g, " −$1")
+      .replace(/\[[^\]]*\]/g, m => m.replace(/\./g, "\u2024"));      // dots inside [names] don't end a sentence
+    for (const sent of txt.split(/(?<=\.)(?<!K\.O\.)\s+/)){
+      const lc = /[Ii]f your Leader|your Leader is|your Leader has|Leader's type/.test(sent) ? 1 : 0;
+      // the part before ":" is a cost you pay (fuel); after it, the effect
+      const ci = sent.lastIndexOf(":");
+      const parts = ci > 0 ? [[sent.slice(0, ci), true], [sent.slice(ci + 1), false]] : [[sent, false]];
+      for (const [p, isCost] of parts){
+        QTY.lastIndex = 0; let m, lastV = null;
+        while ((m = QTY.exec(p))){
+          const rest = p.slice(m.index + m[0].length);
+          const e = rest.search(END); const seg = e < 0 ? rest : rest.slice(0, e);
+          if (/^(?:card|cards) from the top of|^DON!! cards? from your DON!! deck|^(?:card|cards) from your (?:hand|deck)$/.test(seg.trim())) continue;
+          const t = targetOf(seg);
+          let before = p.slice(0, m.index) + m[0].replace(/(?:up to|all|you may|\d+|of|a total|each)/gi, " ").trim();
+          // "You may trash 1 ..." / "Rest 1 of your" : the verb is inside the quantity words
+          const qv = m[0].match(/(trash|rest|return|place)/i);
+          if (qv) before = p.slice(0, m.index) + " " + qv[1][0].toUpperCase() + qv[1].slice(1);
+          if (!t.side){
+            // "play up to 1 {X} type Character card ... from your hand" has no "your" before the noun
+            if (/from your (?:hand|trash|deck|Life)/.test(rest.slice(0, 260)) || /reveal\s*$/i.test(before)) t.side = "own";
+            else continue;
+          }
+          let v = verbOf(before, rest, t.side);
+          if (!v && lastV && /\band\s*$/.test(p.slice(0, m.index))) v = lastV;     // "K.O. up to 1 … and up to 1 …"
+          if (!v) continue;
+          lastV = v;
+          if (isCost && t.side === "own" && /^(rest|bounce|bottom|fuel)$/.test(v)) v = "fuel";
+          if (isCost && t.side === "own" && v !== "fuel") continue;
+          if (/return/i.test(before.slice(-12)) && t.side === "own") v = "fuel";
+          if (/this Character|this card/.test(seg)) continue;
+          if (!t.kinds) continue;
+          const r = {v, side: t.side, kinds: t.kinds};
+          for (const k of ["cmin","cmax","pmin","pmax","base","vary","trig","noeff","rested"]) if (t[k] != null) r[k] = t[k];
+          if (t.ids.length) r.ids = t.ids; if (t.cols.length) r.cols = t.cols; if (t.excl.length) r.excl = t.excl;
+          if (lc) r.lc = 1;
+          if (m[0].trim().toLowerCase().startsWith("all")) r.all = 1;
+          if (v === "play"){ const fm = rest.match(/from your (hand|trash|deck|Life)/); if (fm) r.from = fm[1]; }
+          out.push(r);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+// Does card x fit rule r's target? Returns "yes", "help" (needs a cost/power cut or depends on the game), or "".
+function fits(r, x, opp){
+  if (!r.kinds.includes(x.c)) return "";
+  if (r.excl && r.excl.includes(x.n)) return "";
+  if (r.ids){
+    const hit = r.ids.some(([k, v]) => k === "type" ? x.t.includes(v) : k === "typeinc" ? x.t.some(t => t.includes(v)) : k === "attr" ? x.a === v : k === "name" ? x.n === v : false);
+    if (!hit) return "";
+  }
+  if (r.cols && !r.cols.some(c => x.co.includes(c))) return "";
+  if (r.trig && !x.tr) return "";
+  if (r.noeff && (x.e || "").trim()) return "";
+  const cost = x.c === "L" ? null : x.k;
+  let help = false;
+  if (r.cmin != null && (cost == null || cost < r.cmin)) return "";
+  if (r.cmax != null){ if (cost == null) return ""; if (cost > r.cmax){ if (opp && !r.base && cost - r.cmax <= 2) help = true; else return ""; } }
+  if (r.pmin != null && (x.p == null || x.p < r.pmin)) return "";
+  if (r.pmax != null){ if (x.p == null) return ""; if (x.p > r.pmax){ if (opp && !r.base && x.p - r.pmax <= 2000) help = true; else return ""; } }
+  if (r.vary && opp) help = true;
+  return help ? "help" : "yes";
+}
+
+/* ================= Battle Lab (beta) ================= */
+// Pick a build or ★ Pool, tap a card: "Works with it" (cards in your leader's colors that play, find, boost or
+// use it, and what it does for them) and "Can answer it" (any color: cards that can remove, lock or weaken it).
+// Everything here is legal cards only, and the board state (rested or not, life, DON!!) is ignored on purpose.
+let RULES = null;
+const labRules = id => { if (!RULES){ RULES = new Map(); for (const c of CARDS) RULES.set(c.i, readCard(c)); } return RULES.get(id) || []; };
+const labLegal = c => standardOK(c) && !c.ban;
+const ANS = {remove: ["ko","bounce","bottom","trash","life"], lock: ["rest","lock"], weaken: ["powdown","costdown","negate"]};
+const ANS_GROUP = {remove: "Remove it", lock: "Lock it", weaken: "Weaken it"};
+const VERB = {ko: "K.O.", bounce: "Return to hand", bottom: "Bottom of deck", trash: "Trash", life: "Into Life", rest: "Rest", lock: "Can't attack / stays rested",
+  powdown: "− power", costdown: "− cost", negate: "Cancel its effect",
+  play: "Plays it", search: "Finds it", recur: "Brings it back from trash", buff: "Powers it up", don: "Gives it DON!!", active: "Sets it active", protect: "Protects it", fuel: "Uses it as a cost"};
+const SYN_GROUP = [["Plays it", ["play"]], ["Finds it", ["search"]], ["Brings it back", ["recur"]], ["Boosts it", ["buff","don","active","protect"]], ["Uses it as a cost", ["fuel"]]];
+const OWNV = new Set(["play","search","recur","buff","don","active","protect","fuel"]);
+let labSrc = null, labTab = "syn", labColor = "", labOpen = new Set();
+function labSources(){
+  const out = [];
+  for (const d of recentBuilds()) out.push({k: "d:" + d.id, name: d.name, L: d.leader && BY.get(d.leader), kind: "build"});
+  for (const g of leaderGroups().groups) if (poolCards(g.L.i).size) out.push({k: "p:" + g.L.i, name: `★ ${g.L.n} Pool`, L: g.L, kind: "pool"});
+  return out;
+}
+function labList(){
+  if (!labSrc) return null;
+  if (labSrc.startsWith("d:")){ const d = S.decks.find(x => x.id === labSrc.slice(2)); if (!d) return null;
+    const ids = new Map(Object.entries(d.cards).map(([id, v]) => [id, v.q])); return {L: d.leader && BY.get(d.leader), ids, name: d.name, word: "deck"}; }
+  const lid = labSrc.slice(2), L = BY.get(lid); if (!L) return null;
+  const ids = new Map([...poolCards(lid).keys()].map(id => [id, 1])); return {L, ids, name: `★ ${L.n} Pool`, word: "pool"};
+}
+function protNote(x){
+  const t = (x.e || "").replace(/\([^)]*\)/g, "");
+  const m = t.match(/[^.]*(?:this Character|This Character)[^.]*cannot be (?:K\.O\.'d|removed from the field|rested)[^.]*(?:effects?)[^.]*\./);
+  return m ? m[0].trim() : "";
+}
+// Who can answer card x: every legal card of any color (leaders too) with an effect aimed at the opponent that x fits.
+function labAnswers(x){
+  const by = new Map();
+  for (const y of CARDS){
+    if (!labLegal(y)) continue;
+    for (const r of labRules(y.i)){
+      if (r.side !== "opp" || !VERB[r.v] || OWNV.has(r.v)) continue;
+      const f = fits(r, x, true); if (!f) continue;
+      const e = by.get(y.i) || {c: y, verbs: new Set(), yes: false, lc: true, why: []};
+      e.verbs.add(r.v); if (f === "yes") e.yes = true; if (!r.lc) e.lc = false;
+      if (f === "help") e.why.push(r.vary ? "limit depends on the game" : r.cmax != null && (x.k ?? 0) > r.cmax ? `if its cost is cut to ${r.cmax}` : r.pmax != null && (x.p ?? 0) > r.pmax ? `if its power is cut to ${r.pmax}` : "");
+      by.set(y.i, e);
+    }
+  }
+  const groups = {remove: [], lock: [], weaken: [], help: []};
+  for (const e of by.values()){
+    if (!e.yes){ groups.help.push(e); continue; }
+    const g = Object.keys(ANS).find(k => ANS[k].some(v => e.verbs.has(v))); groups[g].push(e);
+  }
+  const ord = (a,b) => (a.c.c === "L") - (b.c.c === "L") || (a.c.k ?? 0) - (b.c.k ?? 0) || a.c._order - b.c._order;
+  for (const k in groups) groups[k].sort(ord);
+  return groups;
+}
+// What works with card x inside the list's leader colors.
+function labSynergy(x, list){
+  const L = list.L, pool = CARDS.filter(y => labLegal(y) && y.i !== x.i && (y.c !== "L" ? (!L || sharesColor(y, L)) : L && y.i === L.i));
+  const specific = r => !!(r.ids || r.cols);
+  const helps = new Map(), helpsGen = new Map(), mine = new Map(), mineGen = new Map();
+  for (const y of pool){
+    for (const r of labRules(y.i)){
+      if (r.side !== "own" || !OWNV.has(r.v) || fits(r, x, false) !== "yes") continue;
+      if (x.c === "L" && !["buff","don","active","protect"].includes(r.v)) continue;    // a leader is never played, searched or trashed
+      if (r.v === "fuel" && !specific(r)) continue;
+      if (!specific(r) && ["buff","don","active","protect"].includes(r.v)) continue;     // "+1000 to any of your Characters" helps everything
+      const m = specific(r) ? helps : helpsGen; const e = m.get(y.i) || {c: y, verbs: new Set()}; e.verbs.add(r.v); m.set(y.i, e);
+    }
+  }
+  for (const r of labRules(x.i)){
+    if (r.side !== "own" || !OWNV.has(r.v) || r.v === "fuel" && !specific(r)) continue;
+    if (!specific(r) && ["buff","don","active","protect"].includes(r.v)) continue;
+    for (const y of pool){ if (y.c === "L" || fits(r, y, false) !== "yes") continue;
+      const m = specific(r) ? mine : mineGen; const e = m.get(y.i) || {c: y, verbs: new Set()}; e.verbs.add(r.v); m.set(y.i, e); }
+  }
+  const ord = (a,b) => (list.ids.has(b.c.i) - list.ids.has(a.c.i)) || (a.c.k ?? 0) - (b.c.k ?? 0) || a.c._order - b.c._order;
+  const sorted = m => [...m.values()].sort(ord);
+  return {helps: sorted(helps), helpsGen: sorted(helpsGen), mine: sorted(mine), mineGen: sorted(mineGen)};
+}
+function labRow(e, list, extra){
+  const c = e.c, n = list && list.ids.get(c.i), lead = list && list.L && list.L.i === c.i;
+  const why = [...e.verbs].map(v => VERB[v]).join(" · ") + (extra || "");
+  return `<button class="lrw" data-labopen="${c.i}"><span class="lth" style="background:${bandBg(c)}">${imgTag(c.i, "")}</span>
+    <span class="lt2"><b>${esc(c.n)}</b><small><span class="mono">${c.i}</span> · ${c.c === "L" ? "Leader" : "Cost " + (c.k ?? "–")}${c.p != null ? " · " + c.p : ""}</small><small class="lwhy">${esc(why)}</small></span>
+    ${lead ? `<span class="ltag">Your leader</span>` : n ? `<span class="ltag">In ${list.word}${list.word === "deck" ? " ×" + n : ""}</span>` : ""}${e.lc ? `<span class="ltag dim" title="Only with the right leader">Leader cond.</span>` : ""}</button>`;
+}
+function labGroup(key, title, rows, list, note, start){
+  if (!rows.length) return "";
+  const open = labOpen.has(key), lim = open ? rows.length : (start ?? 12);
+  return `<div class="lgrp"><div class="lgh2">${esc(title)} <span class="muted">${rows.length}</span></div>${note ? `<p class="muted lnote">${note}</p>` : ""}
+    <div class="lrows">${rows.slice(0, lim).map(e => labRow(e, list, !e.yes && e.why && e.why.filter(Boolean).length ? " · " + [...new Set(e.why.filter(Boolean))].join(", ") : "")).join("")}</div>
+    ${rows.length > lim ? `<button class="linkbtn" data-labmore="${key}">Show all ${rows.length}</button>` : ""}</div>`;
+}
+function labCardSheet(id){
+  const x = BY.get(id), list = labList(); if (!x || !list) return;
+  const A = labAnswers(x), Y = labSynergy(x, list);
+  const colsOf = arr => { const m = {}; for (const e of arr) for (const co of e.c.co) m[co] = (m[co] || 0) + 1; return m; };
+  const live = [...A.remove, ...A.lock, ...A.weaken];
+  const cc = colsOf(live);
+  const byCol = arr => labColor ? arr.filter(e => e.c.co.includes(labColor)) : arr;
+  const pn = protNote(x);
+  const synHTML = () => {
+    const parts = SYN_GROUP.map(([t, vs]) => labGroup("h" + t, t, Y.helps.filter(e => vs.some(v => e.verbs.has(v))), list)).join("");
+    const gen = SYN_GROUP.map(([t, vs]) => { const rows = Y.helpsGen.filter(e => vs.some(v => e.verbs.has(v))); return rows.length ? labGroup("g" + t, `${t}: any card like it`, rows, list, `These ${t === "Plays it" ? "play" : "find"} any card that fits its cost or power, not just its type.`, 0) : ""; }).join("");
+    const mine = Y.mine.length ? labGroup("mine", `${x.n} helps these`, Y.mine, list, `Cards ${esc(x.n)} can play, find, bring back or boost.`) : "";
+    const mineG = Y.mineGen.length ? labGroup("mineG", `${x.n} helps any card like these`, Y.mineGen, list, "", 0) : "";
+    const body = parts + mine + gen + mineG;
+    return body || `<p class="muted">Nothing in ${list.L ? esc(list.L.co.join("/")) : "these"} colors plays, finds, boosts or uses this card by name, type or attribute.</p>`;
+  };
+  const ansHTML = () => {
+    const tot = live.length;
+    return `<div class="lsum"><b>${tot}</b> legal card${tot === 1 ? "" : "s"} can answer it · Remove ${A.remove.length} · Lock ${A.lock.length} · Weaken ${A.weaken.length}</div>
+      ${pn ? `<p class="lprot"><b>Its own protection:</b> ${esc(pn)}</p>` : ""}
+      <div class="wrapchips" style="margin:8px 0 4px"><button class="chip sm" data-labcol="" aria-pressed="${!labColor}">All colors</button>${COLORS.filter(co => cc[co]).map(co => `<button class="chip sm" data-labcol="${co}" aria-pressed="${labColor === co}"><span class="dot" style="background:${colorVar(co)}"></span>${co} ${cc[co]}</button>`).join("")}</div>
+      ${["remove","lock","weaken"].map(k => labGroup("a" + k, ANS_GROUP[k], byCol(A[k]), null)).join("")}
+      ${A.help.length ? `<details class="addto" style="margin-top:12px" ${labOpen.has("helpOpen") ? "open" : ""} data-labhelp="1"><summary>Needs help first · ${byCol(A.help).length}</summary><div style="padding:0 12px 12px">${labGroup("ahelp", "Works after a cost or power cut", byCol(A.help), null, "These just miss: they reach it once its cost or power is lowered, or their limit depends on the game.", 12)}</div></details>` : ""}
+      ${!tot && !A.help.length ? `<p class="muted">No legal card's effect can touch it directly. It can still be beaten in battle.</p>` : ""}`;
+  };
+  const sc = sheet(`<div class="shead"><span class="mono muted">BATTLE LAB · ${x.i}</span><button class="btn sm x" data-lab="close" style="margin-left:auto">Close</button></div>
+    <div class="lhead"><span class="lth big" style="background:${bandBg(x)}">${imgTag(x.i, "")}</span><span><h2 class="h2" style="margin:0">${esc(x.n)}</h2>
+      <span class="muted" style="font-size:13px">${CATNAME[x.c]} · ${x.co.join("/")} · ${x.c === "L" ? "Life " + x.k : "Cost " + (x.k ?? "–")}${x.p != null ? " · Power " + x.p : ""}</span>
+      <button class="linkbtn" data-labopen="${x.i}" style="display:block;margin-top:4px">Card details</button></span></div>
+    <div class="seg full lseg" role="group" aria-label="Show"><button data-labtab="syn" aria-pressed="${labTab === "syn"}">Works with it</button><button data-labtab="ans" aria-pressed="${labTab === "ans"}">Can answer it</button></div>
+    <div class="lcols" data-show="${labTab}">
+      <section class="lcol syn"><h3 class="h3 lcolh">Works with it <span class="muted" style="text-transform:none;letter-spacing:0">· ${list.L ? esc(list.L.co.join("/")) + " cards" : "any color"}</span></h3>${synHTML()}</section>
+      <section class="lcol ans"><h3 class="h3 lcolh">Can answer it <span class="muted" style="text-transform:none;letter-spacing:0">· any color</span></h3>${ansHTML()}</section>
+    </div>
+    <p class="foot-note">Beta. Read from the card text: what each card does and to which cards. It ignores the board (rested or not, Life, DON!!) and uses printed cost and power. Legal cards only.</p>`, "Battle Lab · " + x.n);
+  sc.querySelector(".sheet").classList.add("wide");
+  sc.addEventListener("click", e => {
+    const t = e.target.closest("button"); if (!t) return;
+    if (t.dataset.lab === "close"){ closeSheet(); return; }
+    if (t.dataset.labtab){ labTab = t.dataset.labtab; labCardSheet(id); return; }
+    if (t.dataset.labcol !== undefined){ labColor = t.dataset.labcol; labCardSheet(id); $("#scrim .sheet").scrollTop = 0; return; }
+    if (t.dataset.labmore){ const y = $("#scrim .sheet").scrollTop; labOpen.add(t.dataset.labmore); labCardSheet(id); $("#scrim .sheet").scrollTop = y; return; }
+    if (t.dataset.labopen){ const y = $("#scrim .sheet").scrollTop; closeSheet(); openCard(t.dataset.labopen, "", null, () => { labCardSheet(id); $("#scrim .sheet").scrollTop = y; }); return; }
+  });
+  sc.addEventListener("toggle", e => { if (e.target.dataset && e.target.dataset.labhelp) e.target.open ? labOpen.add("helpOpen") : labOpen.delete("helpOpen"); }, true);
+}
+function renderLab(){
+  const v = $("#v-lab"); if (!v) return;
+  const srcs = labSources();
+  if (!labSrc || !srcs.some(s => s.k === labSrc)) labSrc = S.cur && srcs.some(s => s.k === "d:" + S.cur) ? "d:" + S.cur : (srcs[0] ? srcs[0].k : null);
+  const list = labList();
+  const groups = new Map(); for (const s of srcs){ const key = s.L ? s.L.n : "No leader yet"; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(s); }
+  let grid = "";
+  if (list){
+    const ids = [...list.ids.keys()].map(id => BY.get(id)).filter(Boolean).sort((a,b) => "CES".indexOf(a.c) - "CES".indexOf(b.c) || (a.k ?? 0) - (b.k ?? 0) || a._order - b._order);
+    const tile = (c, q) => `<button class="tile dtile" data-lab="${c.i}" aria-label="${esc(c.n)}">${faceHTML(c, "")}${q > 1 ? `<span class="xq">×${q}</span>` : ""}</button>`;
+    grid = (list.L ? `<div class="dg"><div class="dgh">Leader</div><div class="dgrid">${tile(list.L, 0)}</div></div>` : "")
+      + ["C","E","S"].map(cat => { const cs = ids.filter(c => c.c === cat); return cs.length ? `<div class="dg"><div class="dgh">${CATNAME[cat]}s · ${cs.length}</div><div class="dgrid">${cs.map(c => tile(c, list.ids.get(c.i))).join("")}</div></div>` : ""; }).join("");
+    if (!ids.length) grid += `<p class="muted" style="margin-top:14px">This ${list.word} has no cards yet.</p>`;
+  }
+  v.innerHTML = `<div class="labhead"><h2 class="dtitle">Battle Lab</h2><span class="beta">BETA</span></div>
+    <p class="muted" style="margin:6px 0 12px;font-size:14px">Pick a build or ★ Pool, then tap a card to see what works with it and what can answer it.</p>
+    ${srcs.length ? `<select class="field" id="labSrc" aria-label="Build or pool">${[...groups].map(([g, ss]) => `<optgroup label="${esc(g)}">${ss.map(s => `<option value="${s.k}" ${s.k === labSrc ? "selected" : ""}>${esc(s.name)}${s.kind === "build" ? ` (${deckCount(S.decks.find(d => "d:" + d.id === s.k))}/50)` : ""}</option>`).join("")}</optgroup>`).join("")}</select>`
+      : `<p class="dempty">Make a build first, then come back to test it here.</p>`}
+    <div class="labgrid">${grid}</div>`;
+}
+$("#v-lab").addEventListener("click", e => { const t = e.target.closest("[data-lab]"); if (t) labCardSheet(t.dataset.lab); });
+$("#v-lab").addEventListener("change", e => { if (e.target.id === "labSrc"){ labSrc = e.target.value; renderLab(); } });
+
 /* ================= routing ================= */
-const TABS = ["home","cards","build","decks","lists"];
+const TABS = ["home","cards","build","decks","lists","lab"];
 const scrollMem = {};
 let curTab = "cards";
 function go(tab){ if (location.hash !== "#"+tab) location.hash = tab; else show(tab); }
@@ -2715,6 +3069,7 @@ function show(tab){
   $("#v-deck").hidden = !(tab === "build" && !wide);
   $("#v-decks").hidden = tab !== "decks";
   $("#v-lists").hidden = tab !== "lists";
+  $("#v-lab").hidden = tab !== "lab";
   $("#v-home").hidden = tab !== "home";
   const navTab = tab === "build" ? "decks" : tab;      // a build lives inside My Decks
   document.querySelectorAll(".nav a, .topnav a").forEach(a => a.setAttribute("aria-current", a.dataset.tab===navTab ? "page" : "false"));
@@ -2722,6 +3077,7 @@ function show(tab){
   if (tab === "build" && !wide){ if (bSub === "add") setCtx("build"); renderDeckViews(); }
   if (tab === "decks") renderDecks();
   if (tab === "lists") renderLists();
+  if (tab === "lab") renderLab();
   if (tab === "home") renderHomePage();
   window.scrollTo({top: scrollMem[tab] || 0});
 }
