@@ -423,6 +423,8 @@ details > summary::after{content:"";width:8px;height:8px;border-right:2px solid 
 details[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
 .effects > summary{padding-block:8px;margin-bottom:0}
 .buckets{display:grid;gap:6px;margin-top:8px}
+.lab.sub{font-size:11.5px;margin:12px 0 6px;opacity:.8}
+#fAbilBody{padding-top:2px}
 .bucket{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .bucket > summary{padding:10px 12px;font-weight:700;font-size:14px}
 .bucket > .wrapchips{padding:0 12px 12px}
@@ -973,7 +975,7 @@ function compat(c){
 /* ================= search ================= */
 // Two searches share one engine: the Cards tab searches everything; the Build tab's "Add cards"
 // searches for the open build, locked to its leader's colors until "Leader colors" is switched off.
-const mkF = () => ({ q:"", nameOnly:false, colors:new Set(), cats:new Set(), costs:new Set(), pows:new Set(), counter:"any", trig:"any", tags:new Set(), blocks:new Set(), types:[], typeAll:false, set:"", exact:false, lock:true });
+const mkF = () => ({ q:"", nameOnly:false, colors:new Set(), cats:new Set(), costs:new Set(), pows:new Set(), counter:"any", trig:"any", abil:new Set(), abilAll:false, evt:"any", tags:new Set(), blocks:new Set(), types:[], typeAll:false, set:"", exact:false, lock:true });
 const FC = mkF(); let FB = mkF();
 let ctx = "cards", F = FC;
 const isFav = id => S.favLeaders.includes(id);
@@ -1022,6 +1024,16 @@ function scoreCard(c, toks){
   }
   return total;
 }
+// Abilities dropdown: when an effect happens, keywords, and plain cards
+const ABIL_TIME = [["onplay","On Play"],["whenatk","When Attacking"],["onko","On K.O."],["actmain","Activate: Main"],["onblock","On Block"],["oppattack","On Opponent's Attack"],["endturn","End of Your Turn"],["yourturn","Your Turn"],["oppturn","Opponent's Turn"],["onceturn","Once Per Turn"]];
+const ABIL_KW = [["blocker","Blocker"],["rush","Rush"],["double","Double Attack"],["banish","Banish"],["unblock","Unblockable"]];
+const ABIL_KEYS = new Set([...ABIL_TIME, ...ABIL_KW].map(x => x[0]));
+function hasAbil(c, k){
+  if (k === "vanilla") return c.c === "C" && !(c.e || "").trim();
+  if (ABIL_KW.some(x => x[0] === k) && c.c === "E") return false;   // an Event only mentions keywords, it doesn't have them
+  return c.g.includes(k);
+}
+const evMain = c => /\[Main\]/.test(c.e || ""), evCtr = c => /\[Counter\]/.test(c.e || "");
 function passFilters(c, L, hideLeaders){
   if (F.cats.size){ if (!F.cats.has(c.c)) return false; }
   else if (hideLeaders && c.c === "L") return false;   // while building, other leaders only show under the Leaders chip
@@ -1029,6 +1041,12 @@ function passFilters(c, L, hideLeaders){
   if (L && c.c !== "L" && !sharesColor(c, L)) return false;
   if (F.costs.size && !F.costs.has(c.k ?? 0)) return false;
   if (F.blocks && F.blocks.size && !F.blocks.has(c.b)) return false;
+  if (F.abil && F.abil.size){ const ks = [...F.abil]; if (F.abilAll ? !ks.every(k => hasAbil(c, k)) : !ks.some(k => hasAbil(c, k))) return false; }
+  if (F.evt && F.evt !== "any" && F.cats.has("E") && c.c === "E"){
+    if (F.evt === "main" && !evMain(c)) return false;
+    if (F.evt === "counter" && !evCtr(c)) return false;
+    if (F.evt === "both" && !(evMain(c) && evCtr(c))) return false;
+  }
   if (F.trig && F.trig !== "any" && (F.trig === "has") !== !!c.tr) return false;
   if (F.pows && F.pows.size && !(c.p != null && F.pows.has(Math.min(Math.floor(c.p / 1000), 12)))) return false;
   if (F.counter === "none" && c.ct) return false;
@@ -1204,7 +1222,7 @@ function renderQuick(){
     ? `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>`
     : `<svg viewBox="0 0 24 24" fill="currentColor">${[3,8,13,18].map(x=>[3,8,13,18].map(y=>`<rect x="${x}" y="${y}" width="3.4" height="3.4" rx=".6"/>`).join("")).join("")}</svg>`;
   gb.setAttribute("aria-label", S.prefs.grid === "l" ? "Showing 2 per row. Switch to 4 per row" : "Showing 4 per row. Switch to 2 per row");
-  const n = F.costs.size + (F.pows ? F.pows.size : 0) + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + (!!F.trig && F.trig!=="any") + F.types.length + !!F.set + (S.prefs.pool!=="all");
+  const n = F.costs.size + (F.pows ? F.pows.size : 0) + (F.blocks ? F.blocks.size : 0) + F.tags.size + (F.counter!=="any") + (!!F.trig && F.trig!=="any") + (F.abil ? F.abil.size : 0) + (F.evt && F.evt!=="any" && F.cats.has("E") ? 1 : 0) + F.types.length + !!F.set + (S.prefs.pool!=="all");
   const fc = $("#fcount"); fc.hidden = !n; fc.textContent = n;
   const lb = $("#leaderBanner");
   const wide = innerWidth >= 1024;
@@ -1269,7 +1287,7 @@ qIn.addEventListener("input", () => setTimeout(renderHome, 150));
 // Cards tab "home": recent builds and recently viewed cards, shown until you search or filter
 function renderHome(){
   const el = $("#homeStrip"); if (!el) return;
-  const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.pows && F.pows.size) || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || (F.trig && F.trig !== "any") || F.types.length || F.set;
+  const busy = (ctx === "cards" && lens) || F.q || F.colors.size || F.cats.size || F.costs.size || (F.pows && F.pows.size) || (F.blocks && F.blocks.size) || F.tags.size || F.counter !== "any" || (F.trig && F.trig !== "any") || (F.abil && F.abil.size) || (F.evt && F.evt !== "any" && F.cats.has("E")) || F.types.length || F.set;
   if (ctx !== "cards" || busy){ el.innerHTML = ""; $("#recentSlot").innerHTML = ""; return; }
   const rb = recentBuilds().slice(0,12), rv = (S.recent||[]).map(id=>BY.get(id)).filter(Boolean).slice(0,10);
   const open = S.prefs.recentOpen ?? true;
@@ -1579,10 +1597,9 @@ const BUCKETS = [
   ["Draw, search & recursion", ["draw","search","play","trash"]],
   ["DON!! & setting active", ["donadd","dongive","donminus","active"]],
   ["Power, protection & Life", ["powup","protect","life"]],
-  ["Keywords", ["rush","blocker","banish","double","unblock","trigger"]],
-  ["Timing", ["onplay","whenatk","onko","actmain","counter_ev","onblock","oppattack","yourturn","oppturn","endturn","onceturn","thisturn"]],
+  ["Timing", ["thisturn"]],
 ];
-{ const used = new Set(BUCKETS.flatMap(b=>b[1])); const misc = META.tags.map(t=>t[0]).filter(k=>!used.has(k)); if (misc.length) BUCKETS.push(["Misc", misc]); }
+{ const used = new Set([...BUCKETS.flatMap(b=>b[1]), ...ABIL_KEYS, "trigger", "counter_ev"]); const misc = META.tags.map(t=>t[0]).filter(k=>!used.has(k)); if (misc.length) BUCKETS.push(["Misc", misc]); }
 function openFilters(){
   const bucketHTML = BUCKETS.map(([name, keys]) => {
     const on = keys.filter(k=>F.tags.has(k)).length;
@@ -1592,6 +1609,12 @@ function openFilters(){
   const effOn = F.tags.size;
   if (!F.blocks) F.blocks = new Set();
   if (!F.pows) F.pows = new Set();
+  if (!F.abil){ F.abil = new Set(); F.abilAll = false; F.evt = "any"; }
+  const abChip = ([k,l]) => `<button class="chip" data-fabil="${k}" aria-pressed="${F.abil.has(k)}">${l}</button>`;
+  const abilHTML = () => `<div class="lab sub">When it happens</div><div class="wrapchips">${ABIL_TIME.map(abChip).join("")}</div>
+      <div class="lab sub">Keywords</div><div class="wrapchips">${ABIL_KW.map(abChip).join("")}</div>
+      <div class="lab sub">Plain cards</div><div class="wrapchips">${abChip(["vanilla","No effect"])}</div>
+      ${F.abil.size > 1 ? `<div class="wrapchips" style="margin-top:10px"><button class="chip tog" id="fAbilAll" aria-pressed="${F.abilAll}">Must have all</button><span class="muted" style="font-size:12.5px;align-self:center">${F.abilAll ? "Showing cards that have every one picked" : "Showing cards that have any one picked"}</span></div>` : ""}`;
   const powChips = [1,2,3,4,5,6,7,8,9,10,11,12].map(k=>`<button class="chip" data-fpow="${k}" aria-pressed="${F.pows.has(k)}">${k}k${k===12?"+":""}</button>`).join("");
   const costChips = [1,2,3,4,5,6,7,8,9,10].map(k=>`<button class="chip" data-fcost="${k}" aria-pressed="${F.costs.has(k)}">${k}</button>`).join("");
   const blockChips = [1,2,3,4,5].map(k=>`<button class="chip" data-fblock="${k}" aria-pressed="${F.blocks.has(k)}">${k}</button>`).join("");
@@ -1599,13 +1622,15 @@ function openFilters(){
     <div class="shead"><h2 class="h2">Filters</h2><button class="btn sm" id="fReset">Reset</button><button class="btn sm dark x" id="fDone">Show cards</button></div>
     <div class="fgroup"><div class="lab">Legal cards</div><div class="wrapchips">${[["all","All cards"],["noban","Hide banned"],["std","Legal only"]].map(([v,l])=>`<button class="chip" data-fpool="${v}" aria-pressed="${S.prefs.pool===v}">${l}</button>`).join("")}</div>
       <p class="foot-note" style="margin-top:6px">Banned and rotated are separate. “Hide banned” removes only the ${META.banned.length} cards on the October 12, 2026 ban list. “Legal only” also removes rotated Block 1 cards, except the ${STD_PERMIT.size + STD_B4.size} that Bandai keeps legal.</p></div>
-    <div class="fgroup"><div class="lab">Card type</div><div class="wrapchips">${[["L","Leaders"],["C","Characters"],["E","Events"],["S","Stages"]].map(([k,l])=>`<button class="chip" data-fcat="${k}" aria-pressed="${F.cats.has(k)}">${l}</button>`).join("")}</div></div>
+    <div class="fgroup"><div class="lab">Card type</div><div class="wrapchips">${[["L","Leaders"],["C","Characters"],["E","Events"],["S","Stages"]].map(([k,l])=>`<button class="chip" data-fcat="${k}" aria-pressed="${F.cats.has(k)}">${l}</button>`).join("")}</div>
+      <div id="fEvt" class="wrapchips" style="margin-top:8px;${F.cats.has("E")?"":"display:none"}"><span class="muted" style="font-size:12.5px;align-self:center">Events with</span>${[["any","Any"],["main","Main"],["counter","Counter"],["both","Main + Counter"]].map(([v,l])=>`<button class="chip" data-fevt="${v}" aria-pressed="${F.evt===v}">${l}</button>`).join("")}</div></div>
     <div class="fgroup"><div class="lab">Cost</div><div class="costgrid">${costChips}</div></div>
     <div class="fgroup"><div class="lab">Power</div><div class="costgrid pow">${powChips}</div></div>
     <div class="fgroup"><div class="lab">Block icon</div><div class="costgrid blocks">${blockChips}</div></div>
     ${ctx === "build" || lens ? `<div class="fgroup"><div class="lab">Leader match</div><div class="wrapchips"><button class="chip tog" id="fCompat" aria-pressed="${S.prefs.compat}">Dim cards that don't work with my leader</button></div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Cards that only partly work are dimmed less.</p></div>` : ""}
     <div class="fgroup"><div class="lab">Counter</div><div class="wrapchips">${[["any","Any"],["has","Has counter"],["1000","+1000"],["2000","+2000"],["none","No counter"]].map(([v,l])=>`<button class="chip" data-fctr="${v}" aria-pressed="${F.counter===v}">${l}</button>`).join("")}</div></div>
     <div class="fgroup"><div class="lab">Trigger</div><div class="wrapchips">${[["any","Any"],["has","Has trigger"],["none","No trigger"]].map(([v,l])=>`<button class="chip" data-ftrig="${v}" aria-pressed="${(F.trig||"any")===v}">${l}</button>`).join("")}</div></div>
+    <details class="fgroup effects" id="fAbil"${F.abil.size?" open":""}><summary class="lab">Abilities <span class="bcount" id="abilCount">${F.abil.size?F.abil.size+" selected":""}</span></summary><div id="fAbilBody">${abilHTML()}</div></details>
     <details class="fgroup effects"${effOn?" open":""}><summary class="lab">What the card does <span class="bcount" id="effCount">${effOn?effOn+" selected":""}</span></summary>
       <div class="buckets">${bucketHTML}</div></details>
     <div class="fgroup" id="fTypes">${typesHTML()}</div>
@@ -1616,7 +1641,10 @@ function openFilters(){
   sc.addEventListener("click", e => {
     const t = e.target.closest("button"); if (!t) return;
     if (t.dataset.fcost){ const k=+t.dataset.fcost; F.costs.has(k)?F.costs.delete(k):F.costs.add(k); t.setAttribute("aria-pressed",F.costs.has(k)); }
-    else if (t.dataset.fcat){ const k=t.dataset.fcat; F.cats.has(k)?F.cats.delete(k):F.cats.add(k); t.setAttribute("aria-pressed",F.cats.has(k)); }
+    else if (t.dataset.fcat){ const k=t.dataset.fcat; F.cats.has(k)?F.cats.delete(k):F.cats.add(k); t.setAttribute("aria-pressed",F.cats.has(k)); $("#fEvt").style.display = F.cats.has("E") ? "" : "none"; }
+    else if (t.dataset.fevt){ F.evt = t.dataset.fevt; sc.querySelectorAll("[data-fevt]").forEach(x=>x.setAttribute("aria-pressed", x.dataset.fevt===F.evt)); }
+    else if (t.dataset.fabil){ const k=t.dataset.fabil; F.abil.has(k)?F.abil.delete(k):F.abil.add(k); if (F.abil.size < 2) F.abilAll = false; $("#fAbilBody").innerHTML = abilHTML(); $("#abilCount").textContent = F.abil.size ? F.abil.size+" selected" : ""; }
+    else if (t.id === "fAbilAll"){ F.abilAll = !F.abilAll; $("#fAbilBody").innerHTML = abilHTML(); }
     else if (t.dataset.ftrig){ F.trig = t.dataset.ftrig; sc.querySelectorAll("[data-ftrig]").forEach(x=>x.setAttribute("aria-pressed", x.dataset.ftrig===F.trig)); }
     else if (t.dataset.fpow){ const k=+t.dataset.fpow; F.pows.has(k)?F.pows.delete(k):F.pows.add(k); t.setAttribute("aria-pressed",F.pows.has(k)); }
     else if (t.dataset.fblock){ const k=+t.dataset.fblock; F.blocks.has(k)?F.blocks.delete(k):F.blocks.add(k); t.setAttribute("aria-pressed",F.blocks.has(k)); }
@@ -1632,7 +1660,7 @@ function openFilters(){
     else if (t.id === "fTypeAll"){ F.typeAll = !F.typeAll; drawTypes(); }
     else if (t.dataset.fpool){ S.prefs.pool = t.dataset.fpool; save(); sc.querySelectorAll("[data-fpool]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.fpool===S.prefs.pool)); }
     else if (t.id === "fArts"){ S.prefs.arts = !S.prefs.arts; save(); t.setAttribute("aria-pressed", S.prefs.arts); }
-    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),pows:new Set(),blocks:new Set(),counter:"any",trig:"any",tags:new Set(),types:[],typeAll:false,set:""}); S.prefs.pool="all"; save(); closeSheet(); }
+    else if (t.id === "fReset"){ Object.assign(F,{colors:new Set(),cats:new Set(),costs:new Set(),pows:new Set(),blocks:new Set(),counter:"any",trig:"any",abil:new Set(),abilAll:false,evt:"any",tags:new Set(),types:[],typeAll:false,set:""}); S.prefs.pool="all"; save(); closeSheet(); }
     else if (t.id === "fDone") closeSheet();
   });
   // add the typed type when it matches one from the list (or on Enter / Add for free text)
